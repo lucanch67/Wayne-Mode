@@ -1,5 +1,5 @@
 /* ============================================================
- * theme.js — shared theme engine for the Patron / Vitality suite.
+ * theme.js — shared theme engine for the Patron / Rowan suite.
  *
  * Include this once near the end of <body>:
  *   <script src="theme.js"></script>

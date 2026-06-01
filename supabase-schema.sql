@@ -1,5 +1,5 @@
 -- ============================================================
---  Patron / Vitality — complete Supabase setup.
+--  Patron / Rowan — complete Supabase setup.
 --  Run this ONCE in your Supabase project:  SQL Editor → New query → paste → Run.
 --  It sets up BOTH:
 --    1. the data table  (everything except photos: finance, water, gym, goals…)
@@ -32,5 +32,18 @@ create policy "progress read"   on storage.objects for select using (bucket_id =
 create policy "progress write"  on storage.objects for insert with check (bucket_id = 'progress-photos');
 create policy "progress delete" on storage.objects for delete using (bucket_id = 'progress-photos');
 
--- Done. Now copy your Project URL + anon public key (Settings → API)
--- into the app's  Settings → Cloud sync.
+-- 4) REALTIME — lets your other devices receive snapshot updates instantly
+--    (without this, sync still works but only when you re-open / refocus a tab).
+--    Safe to re-run: only adds the table if it isn't already published.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'app_state'
+  ) then
+    alter publication supabase_realtime add table app_state;
+  end if;
+end $$;
+
+-- Done. Set SUPABASE_URL + SUPABASE_ANON_KEY as Vercel env vars (Settings → API
+-- gives you both), redeploy, and every device syncs automatically.

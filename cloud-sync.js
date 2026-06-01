@@ -57,12 +57,7 @@
       '<div id="csCard">' +
       '<h2>Cloud sync</h2>' +
       '<p>Sync your data + photos across devices with your own free <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> project. Run <code>supabase-schema.sql</code> once, then paste your keys below. Leave blank to keep everything on this device.</p>' +
-      '<p id="csStatus">' + (connected() ? '✓ Connected — syncing to your project.' : 'Local-only — data stays on this device.') + '</p>' +
-      (connected() ?
-        '<p style="font-size:12px;margin:0 0 8px">On the device that HAS your data, tap <b>Push up</b>. On the OTHER device, tap <b>Pull down</b>.</p>' +
-        '<div class="csRow"><button id="csPush" type="button">⤒ Push this device up</button><button id="csPull" type="button">⤓ Pull cloud down</button></div>' +
-        '<p id="csResult" style="font-size:12px;text-align:center;margin:10px 0 0;min-height:16px"></p>'
-        : '') +
+      '<p id="csStatus">' + (connected() ? '✓ Connected — syncing automatically across your devices.' : 'Local-only — data stays on this device.') + '</p>' +
       '<details style="margin-top:14px"><summary style="cursor:pointer;font-size:12px;opacity:.7">Advanced: use your own Supabase project</summary>' +
       '<label style="margin-top:10px">Project URL</label><input id="csUrl" type="text" autocomplete="off" spellcheck="false" placeholder="https://YOUR-PROJECT.supabase.co" value="' + getU().replace(/"/g, '&quot;') + '">' +
       '<label>Anon public key</label><input id="csKey" type="password" autocomplete="off" spellcheck="false" placeholder="paste the anon public key" value="' + getK().replace(/"/g, '&quot;') + '">' +
@@ -73,17 +68,6 @@
     document.body.appendChild(ov);
     ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
     document.getElementById('csCancel').onclick = close;
-    var pushBtn = document.getElementById('csPush'), pullBtn = document.getElementById('csPull'), res = document.getElementById('csResult');
-    if (pushBtn) pushBtn.onclick = function () {
-      if (!window.PatronDB || !PatronDB.pushAll) { res.textContent = 'Sync not ready — reload the page.'; return; }
-      res.textContent = 'Pushing…';
-      PatronDB.pushAll().then(function (r) { res.textContent = r.ok ? ('✓ Pushed ' + r.n + ' item(s) up. Now tap Pull on your other device.') : 'Push failed.'; });
-    };
-    if (pullBtn) pullBtn.onclick = function () {
-      if (!window.PatronDB || !PatronDB.pullAll) { res.textContent = 'Sync not ready — reload the page.'; return; }
-      res.textContent = 'Pulling…';
-      PatronDB.pullAll().then(function (r) { res.textContent = r.ok ? ('✓ Pulled ' + r.n + ' item(s). Reloading…') : 'Pull failed.'; if (r.ok) setTimeout(function () { location.reload(); }, 700); });
-    };
     document.getElementById('csSave').onclick = function () {
       var u = document.getElementById('csUrl').value.trim(), k = document.getElementById('csKey').value.trim();
       if (u && k) { localStorage.setItem(URL_KEY, u); localStorage.setItem(ANON_KEY, k); }

@@ -1,4 +1,4 @@
-# Vitality — a self-hosted personal dashboard
+# Rowan — a self-hosted personal dashboard
 
 A suite of nine single-file apps tied together by one bento **hub** (`index.html`),
 one design system ("Patron" — soft-dark electric-violet), and one shared theme.

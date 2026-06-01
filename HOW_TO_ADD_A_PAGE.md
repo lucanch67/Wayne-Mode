@@ -1,4 +1,4 @@
-# Adding a new page to Vitality
+# Adding a new page to Rowan
 
 Every page shares one design system (`theme.css` + `theme.js`), so a new
 page looks and behaves like the rest without copying any styling.
