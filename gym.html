@@ -17,7 +17,7 @@ body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 img{max-width:100%;height:auto}
 @media (max-width:480px){input,select,textarea{font-size:16px !important}}
 </style>
-<meta name="theme-color" content="#0C0C12">
+<meta name="theme-color" content="#080808">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -111,26 +111,26 @@ const CONFIG = {
 <style>
 :root {
   color-scheme: dark;
-  --bg: #0C0C12;
-  --bg-card: #15151F;
+  --bg: #080808;
+  --bg-card: #111111;
   --text-1: #F3F2F8;
   --text-2: rgba(243,242,248,0.74);
   --text-3: rgba(243,242,248,0.50);
   --text-4: rgba(243,242,248,0.30);
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.17);
-  --accent: #8B7CFF;
+  --accent: #00FF88;
   --good: #46E0A8;
   --warn: #FBBF24;
   --bad: #FB7185;
-  --brand: #8B7CFF; --brand-2: #C7BBFF; --brand-ink: #130E2E;
-  --brand-soft: rgba(139,124,255,0.12); --brand-line: rgba(139,124,255,0.28); --brand-glow: rgba(139,124,255,0.42);
+  --brand: #00FF88; --brand-2: #00CC6A; --brand-ink: #000000;
+  --brand-soft: rgba(0,255,136,0.09); --brand-line: rgba(0,255,136,0.22); --brand-glow: rgba(0,255,136,0.30);
   --good-rgb: 70,224,168;
   --fill-1: rgba(255,255,255,0.028);
   --fill-2: rgba(255,255,255,0.05);
   --fill-3: rgba(255,255,255,0.07);
   --fill-4: rgba(255,255,255,0.10);
-  --body-glow: rgba(139,124,255,0.10);
+  --body-glow: rgba(0,255,136,0.05);
   --tabbar-grad: linear-gradient(180deg, rgba(10,10,16,0) 0%, rgba(10,10,16,0.82) 40%, rgba(10,10,16,0.95) 100%);
   --tabbar-pill: rgba(26,26,36,0.82);
   --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -986,7 +986,7 @@ img, video, canvas, svg { max-width: 100%; }
   <div class="po-header">
     <h1 class="po-title" id="appTitle">Progressive Overload Coach</h1>
     <div class="po-header-right">
-      <div class="themeSeg" role="radiogroup" aria-label="Theme"><button type="button" class="themeBtn" data-theme="nocturne"><span class="themeSwatch" style="background:#8B7CFF"></span><span class="themeBtnLabel">Nocturne</span></button><button type="button" class="themeBtn" data-theme="aurora"><span class="themeSwatch" style="background:linear-gradient(135deg,#8B7BFF,#4FE3D0)"></span><span class="themeBtnLabel">Aurora</span></button><button type="button" class="themeBtn" data-theme="daylight"><span class="themeSwatch" style="background:#6A45FF"></span><span class="themeBtnLabel">Daylight</span></button></div>
+      <div class="themeSeg" role="radiogroup" aria-label="Theme"><button type="button" class="themeBtn" data-theme="nocturne"><span class="themeSwatch" style="background:#00FF88"></span><span class="themeBtnLabel">Nocturne</span></button><button type="button" class="themeBtn" data-theme="aurora"><span class="themeSwatch" style="background:linear-gradient(135deg,#8B7BFF,#4FE3D0)"></span><span class="themeBtnLabel">Aurora</span></button><button type="button" class="themeBtn" data-theme="daylight"><span class="themeSwatch" style="background:#6A45FF"></span><span class="themeBtnLabel">Daylight</span></button></div>
     <button class="po-icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -2464,5 +2464,39 @@ img, video, canvas, svg { max-width: 100%; }
 </script>
 
 <script>(function(){function cur(){try{return localStorage.getItem("patron_theme")||"nocturne";}catch(e){return "nocturne";}}function paint(){var c=cur();document.querySelectorAll(".themeBtn").forEach(function(b){b.classList.toggle("themeBtnActive",b.dataset.theme===c);});}document.addEventListener("click",function(e){var b=e.target.closest(".themeBtn");if(!b)return;var n=b.dataset.theme;document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("patron_theme",n);}catch(e){}paint();});paint();})();</script>
-</body>
+<script>
+(function(){
+  var css = [
+    'body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;',
+    'background-image:linear-gradient(rgba(255,255,255,0.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.024) 1px,transparent 1px);',
+    'background-size:44px 44px;}',
+    '[data-theme="daylight"] body::before{background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);}',
+    '#suiteBar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:11px 20px;',
+    'background:rgba(8,8,8,0.90);border-bottom:1px solid rgba(255,255,255,0.07);',
+    'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}',
+    '[data-theme="daylight"] #suiteBar{background:rgba(242,241,250,0.93);}',
+    '[data-theme="aurora"] #suiteBar{background:rgba(6,8,18,0.92);}',
+    '.stLogo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--fg,#F2F2F2);flex-shrink:0;}',
+    '.stLogoIcon{width:28px;height:28px;border-radius:8px;flex-shrink:0;',
+    'background:linear-gradient(135deg,var(--brand,#00FF88),var(--brand-2,#00CC6A));',
+    'display:flex;align-items:center;justify-content:center;',
+    'box-shadow:0 0 14px var(--brand-glow,rgba(0,255,136,0.30));}',
+    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;}',
+    '.stSpacer{flex:1;}',
+    '.stBack{display:inline-flex;align-items:center;gap:6px;padding:6px 14px 6px 10px;border-radius:999px;',
+    'background:var(--brand-soft,rgba(0,255,136,0.09));border:1px solid var(--brand-line,rgba(0,255,136,0.22));',
+    'color:var(--brand,#00FF88);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;',
+    'text-decoration:none;transition:background 180ms ease;}',
+    '.stBack:hover{background:rgba(0,255,136,0.16);}'
+  ].join('');
+  var st = document.createElement('style');
+  st.textContent = css;
+  document.head.appendChild(st);
+  var svg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>';
+  var bar = document.createElement('div');
+  bar.id = 'suiteBar';
+  bar.innerHTML = '<a class="stLogo" href="index.html"><div class="stLogoIcon">' + svg + '</div><span class="stLogoName">Wayne Mode</span></a><span class="stSpacer"></span><a class="stBack" href="index.html">← Home</a>';
+  document.body.insertBefore(bar, document.body.firstChild);
+})();
+</script></body>
 </html>
