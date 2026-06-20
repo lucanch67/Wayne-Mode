@@ -963,6 +963,36 @@ img, video, canvas, svg { max-width: 100%; }
   .themeBtn .themeBtnLabel { display: none; }
   .themeBtn { padding: 6px; }
 }
+/* ── Activities panel ── */
+#actsPanel { display:none; padding:20px 16px calc(100px + env(safe-area-inset-bottom)); max-width:640px; margin:0 auto; }
+.actsScoreCard { display:flex; align-items:center; gap:18px; padding:20px; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; }
+.actsRingWrap { position:relative; width:96px; height:96px; flex-shrink:0; }
+.actsRingWrap svg { width:100%; height:100%; transform:rotate(-90deg); }
+.actsRingTrack { fill:none; stroke:var(--fill-3); stroke-width:8; }
+.actsRingFill { fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.6s cubic-bezier(0.22,1,0.36,1),stroke 0.4s; }
+.actsRingNum { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:28px; font-weight:600; color:var(--text-1); letter-spacing:-0.03em; }
+.actsScoreInfo { flex:1; min-width:0; }
+.actsScoreLabel { font-family:var(--font-mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); }
+.actsScoreMsg { font-size:13px; color:var(--text-2); line-height:1.5; margin-top:6px; }
+.actsCard { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:18px 16px; margin-bottom:12px; }
+.actsCardTitle { font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--text-3); display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.actsCardTitle::after { content:''; flex:1; height:1px; background:var(--border); }
+.actsForm { display:flex; flex-direction:column; gap:10px; }
+.actsSelect,.actsInput { appearance:none; width:100%; padding:11px 14px; background:var(--fill-2); border:1px solid var(--border); border-radius:10px; color:var(--text-1); font-family:var(--font); font-size:14px; transition:border-color 0.15s; }
+.actsSelect:focus,.actsInput:focus { outline:none; border-color:var(--brand-line); }
+.actsSelect option { background:#111; }
+.actsAddBtn { width:100%; padding:13px; border:none; border-radius:10px; background:var(--brand); color:var(--brand-ink); font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; transition:opacity 0.2s,transform 0.1s; }
+.actsAddBtn:hover { opacity:0.9; } .actsAddBtn:active { transform:scale(0.98); }
+.actsLogEmpty { font-size:13px; color:var(--text-3); padding:6px 0; }
+.actsLogList { display:flex; flex-direction:column; gap:8px; }
+.actsLogRow { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--fill-1); border:1px solid var(--border); border-radius:10px; }
+.actsLogIcon { font-size:22px; flex-shrink:0; }
+.actsLogMain { flex:1; min-width:0; }
+.actsLogName { font-weight:600; font-size:14px; color:var(--text-1); }
+.actsLogMeta { font-family:var(--font-mono); font-size:11px; color:var(--text-3); margin-top:2px; }
+.actsLogPts { font-family:var(--font-display); font-size:22px; font-weight:600; color:var(--brand); letter-spacing:-0.02em; flex-shrink:0; }
+.actsLogDel { background:transparent; border:none; color:var(--text-4); font-size:20px; cursor:pointer; padding:4px 6px; opacity:0.5; transition:opacity 0.2s,color 0.2s; }
+.actsLogDel:hover { opacity:1; color:var(--bad); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1254,6 +1284,50 @@ img, video, canvas, svg { max-width: 100%; }
     </div>
   </div>
 </div>
+
+<!-- ── ACTIVITIES PANEL ── -->
+<section id="actsPanel">
+  <!-- Score ring -->
+  <div class="actsScoreCard">
+    <div class="actsRingWrap">
+      <svg viewBox="0 0 96 96">
+        <circle class="actsRingTrack" cx="48" cy="48" r="40"></circle>
+        <circle class="actsRingFill" id="actsRingFill" cx="48" cy="48" r="40"></circle>
+      </svg>
+      <div class="actsRingNum" id="actsRingNum">0</div>
+    </div>
+    <div class="actsScoreInfo">
+      <div class="actsScoreLabel">Activity score · /100</div>
+      <div id="actsScoreMsg" class="actsScoreMsg">Log an activity to start your day</div>
+    </div>
+  </div>
+
+  <!-- Log form -->
+  <div class="actsCard">
+    <div class="actsCardTitle">Log Activity</div>
+    <div class="actsForm">
+      <select class="actsSelect" id="actsActivity">
+        <option value="cycling">🚴 Cycling</option>
+        <option value="swimming">🏊 Swimming</option>
+        <option value="walking">🚶 Walking (outdoor)</option>
+        <option value="basketball">🏀 Basketball</option>
+      </select>
+      <select class="actsSelect" id="actsIntensity">
+        <option value="light">💧 Light</option>
+        <option value="moderate" selected>⚡ Moderate</option>
+        <option value="hard">🔥 Hard</option>
+      </select>
+      <input class="actsInput" id="actsMinutes" type="number" min="1" max="300" placeholder="Duration (minutes)" />
+      <button class="actsAddBtn" id="actsAddBtn" type="button">Log Activity</button>
+    </div>
+  </div>
+
+  <!-- Today's log -->
+  <div class="actsCard">
+    <div class="actsCardTitle">Today</div>
+    <div id="actsList"></div>
+  </div>
+</section>
 
 <script>
 (function() {
@@ -2463,40 +2537,127 @@ img, video, canvas, svg { max-width: 100%; }
 })();
 </script>
 
+<!-- Activities JS -->
+<script>
+(function(){
+  'use strict';
+  const ACTS_KEY='acts_standalone_v1';
+  const ACT_CFG={cycling:{icon:'🚴',label:'Cycling',rate:1.5},swimming:{icon:'🏊',label:'Swimming',rate:1.6},walking:{icon:'🚶',label:'Walking',rate:1.0},basketball:{icon:'🏀',label:'Basketball',rate:1.8}};
+  const INTEN={light:{label:'Light',mult:0.6},moderate:{label:'Moderate',mult:1.0},hard:{label:'Hard',mult:1.4}};
+
+  function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function loadAll(){ try{ return JSON.parse(localStorage.getItem(ACTS_KEY))||[]; }catch(e){ return []; } }
+  function saveAll(l){ localStorage.setItem(ACTS_KEY,JSON.stringify(l)); }
+  function todaysEntries(){ return loadAll().filter(e=>e.dateKey===todayKey()); }
+  function sessionPts(act,inten,min){ const c=ACT_CFG[act],i=INTEN[inten]; return(c&&i&&min>0)?Math.round(min*c.rate*i.mult):0; }
+  function dailyScore(entries){ return Math.min(100,entries.reduce((s,e)=>s+e.pts,0)); }
+  function scoreColor(v){ return v>=80?'#00FF88':v>=50?'#FFB930':'#FF4060'; }
+
+  function renderActs(){
+    const entries=todaysEntries(), score=dailyScore(entries);
+    const fill=document.getElementById('actsRingFill');
+    if(fill){ const C=2*Math.PI*40; fill.style.strokeDasharray=C; fill.style.strokeDashoffset=C*(1-score/100); fill.style.stroke=scoreColor(score); }
+    const numEl=document.getElementById('actsRingNum'); if(numEl) numEl.textContent=score;
+    const msg=document.getElementById('actsScoreMsg');
+    if(msg){
+      if(score===0) msg.textContent='Log an activity to start your day';
+      else if(score>=100) msg.textContent='🏆 Perfect day — you maxed your score!';
+      else if(score>=80) msg.textContent='Outstanding! Almost at 100.';
+      else if(score>=50) msg.textContent='Good session — keep it going.';
+      else msg.textContent=score+'/100 — plenty of room left today.';
+    }
+    const list=document.getElementById('actsList'); if(!list) return;
+    if(!entries.length){ list.innerHTML='<div class="actsLogEmpty">No activities logged yet today.</div>'; return; }
+    const ul=document.createElement('div'); ul.className='actsLogList';
+    entries.slice().reverse().forEach(e=>{
+      const cfg=ACT_CFG[e.activity]||{icon:'🏃',label:e.activity};
+      const row=document.createElement('div'); row.className='actsLogRow';
+      row.innerHTML='<span class="actsLogIcon">'+cfg.icon+'</span>'
+        +'<div class="actsLogMain"><div class="actsLogName">'+cfg.label+'</div>'
+        +'<div class="actsLogMeta">'+(INTEN[e.intensity]||{label:e.intensity}).label+' · '+e.minutes+' min</div></div>'
+        +'<span class="actsLogPts">+'+e.pts+'</span>'
+        +'<button class="actsLogDel" data-id="'+e.id+'" type="button" aria-label="Delete">×</button>';
+      ul.appendChild(row);
+    });
+    list.innerHTML=''; list.appendChild(ul);
+  }
+
+  document.addEventListener('click',function(ev){
+    var del=ev.target.closest('.actsLogDel');
+    if(del){ var id=del.getAttribute('data-id'); saveAll(loadAll().filter(e=>e.id!==id)); renderActs(); return; }
+    if(ev.target.id==='actsAddBtn'){
+      var act=document.getElementById('actsActivity').value;
+      var inten=document.getElementById('actsIntensity').value;
+      var min=parseInt(document.getElementById('actsMinutes').value,10);
+      if(!act||!inten||!(min>0)){ alert('Enter duration in minutes.'); return; }
+      var pts=sessionPts(act,inten,min);
+      var all=loadAll(); all.push({id:'a'+Date.now(),dateKey:todayKey(),activity:act,intensity:inten,minutes:min,pts:pts});
+      saveAll(all); document.getElementById('actsMinutes').value=''; renderActs();
+    }
+  });
+
+  window.actsRender=renderActs;
+  renderActs();
+})();
+</script>
+
 <script>(function(){function cur(){try{return localStorage.getItem("patron_theme")||"nocturne";}catch(e){return "nocturne";}}function paint(){var c=cur();document.querySelectorAll(".themeBtn").forEach(function(b){b.classList.toggle("themeBtnActive",b.dataset.theme===c);});}document.addEventListener("click",function(e){var b=e.target.closest(".themeBtn");if(!b)return;var n=b.dataset.theme;document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("patron_theme",n);}catch(e){}paint();});paint();})();</script>
 <script>
 (function(){
-  var css = [
+  var css=[
     'body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;',
     'background-image:linear-gradient(rgba(255,255,255,0.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.024) 1px,transparent 1px);',
     'background-size:44px 44px;}',
     '[data-theme="daylight"] body::before{background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);}',
-    '#suiteBar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:max(11px,env(safe-area-inset-top)) 20px 11px;',
+    '#suiteBar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:max(11px,env(safe-area-inset-top)) 16px 11px;',
     'background:rgba(8,8,8,0.90);border-bottom:1px solid rgba(255,255,255,0.07);',
     'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}',
     '[data-theme="daylight"] #suiteBar{background:rgba(242,241,250,0.93);}',
     '[data-theme="aurora"] #suiteBar{background:rgba(6,8,18,0.92);}',
-    '.stLogo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--fg,#F2F2F2);flex-shrink:0;}',
-    '.stLogoIcon{width:28px;height:28px;border-radius:8px;flex-shrink:0;',
+    '.stLogo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-1,#F3F2F8);flex-shrink:0;}',
+    '.stLogoIcon{width:26px;height:26px;border-radius:8px;flex-shrink:0;',
     'background:linear-gradient(135deg,var(--brand,#00FF88),var(--brand-2,#00CC6A));',
     'display:flex;align-items:center;justify-content:center;',
-    'box-shadow:0 0 14px var(--brand-glow,rgba(0,255,136,0.30));}',
-    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;}',
-    '.stSpacer{flex:1;}',
-    '.stBack{display:inline-flex;align-items:center;gap:6px;padding:6px 14px 6px 10px;border-radius:999px;',
+    'box-shadow:0 0 12px var(--brand-glow,rgba(0,255,136,0.30));}',
+    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.3px;}',
+    '.stTabBar{display:flex;align-items:center;gap:2px;flex:1;justify-content:center;}',
+    '.stTab{appearance:none;border:0;background:transparent;color:rgba(243,242,248,0.42);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;transition:background 180ms,color 180ms;white-space:nowrap;}',
+    '.stTab.stTabOn{background:var(--brand-soft,rgba(0,255,136,0.09));color:var(--brand,#00FF88);}',
+    '.stBack{display:inline-flex;align-items:center;gap:5px;padding:6px 11px 6px 8px;border-radius:999px;flex-shrink:0;',
     'background:var(--brand-soft,rgba(0,255,136,0.09));border:1px solid var(--brand-line,rgba(0,255,136,0.22));',
     'color:var(--brand,#00FF88);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;',
-    'text-decoration:none;transition:background 180ms ease;}',
+    'text-decoration:none;transition:background 180ms ease;white-space:nowrap;}',
     '.stBack:hover{background:rgba(0,255,136,0.16);}'
   ].join('');
-  var st = document.createElement('style');
-  st.textContent = css;
-  document.head.appendChild(st);
-  var svg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>';
-  var bar = document.createElement('div');
-  bar.id = 'suiteBar';
-  bar.innerHTML = '<a class="stLogo" href="index.html"><div class="stLogoIcon">' + svg + '</div><span class="stLogoName">Wayne Mode</span></a><span class="stSpacer"></span><a class="stBack" href="index.html">← Home</a>';
-  document.body.insertBefore(bar, document.body.firstChild);
+  var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+  var svg='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>';
+  var bar=document.createElement('div'); bar.id='suiteBar';
+  bar.innerHTML='<a class="stLogo" href="index.html"><div class="stLogoIcon">'+svg+'</div><span class="stLogoName">Wayne Mode</span></a>'
+    +'<div class="stTabBar">'
+    +'<button class="stTab stTabOn" data-tab="gym">Gym</button>'
+    +'<button class="stTab" data-tab="acts">Activities</button>'
+    +'</div>'
+    +'<a class="stBack" href="index.html">← Home</a>';
+  document.body.insertBefore(bar,document.body.firstChild);
+
+  var gymPanel=document.querySelector('.po-shell');
+  var actsPanel=document.getElementById('actsPanel');
+
+  bar.querySelectorAll('.stTab').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.dataset.tab;
+      bar.querySelectorAll('.stTab').forEach(function(b){b.classList.remove('stTabOn');});
+      btn.classList.add('stTabOn');
+      if(gymPanel) gymPanel.style.display=t==='gym'?'':'none';
+      if(actsPanel) actsPanel.style.display=t==='acts'?'block':'none';
+      if(t==='acts'&&window.actsRender) window.actsRender();
+      try{localStorage.setItem('sports_tab',t);}catch(e){}
+    });
+  });
+
+  var lastTab='gym';
+  try{lastTab=localStorage.getItem('sports_tab')||'gym';}catch(e){}
+  if(lastTab==='acts'){var b=bar.querySelector('[data-tab="acts"]');if(b)b.click();}
 })();
 </script></body>
 </html>
