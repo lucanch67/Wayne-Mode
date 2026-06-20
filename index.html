@@ -17,7 +17,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 img{max-width:100%;height:auto}
 @media (max-width:480px){input,select,textarea{font-size:16px !important}}
-@supports (padding:max(0px)){body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}}
+@supports (padding:max(0px)){body{padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}}
 </style>
 <title>Luca · dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -123,7 +123,7 @@ body::before {
 .topbar {
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; gap: var(--space-3);
-  padding: 13px 20px;
+  padding: max(13px, env(safe-area-inset-top)) 20px 13px;
   background: rgba(8,8,8,0.88);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -215,7 +215,7 @@ body::before {
 }
 .gearBtn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: var(--surface); border: 1px solid var(--border);
   color: var(--muted-strong); font-size: 16px; cursor: pointer;
   transition: border-color var(--duration) var(--ease-premium), background var(--duration) var(--ease-premium), color var(--duration) var(--ease-premium);
@@ -331,6 +331,12 @@ body::before {
   opacity: 0.6;
 }
 @media (max-width: 520px) { .vitals { grid-column: span 1; grid-row: auto; } }
+@media (max-width: 480px) {
+  .vitalsBody { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
+  .vMetrics { min-width: 0; width: 100%; }
+  .recRing { width: 108px; height: 108px; }
+  .recNum { font-size: 2rem; }
+}
 
 .vitalsHead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .vitalsEyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brand); }
@@ -403,7 +409,7 @@ body::before {
 .panelHead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-5); }
 .panelEyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--brand); }
 .panelTitle { font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xl); letter-spacing: -0.03em; margin: var(--space-2) 0 0; }
-.panelClose { background: transparent; border: 1px solid var(--border); color: var(--muted-strong); font-size: 20px; line-height: 1; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: color var(--duration), border-color var(--duration); }
+.panelClose { background: transparent; border: 1px solid var(--border); color: var(--muted-strong); font-size: 20px; line-height: 1; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: color var(--duration), border-color var(--duration); }
 .panelClose:hover { color: var(--fg); border-color: var(--border-strong); }
 .srcPills { display: flex; gap: var(--space-2); margin-bottom: var(--space-5); flex-wrap: wrap; }
 .srcPill {
@@ -514,7 +520,7 @@ body::before {
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   padding: 8px 0 max(8px, env(safe-area-inset-bottom));
 }
-@media (max-width: 520px) { .mobileNav { display: flex; } .page { padding-bottom: 80px; } }
+@media (max-width: 520px) { .mobileNav { display: flex; } .page { padding-bottom: calc(80px + env(safe-area-inset-bottom)); } }
 [data-theme="daylight"] .mobileNav { background: rgba(242,241,250,0.94); }
 [data-theme="aurora"]   .mobileNav { background: rgba(6,8,18,0.92); }
 .mobileNavItem {

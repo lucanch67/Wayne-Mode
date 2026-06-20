@@ -17,7 +17,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 img{max-width:100%;height:auto}
 @media (max-width:480px){input,select,textarea{font-size:16px !important}}
-@supports (padding:max(0px)){body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}}
+@supports (padding:max(0px)){body{padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}}
 </style>
 <title>Progress · standalone</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -620,7 +620,7 @@ applyTheme(currentTheme);
     'background-image:linear-gradient(rgba(255,255,255,0.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.024) 1px,transparent 1px);',
     'background-size:44px 44px;}',
     '[data-theme="daylight"] body::before{background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);}',
-    '#suiteBar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:11px 20px;',
+    '#suiteBar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:max(11px,env(safe-area-inset-top)) 20px 11px;',
     'background:rgba(8,8,8,0.90);border-bottom:1px solid rgba(255,255,255,0.07);',
     'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}',
     '[data-theme="daylight"] #suiteBar{background:rgba(242,241,250,0.93);}',
