@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="YOUR NAME" />
+<meta name="apple-mobile-web-app-title" content="Luca" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/svg+xml" href="icon.svg" />
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -19,7 +19,7 @@ img{max-width:100%;height:auto}
 @media (max-width:480px){input,select,textarea{font-size:16px !important}}
 @supports (padding:max(0px)){body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}}
 </style>
-<title>YOUR NAME · dashboard</title>
+<title>Luca · dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -385,7 +385,7 @@ function headerHtml(){
     ? '<button type="button" class="profileChip" data-action="open-profile" title="Edit your profile"><span class="profileAvatar">' + esc((name || '·').charAt(0).toUpperCase()) + '</span>' + esc(name || 'Profile') + '</button>'
     : '<button type="button" class="profileChip profileChipNew" data-action="open-profile">Set up profile</button>';
   const gear = '<button type="button" class="gearBtn" data-action="open-profile" title="Settings / edit profile" aria-label="Settings">⚙</button>';
-  return '<header class="header"><div><h1 class="title">YOUR NAME</h1><p class="subtitle">' + greeting + '</p></div>'
+  return '<header class="header"><div><h1 class="title">Luca</h1><p class="subtitle">' + greeting + '</p></div>'
     + '<div class="headerControls">' + themeSegHtml() + chip + gear + '</div></header>';
 }
 
@@ -490,7 +490,7 @@ function tickerMetrics(){
 function tickerHtml(){
   const items = tickerMetrics();
   if (!items.length){
-    return '<div class="ticker"><div class="tickerLead"><span class="tickerPulse"></span>YOUR NAME · Live</div>'
+    return '<div class="ticker"><div class="tickerLead"><span class="tickerPulse"></span>Luca · Live</div>'
       + '<div class="tickerViewport"><div class="tickerTrack" style="animation:none;padding-left:var(--space-5)">'
       + '<span class="tickerItem" style="border:0"><span class="tiLabel">No data yet — add vitals to go live</span></span>'
       + '</div></div></div>';
@@ -503,7 +503,7 @@ function tickerHtml(){
   const seq = items.map(chip).join('');
   // duration scales with item count so speed stays constant regardless of how much data we have
   const dur = Math.max(18, items.length * 6);
-  return '<div class="ticker"><div class="tickerLead"><span class="tickerPulse"></span>YOUR NAME · Live</div>'
+  return '<div class="ticker"><div class="tickerLead"><span class="tickerPulse"></span>Luca · Live</div>'
     + '<div class="tickerViewport"><div class="tickerTrack" style="animation-duration:' + dur + 's">'
     + seq + seq + '</div></div></div>';
 }
@@ -653,7 +653,7 @@ function profileModalHtml(){
   const inp = (key, type, ph, attrs) => '<input class="fieldInput" type="' + type + '" data-pf="' + key + '" placeholder="' + esc(ph) + '" value="' + esc(d[key]) + '" ' + (attrs || '') + ' />';
   const field = (label, inner) => '<div class="field"><label class="fieldLabel">' + label + '</label>' + inner + '</div>';
   const body = '<div class="fieldGrid">'
-    + '<div class="field fieldFull"><label class="fieldLabel">Name</label>' + inp('name', 'text', 'Your name', 'autocomplete="name"') + '</div>'
+    + '<div class="field fieldFull"><label class="fieldLabel">Name</label>' + inp('name', 'text', 'Luca', 'autocomplete="name"') + '</div>'
     + field('Age', inp('age', 'number', '—', 'min="0" max="120" inputmode="numeric"'))
     + field('Sex', sel('sex', [['M', 'Male'], ['F', 'Female']]))
     + field('Units', sel('units', [['metric', 'Metric (cm/kg)'], ['imperial', 'Imperial (in/lb)']]))
@@ -667,7 +667,7 @@ function profileModalHtml(){
   return '<div class="overlay" data-action="close-profile"><div class="panel" data-stop="1">'
     + '<div class="panelHead"><div><div class="panelEyebrow">' + (isEdit ? 'Your profile' : 'Welcome') + '</div><h2 class="panelTitle">' + (isEdit ? 'Edit profile' : 'Set up your dashboard') + '</h2></div>'
     + (isEdit ? '<button type="button" class="panelClose" data-action="close-profile">×</button>' : '') + '</div>'
-    + (isEdit ? '' : '<p class="panelNote" style="border-color:var(--brand-line)">Tell the suite a little about you — your name personalizes it, and your stats pre-fill the apps (weight → Water, age/goal/training → Supplements). Stored only in this browser; edit anytime.</p>')
+    + (isEdit ? '' : '<p class="panelNote" style="border-color:var(--brand-line)">Tell the suite a little about you — Luca personalizes it, and your stats pre-fill the apps (weight → Water, age/goal/training → Supplements). Stored only in this browser; edit anytime.</p>')
     + body
     + '<div class="panelActions"><button type="button" class="btn ' + (isEdit ? 'btn-ghost' : 'btn-link') + '" data-action="close-profile">' + (isEdit ? 'Cancel' : 'Skip for now') + '</button>'
     + '<button type="button" class="btn btn-primary" data-action="save-profile">' + (isEdit ? 'Save' : 'Save &amp; start') + '</button></div></div></div>';
@@ -675,7 +675,7 @@ function profileModalHtml(){
 function saveProfile(){
   const d = ui.profileDraft || {};
   const name = (d.name || '').trim();
-  if (!name) { alert('Add your name to continue (or Skip for now).'); return; }
+  if (!name) { alert('Add Luca to continue (or Skip for now).'); return; }
   const units = d.units === 'imperial' ? 'imperial' : 'metric';
   const num = (x) => { if (x === '' || x == null) return ''; const n = Number(x); return isFinite(n) ? n : ''; };
   const hRaw = num(d.height), wRaw = num(d.weight);

@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="YOUR NAME" />
+<meta name="apple-mobile-web-app-title" content="Luca" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/svg+xml" href="icon.svg" />
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -734,7 +734,7 @@ function headerHtml() {
   const dayLabel = DOW[d.getDay()] + ', ' + MON[d.getMonth()] + ' ' + d.getDate();
   return ''
     + '<header class="header"><div class="headerLeft">'
-    +   '<a class="back" href="index.html"><span class="backArrow">←</span> YOUR NAME</a>'
+    +   '<a class="back" href="index.html"><span class="backArrow">←</span> Luca</a>'
     +   '<span class="dayPill">' + dayLabel + '</span>'
     +   '<h1 class="title">Supplements</h1>'
     +   '<p class="subtitle">Daily stack · resets at 6 AM</p>'
@@ -934,7 +934,7 @@ function recsHtml() {
   if (tickerItems.length >= 2) {
     const rolled = tickerItems.concat(tickerItems);
     header += '<div class="recTicker" role="status" aria-label="Live inputs driving these picks">'
-      + '<div class="recTickerEyebrow"><span class="recTickerPulse" aria-hidden></span>YOUR NAME · live</div>'
+      + '<div class="recTickerEyebrow"><span class="recTickerPulse" aria-hidden></span>Luca · live</div>'
       + '<div class="recTickerScroll"><div class="recTickerTrack">'
       + rolled.map(it => '<span class="recTickerItem" data-tone="' + it.tone + '">' + esc(it.text) + '</span>').join('')
       + '</div></div></div>';

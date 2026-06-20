@@ -1,6 +1,6 @@
 ﻿{
-  "name": "YOUR NAME",
-  "short_name": "YOUR NAME",
+  "name": "Luca",
+  "short_name": "Luca",
   "description": "Your personal health, training, finance & creator dashboard.",
   "start_url": "index.html",
   "scope": "./",

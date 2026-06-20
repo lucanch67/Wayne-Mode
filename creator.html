@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="YOUR NAME" />
+<meta name="apple-mobile-web-app-title" content="Luca" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/svg+xml" href="icon.svg" />
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -305,7 +305,7 @@ function themeSegHtml(){return '<div class="themeSeg" role="radiogroup" aria-lab
 function seed(){
   const now=Date.now();
   return {
-    name:(function(){try{var p=JSON.parse(localStorage.getItem('patron_profile_v1')||'null');return (p&&p.name)?p.name:'Your Name';}catch(e){return 'Your Name';}})(), emoji:'🎬', archetype:'Creator',
+    name:(function(){try{var p=JSON.parse(localStorage.getItem('patron_profile_v1')||'null');return (p&&p.name)?p.name:'Luca';}catch(e){return 'Luca';}})(), emoji:'🎬', archetype:'Creator',
     blurb:'Social-first. TikTok, Reels, Shorts, YouTube.',
     schedules:[{id:genId('sch'),platform:'youtube',label:'Youtube',target:1,unit:'videos',period:'weekly',done:0}],
     accounts:[
@@ -369,7 +369,7 @@ const A={
 /* ============================ Views ============================ */
 function headerHtml(){
   return '<header class="header"><div class="headerLeft">'
-    +'<a class="back" href="index.html"><span class="backArrow">←</span> YOUR NAME</a>'
+    +'<a class="back" href="index.html"><span class="backArrow">←</span> Luca</a>'
     +'<div class="detailHero"><span class="detailEmoji">'+esc(state.emoji)+'</span><div class="detailHeroText"><h1 class="title">'+esc(state.name)+'</h1><span class="detailChip">'+esc(state.archetype)+'</span></div></div>'
     +(state.blurb?'<p class="detailBlurb">'+esc(state.blurb)+'</p>':'')
     +'</div><div class="headerRight">'+themeSegHtml()+'</div></header>';
