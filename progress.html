@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Patron" />
+<meta name="apple-mobile-web-app-title" content="YOUR NAME" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/svg+xml" href="icon.svg" />
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -258,15 +258,109 @@ function compress(dataUrl,maxDim,q){return new Promise(res=>{const img=new Image
 
 const CHART_WINDOW=30,AVG_WINDOW=7;
 
-/* ===================== Static demo data (workout-fed in hosted app) ===================== */
-const LIFTS=[
-  {id:'l1',exerciseName:'Barbell bench',kind:'pr_reps',currentReps:7,previousReps:5,currentWeightKg:85,previousWeightKg:85},
-  {id:'l2',exerciseName:'Barbell bench',kind:'pr_weight',currentWeightKg:85,previousWeightKg:80,currentReps:5,previousReps:5},
-  {id:'l3',exerciseName:'Back squat',kind:'pr_weight',currentWeightKg:120,previousWeightKg:115,currentReps:5,previousReps:5},
-  {id:'l4',exerciseName:'Deadlift',kind:'pr_reps',currentReps:6,previousReps:4,currentWeightKg:140,previousWeightKg:140},
-  {id:'l5',exerciseName:'Overhead press',kind:'regress_weight',currentWeightKg:50,previousWeightKg:55,currentReps:5,previousReps:5},
-];
-const COMPOSITION={phase:'recomp',weightSlopeKgPerWeek:0,volumeTrendPct:143,estimatedLeanKgPerWeek:null,estimatedFatKgPerWeek:null,windowDays:28,confidence:30};
+/* ===================== Real Gym data from po_coach_v1 ===================== */
+function loadGymLifts(){
+  try{
+    const raw=localStorage.getItem('po_coach_v1');
+    if(!raw)return[];
+    const gs=JSON.parse(raw);
+    if(!gs||!gs.exercises||!gs.logs)return[];
+    const results=[];
+    for(const ex of gs.exercises){
+      const all=(gs.logs[ex.id]||[]).filter(l=>l&&l.dateKey);
+      if(all.length<2)continue;
+      all.sort((a,b)=>a.dateKey.localeCompare(b.dateKey));
+      const lastKey=all[all.length-1].dateKey;
+      const recent=all.filter(l=>l.dateKey===lastKey);
+      const prior=all.filter(l=>l.dateKey!==lastKey);
+      if(!prior.length)continue;
+      const scoreOf=l=>(l.weight||0)*100+(l.reps||0);
+      const bestR=recent.reduce((b,l)=>scoreOf(l)>scoreOf(b)?l:b,recent[0]);
+      const bestP=prior.reduce((b,l)=>scoreOf(l)>scoreOf(b)?l:b,prior[0]);
+      if(!ex.bw){
+        if(bestR.weight>bestP.weight)results.push({id:ex.id,exerciseName:ex.name,kind:'pr_weight',currentWeightKg:bestR.weight,previousWeightKg:bestP.weight,currentReps:bestR.reps,previousReps:bestP.reps});
+        else if(bestR.weight===bestP.weight&&bestR.reps>bestP.reps)results.push({id:ex.id,exerciseName:ex.name,kind:'pr_reps',currentWeightKg:bestR.weight,previousWeightKg:bestP.weight,currentReps:bestR.reps,previousReps:bestP.reps});
+        else if(bestR.weight<bestP.weight)results.push({id:ex.id,exerciseName:ex.name,kind:'regress_weight',currentWeightKg:bestR.weight,previousWeightKg:bestP.weight,currentReps:bestR.reps,previousReps:bestP.reps});
+      } else {
+        if(bestR.reps>bestP.reps)results.push({id:ex.id,exerciseName:ex.name,kind:'pr_reps',currentWeightKg:0,previousWeightKg:0,currentReps:bestR.reps,previousReps:bestP.reps});
+        else if(bestR.reps<bestP.reps)results.push({id:ex.id,exerciseName:ex.name,kind:'regress_weight',currentWeightKg:0,previousWeightKg:0,currentReps:bestR.reps,previousReps:bestP.reps});
+      }
+    }
+    return results;
+  }catch(e){return[];}
+}
+
+function loadGymComposition(){
+  try{
+    // Weight data from progress page (progress_standalone_v1)
+    const wp=localStorage.getItem('progress_standalone_v1');
+    const wdata=wp?JSON.parse(wp):null;
+    const entries=wdata&&Array.isArray(wdata.entries)?wdata.entries.slice().sort((a,b)=>a.dateKey.localeCompare(b.dateKey)):[];
+
+    // Strength volume from gym logs
+    const graw=localStorage.getItem('po_coach_v1');
+    const gs=graw?JSON.parse(graw):null;
+
+    const windowDays=30;
+    const now=new Date();
+    const cutoff=new Date(now.getTime()-windowDays*24*60*60*1000);
+    const cutoffKey=cutoff.toISOString().slice(0,10);
+    const prevCutoff=new Date(cutoff.getTime()-windowDays*24*60*60*1000);
+    const prevKey=prevCutoff.toISOString().slice(0,10);
+
+    // Weight slope (kg/week) over window using linear regression
+    const wWin=entries.filter(e=>e.dateKey>=cutoffKey);
+    let weightSlopeKgPerWeek=null;
+    if(wWin.length>=3){
+      const n=wWin.length;
+      const xs=wWin.map((_,i)=>i),ys=wWin.map(e=>e.weightKg);
+      const mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
+      const num=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+      const den=xs.reduce((s,x)=>s+(x-mx)**2,0);
+      const slope=den?num/den:0;
+      weightSlopeKgPerWeek=slope*7;
+    }
+
+    // Volume trend: total (weight × reps) this window vs previous window
+    let volumeTrendPct=null;
+    if(gs&&gs.exercises&&gs.logs){
+      let volCur=0,volPrev=0;
+      for(const ex of gs.exercises){
+        for(const l of (gs.logs[ex.id]||[])){
+          if(!l||!l.dateKey)continue;
+          const v=(l.weight||1)*(l.reps||0);
+          if(l.dateKey>=cutoffKey)volCur+=v;
+          else if(l.dateKey>=prevKey)volPrev+=v;
+        }
+      }
+      if(volPrev>0)volumeTrendPct=((volCur-volPrev)/volPrev)*100;
+    }
+
+    if(weightSlopeKgPerWeek===null&&volumeTrendPct===null)return null;
+
+    // Determine composition phase
+    const wUp=weightSlopeKgPerWeek!=null&&weightSlopeKgPerWeek>0.1;
+    const wDown=weightSlopeKgPerWeek!=null&&weightSlopeKgPerWeek<-0.1;
+    const wFlat=!wUp&&!wDown;
+    const lUp=volumeTrendPct!=null&&volumeTrendPct>3;
+    const lDown=volumeTrendPct!=null&&volumeTrendPct<-3;
+
+    let phase;
+    if(wFlat&&lUp)phase='recomp';
+    else if(wUp&&lUp)phase='bulking';
+    else if(wUp&&!lUp)phase='fat_gain';
+    else if(wDown&&lUp)phase='cutting';
+    else if(wDown&&lDown)phase='losing';
+    else if(wFlat&&!lUp)phase='holding';
+    else phase='insufficient';
+
+    const confidence=Math.min(100,wWin.length*8+(volumeTrendPct!=null?15:0));
+    return{phase,weightSlopeKgPerWeek:weightSlopeKgPerWeek||0,volumeTrendPct,estimatedLeanKgPerWeek:null,estimatedFatKgPerWeek:null,windowDays,confidence};
+  }catch(e){return null;}
+}
+
+const LIFTS=loadGymLifts();
+const COMPOSITION=loadGymComposition();
 const PHASE_LABEL={recomp:'Recomping',bulking:'Bulking',fat_gain:'Fat gain',cutting:'Cutting',losing:'Losing both',holding:'Holding',insufficient:'Calibrating'};
 const PHASE_SUB={recomp:'lifts up, weight steady, likely swapping fat for muscle',bulking:'weight up, lifts up. the gains are mostly muscle',fat_gain:'weight up, lifts flat. most of the gain is fat',cutting:'weight down, lifts preserved. fat loss with muscle held',losing:'weight down, lifts down. losing both',holding:'weight + lifts both steady. maintenance phase',insufficient:'log a few more weeks of weight + training to unlock this'};
 
@@ -372,6 +466,7 @@ function trainingHtml(){
     +'<div class="ticker"><div class="tickerBadge"><span class="tickerBadgeDot"></span>lifts</div><div class="tickerViewport"><div class="tickerTrack">'+items+items+'</div></div></div></section>';
 }
 function compHtml(){
+  if(!COMPOSITION)return '';
   const c=COMPOSITION,u=state.units;
   const wDisp=kgToDisplay(c.weightSlopeKgPerWeek,u);
   const lean=c.estimatedLeanKgPerWeek==null?null:kgToDisplay(c.estimatedLeanKgPerWeek,u);
@@ -388,8 +483,7 @@ function compHtml(){
   return '<section class="section"><div class="sectionEyebrow">composition · last '+c.windowDays+' days</div>'
     +'<div class="compCard"><div><span class="compPhaseWord">'+PHASE_LABEL[c.phase]+'</span></div><p class="compPhaseSub">'+PHASE_SUB[c.phase]+'</p>'
     +(c.phase!=='insufficient'?'<div class="compPillRow">'+pillHtml+'</div>':'')
-    +'<p class="compCaveat">estimate · not a body-fat measurement'+(c.confidence<35?' · low data':'')+'</p></div>'
-    +'<p class="noteLine">Lifts + composition read from your workout logs in the hosted app — shown here as a sample.</p></section>';
+    +'<p class="compCaveat">estimate · not a body-fat measurement'+(c.confidence<35?' · low data':'')+'</p></div></section>';
 }
 
 /* ===================== Render: photos ===================== */
@@ -413,7 +507,7 @@ function applyTheme(name){if(!THEMES.some(t=>t.key===name))name='nocturne';curre
 function themeSegHtml(){return '<div class="themeSeg" role="radiogroup" aria-label="Theme">'+THEMES.map(t=>'<button type="button" class="themeBtn '+(t.key===currentTheme?'themeBtnActive':'')+'" data-act="theme" data-theme="'+t.key+'" title="'+t.label+'"><span class="themeSwatch" style="background:'+t.swatch+'"></span></button>').join('')+'</div>';}
 function render(){
   document.getElementById('app').innerHTML=
-    '<header class="header"><a class="back" href="index.html"><span class="backArrow">←</span> Luca</a>'
+    '<header class="header"><a class="back" href="index.html"><span class="backArrow">←</span> YOUR NAME</a>'
     +'<div class="headerRow"><h1 class="title">Progress</h1><div class="unitSeg"><button class="unitBtn '+(state.units==='kg'?'unitBtnActive':'')+'" data-act="units" data-u="kg">kg</button><button class="unitBtn '+(state.units==='lb'?'unitBtnActive':'')+'" data-act="units" data-u="lb">lb</button></div>'+themeSegHtml()+'</div>'
     +'<p class="subtitle">weight log · progress photos</p></header>'
     +heroHtml()+trainingHtml()+compHtml()+photosHtml();
