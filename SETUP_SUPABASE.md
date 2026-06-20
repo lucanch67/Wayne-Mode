@@ -1,4 +1,4 @@
-# Supabase setup — sync phone + PC
+﻿# Supabase setup — sync phone + PC
 
 Follow top to bottom. Do steps 1–4 ONCE. Do step 5 on BOTH devices.
 
@@ -8,7 +8,7 @@ Follow top to bottom. Do steps 1–4 ONCE. Do step 5 on BOTH devices.
 
 ## 2. New project
 - Click **New project**
-- Name it whatever your folder is (Patron-Rowan2)
+- Name it whatever your folder is (Patron-Luca2)
 - Set a database password (save it somewhere)
 - Pick the closest region → **Create**
 - Wait ~1 min for it to finish
