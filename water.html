@@ -23,7 +23,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"nocturne");}catch(e){document.documentElement.setAttribute("data-theme","nocturne");}</script>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"aurora");}catch(e){document.documentElement.setAttribute("data-theme","aurora");}</script>
 <style>
 
 /* ============================================================
@@ -262,9 +262,9 @@ const LS='water_standalone_v1';
 // Common ADHD / wakefulness stimulants for the search box. Free text is allowed too — type anything.
 const STIM_OPTIONS=['Concerta','Ritalin','Methylphenidate','Vyvanse','Elvanse','Adderall','Adderall XR','Dexedrine','Dexamfetamine','Focalin','Mydayis','Modafinil','Armodafinil'];
 const THEMES=[{key:'nocturne',label:'Nocturne',swatch:'#00FF88'},{key:'aurora',label:'Aurora',swatch:'linear-gradient(135deg,#8B7BFF,#4FE3D0)'},{key:'daylight',label:'Daylight',swatch:'#6A45FF'}];
-let currentTheme=(function(){try{return localStorage.getItem('patron_theme')||'nocturne';}catch(e){return 'nocturne';}})();
-if(!THEMES.some(t=>t.key===currentTheme))currentTheme='nocturne';
-function applyTheme(name){if(!THEMES.some(t=>t.key===name))name='nocturne';currentTheme=name;document.documentElement.setAttribute('data-theme',name);try{localStorage.setItem('patron_theme',name);}catch(e){}render();}
+let currentTheme=(function(){try{return localStorage.getItem('patron_theme')||'aurora';}catch(e){return 'aurora';}})();
+if(!THEMES.some(t=>t.key===currentTheme))currentTheme='aurora';
+function applyTheme(name){if(!THEMES.some(t=>t.key===name))name='aurora';currentTheme=name;document.documentElement.setAttribute('data-theme',name);try{localStorage.setItem('patron_theme',name);}catch(e){}render();}
 function themeSegHtml(){return '<div class="themeSeg" role="radiogroup" aria-label="Theme">'+THEMES.map(t=>'<button type="button" class="themeBtn '+(t.key===currentTheme?'themeBtnActive':'')+'" data-act="theme" data-theme="'+t.key+'"><span class="themeSwatch" style="background:'+t.swatch+'"></span>'+t.label+'</button>').join('')+'</div>';}
 function seed(){
   const logs={};const samples=[6,5,6,4,6,7,3,6,5,6,2,6,4]; // last 13 days (oldest→newest), today stays 0

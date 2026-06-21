@@ -22,7 +22,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"nocturne");}catch(e){document.documentElement.setAttribute("data-theme","nocturne");}</script>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"aurora");}catch(e){document.documentElement.setAttribute("data-theme","aurora");}</script>
 <style>
 
 /* ============================================================
@@ -762,10 +762,10 @@ const THEME_PALETTES = {
   aurora:   { bank: '#8B7BFF', stocks: '#B9ABFF', crypto: '#4FE3D0', other: 'rgba(220,225,255,0.4)', subs: '#FFC65C' },
   daylight: { bank: '#6A45FF', stocks: '#9E84FF', crypto: '#0E9E64', other: 'rgba(23,22,34,0.4)', subs: '#B4690E' },
 };
-let currentTheme = (function(){ try { return localStorage.getItem('patron_theme') || 'nocturne'; } catch(e){ return 'nocturne'; } })();
-if (!THEME_PALETTES[currentTheme]) currentTheme = 'nocturne';
+let currentTheme = (function(){ try { return localStorage.getItem('patron_theme') || 'aurora'; } catch(e){ return 'aurora'; } })();
+if (!THEME_PALETTES[currentTheme]) currentTheme = 'aurora';
 function applyTheme(name){
-  if (!THEME_PALETTES[name]) name = 'nocturne';
+  if (!THEME_PALETTES[name]) name = 'aurora';
   currentTheme = name;
   document.documentElement.setAttribute('data-theme', name);
   const p = THEME_PALETTES[name];
