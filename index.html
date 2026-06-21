@@ -357,6 +357,8 @@ body::before {
 @keyframes wm-wiggle { 0%,100%{transform:rotate(-5deg);} 50%{transform:rotate(5deg);} }
 .wm-icon:hover .ic-home { animation: wm-bob .7s ease-in-out infinite; transform-origin: center; }
 @keyframes wm-bob { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-1.5px) scale(1.06);} }
+.wm-icon:hover .ic-stim { animation: wm-steam 1.1s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes wm-steam { 0%,100%{transform:translateY(0) scaleX(1);} 30%{transform:translateY(-2px) scaleX(0.97);} 60%{transform:translateY(-1px) scaleX(1.02);} }
 @media (prefers-reduced-motion: reduce) { .wm-icon,.wm-icon::before,.wm-icon * { animation: none !important; } }
 .cardName { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.02em; }
 .cardTag  { font-size: 12px; color: var(--muted); line-height: 1.4; }
@@ -619,6 +621,7 @@ const WM_ICONS = {
   supp:     '<svg viewBox="0 0 24 24"><g class="ic ic-supp"><rect x="2.8" y="9" width="18.4" height="6" rx="3" transform="rotate(45 12 12)"/><path d="M8.5 8.5 15.5 15.5"/></g></svg>',
   water:    '<svg viewBox="0 0 24 24"><g class="ic ic-water"><circle class="ripple" cx="12" cy="19" r="6"/><path class="drop" d="M12 3.6c0 0-6.4 6.9-6.4 10.8a6.4 6.4 0 0 0 12.8 0C18.4 10.5 12 3.6 12 3.6Z"/></g></svg>',
   band:     '<svg viewBox="0 0 24 24"><g class="ic ic-band"><rect x="7" y="3" width="10" height="18" rx="5"/><path d="M9 10h6M9 13h4"/></g></svg>',
+  stim:     '<svg viewBox="0 0 24 24"><g class="ic ic-stim"><path d="M3 9h14v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9Z"/><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 4c0 0 .5-1 1.5-1s2 1 2 1 .5-1 1.5-1 1.5 1 1.5 1"/></g></svg>',
 };
 function wmIcon(key, active) {
   return '<span class="wm-icon' + (active ? ' is-active' : '') + '" aria-hidden>' + (WM_ICONS[key] || '') + '</span>';
@@ -633,6 +636,7 @@ const APPS = [
   { file: 'goals.html',       name: 'Goals',        tag: 'Goals & streaks',                        icon: 'goals' },
   { file: 'progress.html',    name: 'Progress',     tag: 'Photos & measurements',                  icon: 'progress' },
   { file: 'macros.html',      name: 'Foods',        tag: 'Food · Calories · Caffeine tracker',     icon: 'foods' },
+  { file: 'caffeine-tracker.html', name: 'Stimulant', tag: 'Peak · Crash · Half-life · 90+ drinks', icon: 'stim' },
 ];
 
 /* ================================================================
@@ -801,6 +805,7 @@ function statFor(file){
     else if (file === 'supplements.html') { const s = lsGet('supplements_standalone_v1'); if (s && Array.isArray(s.items) && s.items.length) { const tk = (s.taken && s.taken[activeDateKey()]) || {}; const n = s.items.filter(i => tk[i.id]).length; return { value: n + '/' + s.items.length, label: 'taken today' }; } }
     else if (file === 'water.html') { const s = lsGet('water_standalone_v1'); if (s && s.logs) { const n = s.logs[localDateKey()] || 0; return { value: String(n), label: (n === 1 ? 'drink' : 'drinks') + ' today' }; } }
     else if (file === 'whoop.html') { if (health && health.recovery != null) return { value: Math.round(health.recovery) + '%', label: 'recovery' }; }
+    else if (file === 'caffeine-tracker.html') { const s = lsGet('caffeine_tracker_v1'); if (s && Array.isArray(s.logs) && s.logs.length) { const todayKey = (function(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })(); if (s.dateKey === todayKey) { const total = s.logs.reduce((a,x)=>a+(Number(x.mg)||0),0); return { value: total + ' mg', label: 'today' }; } } }
   } catch (e) {}
   return null;
 }
