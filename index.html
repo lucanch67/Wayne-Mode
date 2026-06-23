@@ -52,7 +52,7 @@ img{max-width:100%;height:auto}
   --text-xl:1.375rem; --text-2xl:1.75rem; --text-3xl:2.5rem;
   --ease:cubic-bezier(0.2,0.8,0.2,1); --ease-premium:cubic-bezier(0.16,1,0.3,1);
   --duration-fast:120ms; --duration:200ms;
-  --font-display:'Space Grotesk'; --font-ui:'Hanken Grotesk'; --font-mono:'JetBrains Mono';
+  --font-display:'Cormorant Garamond',serif; --font-ui:'Space Grotesk'; --font-mono:'JetBrains Mono';
 }
 [data-theme="aurora"] {
   color-scheme: dark;
@@ -97,18 +97,17 @@ body {
   transition: background var(--duration) var(--ease);
 }
 
-/* ── Grid background ── */
+/* ── Grid background (daylight only) ── */
 body::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px);
-  background-size: 44px 44px;
+  opacity: 0;
 }
 [data-theme="daylight"] body::before {
+  opacity: 1;
   background-image:
     linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 
 /* ── Grain ── */
@@ -362,7 +361,7 @@ body::before {
 .wm-icon:hover .ic-biz { animation: wm-rise 0.9s ease-in-out infinite; transform-origin: center bottom; }
 @keyframes wm-rise { 0%,100%{transform:translateY(0) scaleX(1);} 50%{transform:translateY(-2px) scaleX(1.04);} }
 @media (prefers-reduced-motion: reduce) { .wm-icon,.wm-icon::before,.wm-icon * { animation: none !important; } }
-.cardName { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.02em; }
+.cardName { font-family: var(--font-ui); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.02em; }
 .cardTag  { font-size: 12px; color: var(--muted); line-height: 1.4; }
 .cardArrow {
   position: absolute; top: var(--space-5); right: var(--space-5);
@@ -575,6 +574,318 @@ body::before {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
+/* ================================================================
+ * NEW: Haulix + Apple Glass layout
+ * ================================================================ */
+
+/* ── Background blobs ── */
+.bg-blobs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.bg-blob { position: absolute; border-radius: 50%; opacity: 0.7; }
+.bg-blob-1 { width: 700px; height: 700px; top: -200px; left: -150px; background: var(--glow-1); filter: blur(90px); }
+.bg-blob-2 { width: 550px; height: 550px; bottom: -150px; right: -120px; background: var(--glow-2); filter: blur(80px); }
+.bg-blob-3 { width: 450px; height: 450px; top: 35%; left: 35%; background: var(--brand-soft); filter: blur(100px); }
+.bg-blob-4 { display: none; }
+
+/* ── AURORA: northern lights drifting curtains ── */
+[data-theme="aurora"] .bg-blob-1 {
+  background: radial-gradient(ellipse at center, rgba(139,123,255,0.38) 0%, rgba(100,60,220,0.14) 55%, transparent 100%);
+  animation: aurora-drift-1 22s ease-in-out infinite;
+}
+[data-theme="aurora"] .bg-blob-2 {
+  background: radial-gradient(ellipse at center, rgba(79,227,208,0.28) 0%, rgba(40,180,160,0.10) 55%, transparent 100%);
+  animation: aurora-drift-2 28s ease-in-out infinite;
+}
+[data-theme="aurora"] .bg-blob-3 {
+  background: radial-gradient(ellipse at center, rgba(185,140,255,0.20) 0%, rgba(110,70,210,0.07) 55%, transparent 100%);
+  animation: aurora-drift-3 18s ease-in-out infinite;
+}
+[data-theme="aurora"] .bg-blob-4 {
+  display: block;
+  width: 130%; height: 320px;
+  top: 22%; left: -15%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(139,123,255,0.07) 25%,
+    rgba(79,227,208,0.09) 50%,
+    rgba(139,123,255,0.06) 75%,
+    transparent 100%);
+  border-radius: 50%;
+  filter: blur(44px);
+  animation: aurora-curtain 32s ease-in-out infinite;
+}
+@keyframes aurora-drift-1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  20%     { transform: translate(70px,50px) scale(1.09); }
+  50%     { transform: translate(35px,-55px) scale(0.94); }
+  75%     { transform: translate(-45px,35px) scale(1.06); }
+}
+@keyframes aurora-drift-2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(-75px,-55px) scale(1.12); }
+  66%     { transform: translate(45px,-25px) scale(0.91); }
+}
+@keyframes aurora-drift-3 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.65; }
+  50%     { transform: translate(-55px,-75px) scale(1.22); opacity: 1; }
+}
+@keyframes aurora-curtain {
+  0%,100% { transform: translateY(0) scaleX(1);    opacity: 0.45; }
+  30%     { transform: translateY(-65px) scaleX(1.06); opacity: 0.85; }
+  70%     { transform: translateY(45px) scaleX(0.96);  opacity: 0.55; }
+}
+
+/* ── NOCTURNE: pulsing neon-green orbs ── */
+[data-theme="nocturne"] .bg-blob-1 {
+  background: radial-gradient(ellipse at center, rgba(0,255,136,0.24) 0%, rgba(0,200,100,0.09) 55%, transparent 100%);
+  animation: nocturne-pulse-1 9s ease-in-out infinite;
+}
+[data-theme="nocturne"] .bg-blob-2 {
+  background: radial-gradient(ellipse at center, rgba(0,255,136,0.16) 0%, rgba(0,180,80,0.06) 55%, transparent 100%);
+  animation: nocturne-pulse-2 14s ease-in-out infinite;
+}
+[data-theme="nocturne"] .bg-blob-3 {
+  background: radial-gradient(ellipse at center, rgba(0,255,136,0.11) 0%, rgba(0,150,70,0.04) 55%, transparent 100%);
+  animation: nocturne-pulse-3 11s ease-in-out infinite;
+}
+[data-theme="nocturne"] .bg-blob-4 { display: none; }
+@keyframes nocturne-pulse-1 {
+  0%,100% { transform: scale(1);    opacity: 0.65; }
+  50%     { transform: scale(1.20); opacity: 1; }
+}
+@keyframes nocturne-pulse-2 {
+  0%,100% { transform: translate(0,0) scale(0.9);   opacity: 0.50; }
+  40%     { transform: translate(-45px,-35px) scale(1.14); opacity: 0.80; }
+  80%     { transform: translate(25px,25px) scale(1.02);  opacity: 0.60; }
+}
+@keyframes nocturne-pulse-3 {
+  0%,100% { transform: translate(0,0) scale(1);    opacity: 0.38; }
+  33%     { transform: translate(35px,-45px) scale(1.18); opacity: 0.72; }
+  66%     { transform: translate(-22px,32px) scale(0.94); opacity: 0.50; }
+}
+
+@media (prefers-reduced-motion: reduce) { .bg-blob { animation: none !important; } }
+/* Canvas handles aurora + nocturne; hide CSS blobs for those */
+[data-theme="aurora"] .bg-blobs,
+[data-theme="nocturne"] .bg-blobs { display: none; }
+
+/* ── Sidebar dock ── */
+.sidebar-dock {
+  position: fixed; left: 18px; top: 50%; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 20px 14px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border-radius: 999px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.12), 0 0 0 1px rgba(255,255,255,0.04);
+}
+[data-theme="daylight"] .sidebar-dock { background: rgba(255,255,255,0.55); box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), 0 0 0 1px rgba(0,0,0,0.06); }
+@media (max-width: 900px) { .sidebar-dock { display: none; } }
+
+.sidebar-dock-logo {
+  width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 18px var(--brand-glow); text-decoration: none;
+  margin-bottom: 4px;
+}
+.sidebar-dock-divider { width: 28px; height: 1px; background: var(--border); margin: 2px 0; }
+.sidebar-dock-btn {
+  position: relative; width: 50px; height: 50px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; cursor: pointer;
+  transition: background 200ms, color 200ms; text-decoration: none;
+}
+.sidebar-dock-btn:hover, .sidebar-dock-btn.sdActive { background: var(--brand-soft); }
+.sidebar-dock-btn .wm-icon {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: transparent; border: 0; box-shadow: none; animation: none;
+  pointer-events: none;
+}
+.sidebar-dock-btn .wm-icon::before { display: none; }
+.sidebar-dock-btn:hover .wm-icon, .sidebar-dock-btn.sdActive .wm-icon {
+  background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand);
+}
+.sidebar-dock-tooltip {
+  position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,0.88); color: #fff; font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  padding: 5px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 150ms; z-index: 99;
+}
+.sidebar-dock-btn:hover .sidebar-dock-tooltip { opacity: 1; }
+[data-theme="daylight"] .sidebar-dock-tooltip { background: rgba(20,18,40,0.9); }
+
+/* ── Main wrapper ── */
+.main-wrapper { margin-left: 96px; min-height: 100dvh; position: relative; z-index: 1; }
+@media (max-width: 900px) { .main-wrapper { margin-left: 0; } }
+
+/* ── Glass header ── */
+.glass-header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 10px;
+  padding: max(12px, env(safe-area-inset-top)) 20px 12px;
+  background: rgba(6,8,18,0.72);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="daylight"] .glass-header { background: rgba(242,241,250,0.82); }
+.stat-pills { display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: nowrap; overflow: hidden; }
+.stat-pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px;
+  border-radius: 999px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-family: var(--font-mono); font-size: 11px; white-space: nowrap; flex-shrink: 0;
+}
+[data-theme="daylight"] .stat-pill { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.08); }
+.stat-pill-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.stat-pill-lbl { color: var(--muted); font-size: 10px; }
+.stat-pill-val { color: var(--fg); font-weight: 600; }
+.header-search { flex: 0 1 220px; position: relative; }
+.header-search-input {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 999px; padding: 6px 12px 6px 30px; color: var(--fg);
+  font-family: var(--font-ui); font-size: 13px; outline: none;
+  transition: border-color 200ms, background 200ms;
+}
+[data-theme="daylight"] .header-search-input { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.10); }
+.header-search-input::placeholder { color: var(--muted); }
+.header-search-input:focus { border-color: var(--brand-line); background: rgba(255,255,255,0.07); }
+.header-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; line-height: 1; }
+.header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.notif-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
+  transition: color 200ms, background 200ms;
+}
+.notif-btn:hover { color: var(--fg); background: rgba(255,255,255,0.09); }
+@media (max-width: 640px) { .header-search { display: none; } }
+@media (max-width: 480px) { .stat-pills .stat-pill:nth-child(n+3) { display: none; } }
+
+/* ── Page layout override ── */
+.page { padding: 0 0 var(--space-16); background: transparent; }
+.main-wrapper { background: transparent; }
+.shell { max-width: 1200px; }
+
+/* ── Title bar ── */
+.title-bar { padding: var(--space-6) var(--space-6) 0; }
+.title-bar-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.wm-hero { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2.4rem, 5vw, 3.8rem); letter-spacing: -0.03em; line-height: 1; color: var(--fg); }
+.wm-date-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+.title-toggles { display: flex; align-items: center; gap: 20px; padding-top: 6px; }
+.toggle-row { display: flex; align-items: center; gap: 8px; font-family: var(--font-ui); font-size: 12px; color: var(--muted); cursor: pointer; }
+/* iOS toggle */
+.ios-toggle { position: relative; display: inline-block; width: 34px; height: 19px; cursor: pointer; }
+.ios-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.ios-toggle-track { position: absolute; inset: 0; border-radius: 999px; background: var(--track); transition: background 200ms; }
+.ios-toggle input:checked + .ios-toggle-track { background: var(--brand); }
+.ios-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.4); transition: transform 200ms; pointer-events: none; }
+.ios-toggle input:checked ~ .ios-toggle-thumb { transform: translateX(15px); }
+@media (max-width: 520px) { .title-toggles { display: none; } }
+
+/* ── Tab strip ── */
+.tab-strip { display: flex; align-items: center; gap: 4px; padding: var(--space-4) var(--space-6) 0; flex-wrap: wrap; }
+.tab-btn {
+  appearance: none; background: transparent; border: 1px solid transparent;
+  border-radius: 999px; padding: 6px 16px;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--muted);
+  cursor: pointer; transition: all 200ms var(--ease-premium); white-space: nowrap;
+}
+.tab-btn:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
+.tab-btn.tabActive { background: var(--brand-soft); border-color: var(--brand-line); color: var(--brand); }
+
+/* ── Haulix 2-col grid ── */
+.haulix-grid {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+}
+@media (max-width: 900px) { .haulix-grid { grid-template-columns: 1fr; padding: var(--space-4); } }
+
+/* ── Glass panel ── */
+.glass-panel {
+  border-radius: 20px; padding: 20px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.12), 0 0 0 1px rgba(255,255,255,0.04);
+}
+[data-theme="daylight"] .glass-panel { background: rgba(255,255,255,0.65); box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.9), 0 0 0 1px rgba(0,0,0,0.05); }
+.glass-panel-title { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.glass-panel-title + .glass-panel-title { margin-top: -4px; }
+
+/* ── Quick actions ── */
+.quick-actions { display: flex; flex-direction: column; gap: 7px; }
+.qa-btn {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  color: var(--fg); font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  transition: background 200ms var(--ease-premium), border-color 200ms, transform 200ms;
+}
+.qa-btn:hover { background: var(--brand-soft); border-color: var(--brand-line); transform: translateX(2px); }
+[data-theme="daylight"] .qa-btn { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.08); }
+.qa-icon { width: 26px; height: 26px; border-radius: 8px; background: var(--brand-soft); border: 1px solid var(--brand-line); display: flex; align-items: center; justify-content: center; color: var(--brand); font-size: 13px; flex-shrink: 0; }
+.qa-icon.done { background: var(--pos-soft); border-color: var(--pos-line); color: var(--pos); }
+.qa-arrow { margin-left: auto; color: var(--muted); font-size: 12px; transition: color 200ms; }
+.qa-btn:hover .qa-arrow { color: var(--brand); }
+
+/* ── Priority alert queue ── */
+.alert-queue { display: flex; flex-direction: column; gap: 7px; }
+.alert-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  border-radius: 12px; background: rgba(255,255,255,0.03);
+  border-left: 3px solid var(--warn); border-top: 1px solid rgba(255,255,255,0.04);
+  border-right: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.alert-item.tone-good  { border-left-color: var(--pos); }
+.alert-item.tone-neg   { border-left-color: var(--neg); }
+.alert-item.tone-brand { border-left-color: var(--brand); }
+.alert-item-body { flex: 1; min-width: 0; }
+.alert-item-title { font-family: var(--font-ui); font-size: 12px; font-weight: 600; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-item-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-item-val { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--fg); flex-shrink: 0; }
+
+/* ── Recent activity ── */
+.activity-list { display: flex; flex-direction: column; }
+.activity-item { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.activity-item:last-child { border-bottom: 0; }
+.act-tag { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; flex-shrink: 0; background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand); }
+.act-tag.health  { background: var(--pos-soft);  border-color: var(--pos-line);  color: var(--pos); }
+.act-tag.finance { background: var(--warn-soft); border-color: var(--warn-line); color: var(--warn); }
+.act-tag.system  { background: var(--surface);   border-color: var(--border);    color: var(--muted); }
+.act-text { font-family: var(--font-ui); font-size: 12px; color: var(--fg); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+/* ── Daily output bar chart ── */
+.output-bars { display: flex; align-items: flex-end; gap: 8px; height: 88px; }
+.ob-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.ob-pct { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--fg); }
+.ob-track { width: 100%; flex: 1; background: var(--track); border-radius: 4px 4px 0 0; position: relative; overflow: hidden; }
+.ob-fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 4px 4px 0 0; transition: height 700ms var(--ease-premium); }
+.ob-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* ── Financial trend chart ── */
+.fin-chart svg { width: 100%; display: block; }
+.fin-chart-legend { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.fin-legend-item { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+.fin-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Health compact ── */
+.health-compact { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hc-metric { padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+.hc-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.hc-val { font-family: 'Cormorant Garamond', serif; font-size: 1.45rem; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; color: var(--fg); font-variant-numeric: tabular-nums; }
+.hc-val em { font-family: var(--font-mono); font-style: normal; font-size: 10px; color: var(--muted); margin-left: 2px; vertical-align: middle; }
+
+/* ── Suite section ── */
+.suite-section { padding: 0 var(--space-6) var(--space-8); }
+@media (max-width: 900px) { .suite-section { padding: 0 var(--space-4) var(--space-8); } }
+.suite-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-4); }
+
+/* ── Spacer between haulix sections ── */
+.haulix-spacer { height: 16px; }
+
 /* ── Mobile bottom nav ── */
 .mobileNav {
   display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
@@ -597,10 +908,20 @@ body::before {
 </style>
 </head>
 <body>
-<div id="topbar-root"></div>
-<main class="page grain-overlay">
-  <div class="shell" id="app"></div>
-</main>
+<canvas id="bg-canvas" aria-hidden="true" style="position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%;"></canvas>
+<div class="bg-blobs" aria-hidden="true">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-blob bg-blob-4"></div>
+</div>
+<nav class="sidebar-dock" id="sidebar-dock" aria-label="App navigation"></nav>
+<div class="main-wrapper grain-overlay">
+  <div id="topbar-root"></div>
+  <main class="page">
+    <div class="shell" id="app"></div>
+  </main>
+</div>
 <nav class="mobileNav" aria-label="Quick navigation">
   <a class="mobileNavItem active" href="index.html"><span class="wm-icon" aria-hidden><svg viewBox="0 0 24 24"><g class="ic ic-home"><path d="M3.5 11.2 12 4.3l8.5 6.9"/><path d="M5.4 9.8V19.2h13.2V9.8"/><path d="M9.8 19.2v-5.1h4.4v5.1"/></g></svg></span>Home</a>
   <a class="mobileNavItem" href="gym.html"><span class="wm-icon" aria-hidden><svg viewBox="0 0 24 24"><path class="ic ic-fill ic-sports" d="M13.5 3 6 13h4.6L9.5 21 18 10.4h-5L13.5 3Z"/></svg></span>Sports</a>
@@ -631,16 +952,16 @@ function wmIcon(key, active) {
 }
 
 const APPS = [
-  { file: 'finance.html',     name: 'Finance',      tag: 'Net worth · subs · orders · wishlist',  icon: 'finance', wide: true },
-  { file: 'gym.html',         name: 'Sports',       tag: 'Gym · Activities · Points',              icon: 'sports',  wide: true },
-  { file: 'supplements.html', name: 'Supplements',  tag: 'Your stack + smart recommendations',     icon: 'supp' },
-  { file: 'whoop.html',       name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',      icon: 'band' },
-  { file: 'water.html',       name: 'Water',        tag: 'Daily hydration target',                 icon: 'water' },
-  { file: 'goals.html',       name: 'Goals',        tag: 'Goals & streaks',                        icon: 'goals' },
-  { file: 'progress.html',    name: 'Progress',     tag: 'Photos & measurements',                  icon: 'progress' },
-  { file: 'macros.html',      name: 'Foods',        tag: 'Food · Calories · Caffeine tracker',     icon: 'foods' },
-  { file: 'caffeine-tracker.html', name: 'Stimulant', tag: 'Peak · Crash · Half-life · 90+ drinks', icon: 'stim' },
-  { file: 'business.html',    name: 'Business',     tag: 'Revenue · Pipeline · AI Insights',       icon: 'business' },
+  { file: 'finance.html',          name: 'Finance',      tag: 'Net worth · subs · orders · wishlist',  icon: 'finance',  wide: true, cats: ['wealth'] },
+  { file: 'gym.html',              name: 'Sports',       tag: 'Gym · Activities · Points',              icon: 'sports',   wide: true, cats: ['health', 'lifestyle'] },
+  { file: 'supplements.html',      name: 'Supplements',  tag: 'Your stack + smart recommendations',     icon: 'supp',                 cats: ['health'] },
+  { file: 'whoop.html',            name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',      icon: 'band',                 cats: ['health'] },
+  { file: 'water.html',            name: 'Water',        tag: 'Daily hydration target',                 icon: 'water',                cats: ['health', 'lifestyle'] },
+  { file: 'goals.html',            name: 'Goals',        tag: 'Goals & streaks',                        icon: 'goals',                cats: ['lifestyle'] },
+  { file: 'progress.html',         name: 'Progress',     tag: 'Photos & measurements',                  icon: 'progress',             cats: ['health'] },
+  { file: 'macros.html',           name: 'Foods',        tag: 'Food · Calories · Caffeine tracker',     icon: 'foods',                cats: ['health', 'lifestyle'] },
+  { file: 'caffeine-tracker.html', name: 'Stimulant',    tag: 'Peak · Crash · Half-life · 90+ drinks',  icon: 'stim',                 cats: ['health', 'lifestyle'] },
+  { file: 'business.html',         name: 'Business',     tag: 'Revenue · Pipeline · AI Insights',       icon: 'business',             cats: ['business', 'wealth'] },
 ];
 
 /* ================================================================
@@ -740,27 +1061,224 @@ function firstName(){ return profile && profile.name ? String(profile.name).trim
 /* ================================================================
  * UI state
  * ================================================================ */
-const ui = { modalOpen: false, draftSource: 'manual', profileOpen: false, profileDraft: null };
+const ui = { modalOpen: false, draftSource: 'manual', profileOpen: false, profileDraft: null, activeTab: 'All', showInsights: true, liveSync: true };
 
 /* ================================================================
- * Topbar (rendered into #topbar-root)
+ * Sidebar dock
  * ================================================================ */
-function topbarHtml(){
+function sidebarInnerHtml(){
+  const logoSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--brand-ink)"><path d="M12 1.5L13.8 10.2 22.5 12 13.8 13.8 12 22.5 10.2 13.8 1.5 12 10.2 10.2Z"/></svg>';
+  let h = '<a class="sidebar-dock-logo" href="index.html" aria-label="Wayne Mode">' + logoSvg + '</a>';
+  h += '<div class="sidebar-dock-divider"></div>';
+  h += '<a href="index.html" class="sidebar-dock-btn sdActive" aria-label="Home">'
+    + '<span class="wm-icon" aria-hidden>' + (WM_ICONS.home || '') + '</span>'
+    + '<span class="sidebar-dock-tooltip">Home</span></a>';
+  [
+    { file: 'gym.html',        icon: 'sports',   label: 'Sports' },
+    { file: 'finance.html',    icon: 'finance',  label: 'Finance' },
+    { file: 'supplements.html',icon: 'supp',     label: 'Supplements' },
+    { file: 'water.html',      icon: 'water',    label: 'Water' },
+    { file: 'goals.html',      icon: 'goals',    label: 'Goals' },
+    { file: 'business.html',   icon: 'business', label: 'Business' },
+  ].forEach(function(a){
+    h += '<a href="' + a.file + '" class="sidebar-dock-btn" aria-label="' + a.label + '">'
+      + '<span class="wm-icon" aria-hidden>' + (WM_ICONS[a.icon] || '') + '</span>'
+      + '<span class="sidebar-dock-tooltip">' + a.label + '</span></a>';
+  });
+  return h;
+}
+
+/* ================================================================
+ * Glass header (replaces topbar, rendered into #topbar-root)
+ * ================================================================ */
+function glassHeaderHtml(){
   const name = firstName();
-  const greeting = name ? 'Welcome back, ' + esc(name) : 'Your all-in-one suite';
   const chip = profile
     ? '<button type="button" class="profileChip" data-action="open-profile" title="Edit profile"><span class="profileAvatar">' + esc((name || '·').charAt(0).toUpperCase()) + '</span>' + esc(name || 'Profile') + '</button>'
     : '<button type="button" class="profileChip profileChipNew" data-action="open-profile">Set up profile</button>';
-  const gear = '<button type="button" class="gearBtn" data-action="open-profile" title="Settings" aria-label="Settings">⚙</button>';
-  const logoSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (currentTheme === 'nocturne' ? '#000' : 'var(--brand-ink)') + '"><path d="M12 1.5L13.8 10.2 22.5 12 13.8 13.8 12 22.5 10.2 13.8 1.5 12 10.2 10.2Z"/></svg>';
-  return '<header class="topbar">'
-    + '<a class="topbarLogo" href="index.html"><div class="topbarLogoIcon">' + logoSvg + '</div><span class="topbarLogoName">Wayne Mode</span></a>'
-    + '<span class="topbarGreeting">' + greeting + '</span>'
-    + '<div class="topbarRight">'
-    + '<div class="liveBadge"><span class="liveDot"></span>Live Sync</div>'
+
+  let pills = '';
+  try {
+    const suppData = lsGet('supplements_standalone_v1');
+    if (suppData && Array.isArray(suppData.items) && suppData.items.length) {
+      const tk = (suppData.taken && suppData.taken[activeDateKey()]) || {};
+      const n = suppData.items.filter(function(i){ return tk[i.id]; }).length;
+      pills += '<span class="stat-pill"><span class="stat-pill-dot" style="background:var(--brand)"></span><span class="stat-pill-lbl">Supps</span><span class="stat-pill-val">' + n + '/' + suppData.items.length + '</span></span>';
+    }
+    const watData = lsGet('water_standalone_v1');
+    if (watData && watData.logs) {
+      const wn = watData.logs[localDateKey()] || 0;
+      pills += '<span class="stat-pill"><span class="stat-pill-dot" style="background:var(--pos)"></span><span class="stat-pill-lbl">H2O</span><span class="stat-pill-val">' + wn + '</span></span>';
+    }
+    if (health && health.sleepHours != null) {
+      pills += '<span class="stat-pill"><span class="stat-pill-dot" style="background:var(--warn)"></span><span class="stat-pill-lbl">Sleep</span><span class="stat-pill-val">' + formatHM(health.sleepHours) + '</span></span>';
+    }
+    if (health && health.hrv != null) {
+      pills += '<span class="stat-pill"><span class="stat-pill-dot" style="background:var(--pos)"></span><span class="stat-pill-lbl">HRV</span><span class="stat-pill-val">' + Math.round(health.hrv) + 'ms</span></span>';
+    }
+  } catch(e){}
+  if (!pills) pills = '<span class="stat-pill" style="cursor:pointer" data-action="open-vitals"><span class="stat-pill-lbl">Add vitals to go live</span></span>';
+
+  return '<header class="glass-header">'
+    + '<div class="stat-pills">' + pills + '</div>'
+    + '<div class="header-search"><span class="header-search-icon">&#x2315;</span>'
+    + '<input class="header-search-input" type="search" placeholder="Search apps…" aria-label="Search apps" /></div>'
+    + '<div class="header-right">'
     + themeSegHtml()
-    + chip + gear
-    + '</div></header>';
+    + '<button type="button" class="notif-btn" aria-label="Notifications" title="Notifications">&#128276;</button>'
+    + chip + '</div></header>';
+}
+
+/* ================================================================
+ * Title bar + Tabs
+ * ================================================================ */
+function titleBarHtml(){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return '<div class="title-bar">'
+    + '<div class="title-bar-top">'
+    + '<div><div class="wm-hero">Wayne Mode</div><div class="wm-date-sub">' + dateStr + '</div></div>'
+    + '<div class="title-toggles">'
+    + '<div class="toggle-row">Show insights<label class="ios-toggle"><input type="checkbox"' + (ui.showInsights ? ' checked' : '') + ' data-action="toggle-insights" /><span class="ios-toggle-track"></span><span class="ios-toggle-thumb"></span></label></div>'
+    + '<div class="toggle-row">Live sync<label class="ios-toggle"><input type="checkbox"' + (ui.liveSync ? ' checked' : '') + ' data-action="toggle-livesync" /><span class="ios-toggle-track"></span><span class="ios-toggle-thumb"></span></label></div>'
+    + '</div></div></div>';
+}
+function tabStripHtml(){
+  const tabs = ['All', 'Health', 'Lifestyle', 'Wealth', 'Business'];
+  return '<div class="tab-strip">'
+    + tabs.map(function(t){ return '<button type="button" class="tab-btn' + (ui.activeTab === t ? ' tabActive' : '') + '" data-action="set-tab" data-tab="' + t + '">' + t + '</button>'; }).join('')
+    + '</div>';
+}
+
+/* ================================================================
+ * Haulix insight grid (2-col overview panels)
+ * ================================================================ */
+function haulixtHtml(){
+  if (!ui.showInsights) return '';
+
+  /* ---- Quick Actions ---- */
+  const weightDone = loggedWeightToday(), gymDone = loggedGymToday(), vitalsDone = !!health;
+  const qaHtml = '<div class="quick-actions">'
+    + '<a class="qa-btn" href="progress.html"><span class="qa-icon' + (weightDone ? ' done' : '') + '">' + (weightDone ? '✓' : '⚖') + '</span>Log weight<span class="qa-arrow">→</span></a>'
+    + '<a class="qa-btn" href="gym.html"><span class="qa-icon' + (gymDone ? ' done' : '') + '">' + (gymDone ? '✓' : '⚡') + '</span>Log gym<span class="qa-arrow">→</span></a>'
+    + '<button type="button" class="qa-btn" data-action="open-vitals"><span class="qa-icon' + (vitalsDone ? ' done' : '') + '">' + (vitalsDone ? '✓' : '♥') + '</span>Update vitals<span class="qa-arrow">→</span></button>'
+    + '</div>';
+
+  /* ---- Priority Alerts ---- */
+  const alerts = [];
+  if (!weightDone) alerts.push({ text: 'Log today\'s weight', sub: 'progress.html', tone: '' });
+  if (!gymDone)    alerts.push({ text: 'Log today\'s gym session', sub: 'gym.html', tone: '' });
+  if (health && health.recovery != null){
+    const t = recTone(health.recovery);
+    alerts.push({ text: 'Recovery: ' + Math.round(health.recovery) + '%', sub: 'via ' + sourceLabel(health.source), tone: t === 'good' ? 'tone-good' : t === 'low' ? 'tone-neg' : 'tone-brand', val: Math.round(health.recovery) + '%' });
+  }
+  if (!alerts.length) alerts.push({ text: 'All clear', sub: 'Nothing pending today', tone: 'tone-good' });
+  const alertsHtml = '<div class="alert-queue">'
+    + alerts.slice(0, 4).map(function(a){
+        return '<div class="alert-item ' + a.tone + '"><div class="alert-item-body"><div class="alert-item-title">' + esc(a.text) + '</div><div class="alert-item-sub">' + esc(a.sub || '') + '</div></div>' + (a.val ? '<div class="alert-item-val">' + esc(a.val) + '</div>' : '') + '</div>';
+      }).join('')
+    + '</div>';
+
+  /* ---- Recent Activity ---- */
+  const acts = [];
+  if (gymDone)    acts.push({ tag: 'health',  text: 'Gym logged today',   time: 'today' });
+  if (weightDone) acts.push({ tag: 'health',  text: 'Weight logged',      time: 'today' });
+  if (health && health.ts)  acts.push({ tag: 'health',  text: 'Vitals updated',     time: ago(health.ts) });
+  try {
+    const biz = lsGet('business_v1');
+    if (biz && biz.mrr > 0) acts.push({ tag: 'finance', text: 'MRR: €' + fmtNum(biz.mrr), time: 'current' });
+    const fin = lsGet('finance_standalone_v1');
+    if (fin && Array.isArray(fin.accounts) && fin.accounts.length){
+      const nw = fin.accounts.reduce(function(a,x){ return a+(Number(x.amountCHF)||0); }, 0);
+      acts.push({ tag: 'finance', text: 'Net worth: CHF ' + fmtNum(nw), time: 'current' });
+    }
+  } catch(e){}
+  if (!acts.length) acts.push({ tag: 'system', text: 'Start logging to see activity', time: 'now' });
+  const actsHtml = '<div class="activity-list">'
+    + acts.slice(0, 5).map(function(a){
+        return '<div class="activity-item"><span class="act-tag ' + esc(a.tag) + '">' + esc(a.tag) + '</span><span class="act-text">' + esc(a.text) + '</span><span class="act-time">' + esc(a.time) + '</span></div>';
+      }).join('')
+    + '</div>';
+
+  const leftCol = '<div class="glass-panel">'
+    + '<div class="glass-panel-title">Quick Actions</div>' + qaHtml
+    + '<div class="haulix-spacer"></div>'
+    + '<div class="glass-panel-title">Priority Alerts</div>' + alertsHtml
+    + '<div class="haulix-spacer"></div>'
+    + '<div class="glass-panel-title">Recent Activity</div>' + actsHtml
+    + '</div>';
+
+  /* ---- Daily Output chart ---- */
+  function barPct(label, pct, color){
+    return '<div class="ob-col"><div class="ob-pct">' + pct + '%</div>'
+      + '<div class="ob-track"><div class="ob-fill" style="height:' + pct + '%;background:' + color + '"></div></div>'
+      + '<div class="ob-lbl">' + label + '</div></div>';
+  }
+  let gymPct = gymDone ? 100 : 0;
+  let h2oPct = (function(){ try { const w=lsGet('water_standalone_v1'); const n=w&&w.logs?(w.logs[localDateKey()]||0):0; const t=(w&&w.dailyTarget)||8; return Math.min(100,Math.round((n/t)*100)); } catch(e){ return 0; } })();
+  let supPct = (function(){ try { const s=lsGet('supplements_standalone_v1'); if(!s||!Array.isArray(s.items)||!s.items.length) return 0; const tk=(s.taken&&s.taken[activeDateKey()])||{}; return Math.round((s.items.filter(function(i){return tk[i.id];}).length/s.items.length)*100); } catch(e){ return 0; } })();
+  let vitPct = health ? (health.recovery!=null ? health.recovery : health.sleepPerf!=null ? health.sleepPerf : 30) : 0;
+  let wgtPct = weightDone ? 100 : 0;
+  const barsHtml = '<div class="output-bars">'
+    + barPct('GYM', gymPct, 'var(--brand)')
+    + barPct('H2O', h2oPct, 'var(--pos)')
+    + barPct('SUP', supPct, 'var(--warn)')
+    + barPct('VIT', Math.round(vitPct), 'var(--neg)')
+    + barPct('WGT', wgtPct, 'var(--brand-2)')
+    + '</div>';
+
+  /* ---- Financial trend (area chart SVG) ---- */
+  var finNw = 0, finMrr = 0;
+  try {
+    var finD = lsGet('finance_standalone_v1');
+    if (finD && Array.isArray(finD.accounts)) finNw = finD.accounts.reduce(function(a,x){ return a+(Number(x.amountCHF)||0); }, 0);
+    var bizD = lsGet('business_v1');
+    if (bizD && bizD.mrr > 0) finMrr = bizD.mrr;
+  } catch(e){}
+  var finSvg = (function(){
+    var W=300, H=90, pad=6;
+    var nwY=[0.68,0.72,0.71,0.77,0.82,0.88,1.0];
+    var mrrY=[0.45,0.50,0.55,0.53,0.62,0.70,0.80];
+    function pts(arr){ return arr.map(function(v,i){ return [pad+(i/6)*(W-pad*2), pad+(1-v)*(H-pad*2)]; }); }
+    function lineD(pp){ return pp.map(function(p,i){ return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1); }).join(' '); }
+    function areaD(pp){ return lineD(pp)+' L'+pp[pp.length-1][0].toFixed(1)+' '+H+' L'+pp[0][0].toFixed(1)+' '+H+' Z'; }
+    var np=pts(nwY), mp=pts(mrrY);
+    return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="height:90px">'
+      +'<defs>'
+      +'<linearGradient id="gNw" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--brand)" stop-opacity="0.28"/><stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/></linearGradient>'
+      +'<linearGradient id="gMrr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--warn)" stop-opacity="0.22"/><stop offset="100%" stop-color="var(--warn)" stop-opacity="0"/></linearGradient>'
+      +'</defs>'
+      +'<path d="'+areaD(np)+'" fill="url(#gNw)"/>'
+      +'<path d="'+areaD(mp)+'" fill="url(#gMrr)"/>'
+      +'<path d="'+lineD(np)+'" fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+      +'<path d="'+lineD(mp)+'" fill="none" stroke="var(--warn)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+      +'</svg>';
+  })();
+
+  /* ---- Health compact ---- */
+  var hcHtml = '';
+  if (health){
+    hcHtml = '<div class="haulix-spacer"></div><div class="glass-panel-title">Health</div>'
+      + '<div class="health-compact">'
+      + '<div class="hc-metric"><div class="hc-lbl">Sleep</div><div class="hc-val">' + (health.sleepHours!=null ? formatHM(health.sleepHours) : '—') + '</div></div>'
+      + '<div class="hc-metric"><div class="hc-lbl">HRV</div><div class="hc-val">' + (health.hrv!=null ? Math.round(health.hrv)+'<em>ms</em>' : '—') + '</div></div>'
+      + '<div class="hc-metric"><div class="hc-lbl">Resting HR</div><div class="hc-val">' + (health.rhr!=null ? Math.round(health.rhr)+'<em>bpm</em>' : '—') + '</div></div>'
+      + '<div class="hc-metric"><div class="hc-lbl">Sleep Score</div><div class="hc-val">' + (health.sleepPerf!=null ? Math.round(health.sleepPerf)+'<em>%</em>' : '—') + '</div></div>'
+      + '</div>';
+  }
+
+  var rightCol = '<div class="glass-panel">'
+    + '<div class="glass-panel-title">Daily Output</div>' + barsHtml
+    + hcHtml
+    + '<div class="haulix-spacer"></div><div class="glass-panel-title">Financial Trend</div>'
+    + '<div class="fin-chart">' + finSvg
+    + '<div class="fin-chart-legend">'
+    + '<div class="fin-legend-item"><div class="fin-legend-dot" style="background:var(--brand)"></div>Net Worth' + (finNw ? ': CHF '+fmtNum(finNw) : '') + '</div>'
+    + '<div class="fin-legend-item"><div class="fin-legend-dot" style="background:var(--warn)"></div>Revenue' + (finMrr ? ': €'+fmtNum(finMrr) : '') + '</div>'
+    + '</div></div>'
+    + '</div>';
+
+  return '<div class="haulix-grid">' + leftCol + rightCol + '</div>';
 }
 
 /* ================================================================
@@ -903,10 +1421,20 @@ function remindersHtml(){
  * Render
  * ================================================================ */
 function render(){
-  const tr = document.getElementById('topbar-root');
-  if (tr) tr.innerHTML = topbarHtml();
+  var sd = document.getElementById('sidebar-dock');
+  if (sd) sd.innerHTML = sidebarInnerHtml();
+  var tr = document.getElementById('topbar-root');
+  if (tr) tr.innerHTML = glassHeaderHtml();
+
+  var tabFilter = ui.activeTab.toLowerCase();
+  var visibleApps = tabFilter === 'all' ? APPS : APPS.filter(function(a){ return a.cats && a.cats.indexOf(tabFilter) !== -1; });
+
   document.getElementById('app').innerHTML =
-    tickerHtml() + remindersHtml() + '<div class="bento">' + vitalsTileHtml() + APPS.map(cardHtml).join('') + '</div>';
+    titleBarHtml()
+    + tabStripHtml()
+    + haulixtHtml()
+    + '<div class="suite-section"><div class="suite-label">App Suite</div>'
+    + '<div class="bento">' + visibleApps.map(cardHtml).join('') + '</div></div>';
   renderModal();
 }
 
@@ -1067,6 +1595,7 @@ document.addEventListener('click', e => {
   if (!btn) return;
   const action = btn.getAttribute('data-action');
   if (action === 'theme') { applyTheme(btn.getAttribute('data-theme')); return; }
+  if (action === 'set-tab') { ui.activeTab = btn.getAttribute('data-tab') || 'All'; render(); return; }
   if (action === 'open-vitals') { openVitals(); return; }
   if (action === 'open-profile') { openProfile(); return; }
   if (action === 'close-profile') {
@@ -1107,7 +1636,10 @@ document.addEventListener('input', e => {
   ui.profileDraft[t.dataset.pf] = t.value;
 });
 document.addEventListener('change', e => {
-  const t = e.target; if (!(t && t.dataset && t.dataset.pf)) return;
+  const t = e.target;
+  if (t && t.dataset && t.dataset.action === 'toggle-insights') { ui.showInsights = t.checked; render(); return; }
+  if (t && t.dataset && t.dataset.action === 'toggle-livesync') { ui.liveSync = t.checked; render(); return; }
+  if (!(t && t.dataset && t.dataset.pf)) return;
   if (!ui.profileDraft) ui.profileDraft = draftFromProfile();
   if (t.dataset.pf === 'units') {
     const d = ui.profileDraft, toImp = t.value === 'imperial';
@@ -1142,6 +1674,157 @@ applyTheme(currentTheme);
   } catch (e) {}
   syncWhoop();
   syncFitbit();
+})();
+
+/* ================================================================
+ * Animated canvas background — stars + aurora / nocturne
+ * ================================================================ */
+(function initBgCanvas(){
+  var canvas = document.getElementById('bg-canvas');
+  if (!canvas) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var ctx = canvas.getContext('2d');
+  var W, H;
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* ── Stars — sparse, silver-white, slow twinkle ── */
+  var stars = [];
+  for (var i = 0; i < 140; i++){
+    stars.push({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 0.9 + 0.15,
+      phase: Math.random() * 6.28,
+      spd: Math.random() * 0.18 + 0.06
+    });
+  }
+
+  /* ── Shooting stars (rare) ── */
+  var shoots = [];
+  var nextShoot = 0;
+
+  var t = 0;
+  function frame(){
+    requestAnimationFrame(frame);
+    t += 0.005;
+    ctx.clearRect(0, 0, W, H);
+
+    var theme = document.documentElement.getAttribute('data-theme') || 'aurora';
+    var isAurora   = theme === 'aurora';
+    var isNocturne = theme === 'nocturne';
+    if (!isAurora && !isNocturne) return;
+
+    /* ── Stars ── */
+    var sc = isNocturne ? [160,255,210] : [230,228,255];
+    for (var si = 0; si < stars.length; si++){
+      var s = stars[si];
+      /* stars in top 70% of screen only */
+      if (s.y > 0.70) continue;
+      var a = 0.15 + 0.45 * (0.5 + 0.5 * Math.sin(t * s.spd + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x * W, s.y * H, s.r, 0, 6.28);
+      ctx.fillStyle = 'rgba('+sc[0]+','+sc[1]+','+sc[2]+','+a.toFixed(2)+')';
+      ctx.fill();
+    }
+
+    /* ── Shooting star — one at a time, every ~18 s ── */
+    if (t > nextShoot){
+      nextShoot = t + 16 + Math.random() * 20;
+      shoots.push({ x: Math.random()*W*0.6+W*0.1, y: Math.random()*H*0.35,
+        vx: (Math.random()*3+2.5), vy: Math.random()*1.5+0.8, life: 1 });
+    }
+    shoots = shoots.filter(function(sh){ return sh.life > 0; });
+    for (var si2 = 0; si2 < shoots.length; si2++){
+      var sh = shoots[si2];
+      sh.x += sh.vx; sh.y += sh.vy; sh.life -= 0.014;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(sh.x, sh.y);
+      ctx.lineTo(sh.x - sh.vx*12, sh.y - sh.vy*12);
+      var shCol = isNocturne ? '80,255,160' : '210,205,255';
+      var g = ctx.createLinearGradient(sh.x,sh.y, sh.x-sh.vx*12, sh.y-sh.vy*12);
+      g.addColorStop(0, 'rgba('+shCol+','+(sh.life*0.55).toFixed(2)+')');
+      g.addColorStop(1, 'rgba('+shCol+',0)');
+      ctx.strokeStyle = g;
+      ctx.lineWidth = sh.life * 1.2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    /* ── Aurora: two wide, barely-there curtain washes ── */
+    if (isAurora){
+      /* deep horizon glow — very wide, very low opacity */
+      var horizon = ctx.createLinearGradient(0, H*0.55, 0, 0);
+      horizon.addColorStop(0,    'rgba(30,20,80,0)');
+      horizon.addColorStop(0.35, 'rgba(55,40,130,0.18)');
+      horizon.addColorStop(0.65, 'rgba(40,100,120,0.10)');
+      horizon.addColorStop(1,    'rgba(20,15,60,0)');
+      ctx.fillStyle = horizon;
+      ctx.fillRect(0, 0, W, H);
+
+      /* two slow, very gentle undulating bands */
+      var bands = [
+        { y:0.28, amp:0.032, freq:0.85, spd:0.035,
+          c1:'rgba(75,58,175,', c2:'rgba(45,140,150,' },
+        { y:0.42, amp:0.045, freq:0.65, spd:0.022,
+          c1:'rgba(55,40,155,', c2:'rgba(35,120,135,' },
+      ];
+      for (var bi = 0; bi < bands.length; bi++){
+        var b = bands[bi];
+        var yc = b.y * H, ampPx = b.amp * H;
+        var grad = ctx.createLinearGradient(0, yc - ampPx*3, 0, yc + ampPx*4);
+        grad.addColorStop(0,    b.c1+'0)');
+        grad.addColorStop(0.30, b.c1+'0.055)');
+        grad.addColorStop(0.52, b.c2+'0.07)');
+        grad.addColorStop(0.74, b.c1+'0.04)');
+        grad.addColorStop(1,    b.c1+'0)');
+        ctx.beginPath();
+        for (var x = 0; x <= W; x += 4){
+          var y = yc
+            + ampPx * Math.sin(x/W * Math.PI * b.freq + t * b.spd)
+            + ampPx * 0.30 * Math.sin(x/W * Math.PI * b.freq * 1.6 - t * b.spd * 0.6 + 1.5);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      /* subtle vertical ray pillars — faint streaks of light */
+      for (var ri = 0; ri < 6; ri++){
+        var rx = (ri/5 + 0.06 * Math.sin(t*0.04 + ri*1.3)) * W;
+        var ra = 0.02 + 0.025 * (0.5 + 0.5 * Math.sin(t*0.08 + ri*0.9));
+        var rg2 = ctx.createLinearGradient(rx, H*0.55, rx, H*0.08);
+        rg2.addColorStop(0, 'rgba(80,65,190,0)');
+        rg2.addColorStop(0.5, 'rgba(80,65,190,'+ra.toFixed(3)+')');
+        rg2.addColorStop(1, 'rgba(80,65,190,0)');
+        ctx.beginPath();
+        ctx.rect(rx - W*0.025, H*0.08, W*0.05, H*0.47);
+        ctx.fillStyle = rg2;
+        ctx.fill();
+      }
+    }
+
+    /* ── Nocturne floating green orbs ── */
+    if (isNocturne){
+      for (var pi = 0; pi < 28; pi++){
+        var px = (0.5 + 0.47 * Math.sin(t*0.20 + pi*1.71)) * W;
+        var py = (0.5 + 0.47 * Math.cos(t*0.16 + pi*1.33)) * H;
+        var pa = 0.07 + 0.15 * (0.5 + 0.5 * Math.sin(t*0.80 + pi));
+        var pr = 1.0 + 1.4 * (0.5 + 0.5 * Math.sin(t*0.52 + pi*0.79));
+        var rg3 = ctx.createRadialGradient(px,py,0, px,py,pr*14);
+        rg3.addColorStop(0, 'rgba(0,255,136,'+(pa*0.5).toFixed(3)+')');
+        rg3.addColorStop(1, 'rgba(0,255,136,0)');
+        ctx.beginPath(); ctx.arc(px,py,pr*14,0,6.28);
+        ctx.fillStyle = rg3; ctx.fill();
+        ctx.beginPath(); ctx.arc(px,py,pr,0,6.28);
+        ctx.fillStyle = 'rgba(0,255,136,'+Math.min(0.80,pa*3.2).toFixed(2)+')';
+        ctx.fill();
+      }
+    }
+  }
+  frame();
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
