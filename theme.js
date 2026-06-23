@@ -11,7 +11,7 @@
 window.Patron = (function () {
   const KEY = 'patron_theme';
   const THEMES = [
-    { key: 'nocturne', label: 'Nocturne', swatch: '#8B7CFF' },
+    { key: 'nocturne', label: 'Nocturne', swatch: '#00FF88' },
     { key: 'aurora',   label: 'Aurora',   swatch: 'linear-gradient(135deg,#8B7BFF,#4FE3D0)' },
     { key: 'daylight', label: 'Daylight', swatch: '#6A45FF' },
   ];
