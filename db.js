@@ -190,8 +190,39 @@ window.PatronDB = (function () {
     return changed;
   }
 
-  // Newest snapshot wins. cloud newer -> adopt (+reload once). else, if this
-  // device has unpushed edits (or the cloud has no snapshot yet) -> push up.
+  // Always merge workout logs from cloud into local regardless of timestamp —
+  // this ensures a phone workout never gets lost because the PC happened to
+  // push a snapshot a moment later. Returns true if local state changed.
+  function _mergeWorkoutKeys(blob) {
+    var changed = false;
+    var WORKOUT_KEYS = ['po_coach_v1'];
+    for (var i = 0; i < WORKOUT_KEYS.length; i++) {
+      var k = WORKOUT_KEYS[i];
+      var local = localStorage.getItem(k);
+      var remote = blob[k];
+      if (!local || !remote) continue;
+      var merged = _mergeGymState(local, remote);
+      if (merged !== local) {
+        try { localStorage.setItem(k, merged); changed = true; } catch (_) {}
+      }
+    }
+    // Also merge workout-done markers
+    var doneLocal = localStorage.getItem('po_coach_workout_done');
+    var doneRemote = blob['po_coach_workout_done'];
+    if (doneLocal && doneRemote) {
+      try {
+        var dl = JSON.parse(doneLocal);
+        var dr = typeof doneRemote === 'string' ? JSON.parse(doneRemote) : doneRemote;
+        var dm = JSON.stringify(Object.assign({}, dl, dr));
+        if (dm !== doneLocal) { localStorage.setItem('po_coach_workout_done', dm); changed = true; }
+      } catch (_) {}
+    }
+    return changed;
+  }
+
+  // Reconcile local state with cloud. Workout logs are always merged (union of
+  // both sides) so a phone workout is never lost because the PC pushed later.
+  // For all other keys, newest timestamp wins.
   async function _reconcile(allowReload) {
     if (!ready) return;
     const localTs = _localTs();
@@ -199,6 +230,7 @@ window.PatronDB = (function () {
     const snap = await _fetchSnapshot();
 
     if (snap && snap.ts > localTs) {
+      // Cloud is newer — full adopt (includes workout merge via _adopt)
       const changed = _adopt(snap.blob);
       _setSynced(snap.ts, _hash(_gather()));
       if (changed && allowReload) {
@@ -209,6 +241,25 @@ window.PatronDB = (function () {
       }
       return;
     }
+
+    // Cloud is same age or older — but always merge workout logs in case
+    // the other device logged a workout after our last push.
+    if (snap) {
+      const mergeChanged = _mergeWorkoutKeys(snap.blob);
+      if (mergeChanged) {
+        // We got new workout entries from cloud — push the merged result so
+        // cloud (and other devices) get the complete picture.
+        await _pushNow();
+        if (allowReload) {
+          const guard = 'patron_snapmerge_' + snap.ts;
+          try {
+            if (!sessionStorage.getItem(guard)) { sessionStorage.setItem(guard, '1'); location.reload(); return; }
+          } catch (_) { location.reload(); return; }
+        }
+        return;
+      }
+    }
+
     if (!snap || dirty) { await _pushNow(); }
     else if (_lastSyncedHash == null) { _setSynced(localTs, _hash(_gather())); }
   }
