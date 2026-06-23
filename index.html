@@ -228,6 +228,8 @@ body::before {
   padding: var(--space-6) var(--space-5) var(--space-16);
   isolation: isolate;
 }
+[data-theme="aurora"] .page,
+[data-theme="nocturne"] .page { background: transparent; }
 .page::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
   background:
