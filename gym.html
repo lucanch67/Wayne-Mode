@@ -2572,6 +2572,11 @@ img, video, canvas, svg { max-width: 100%; }
     if (!window.supabase || !SUPABASE_URL || !SUPABASE_KEY) return;
     // Skip if the placeholder values are still in place (local-only mode)
     if (SUPABASE_URL.indexOf('PASTE-') === 0 || SUPABASE_KEY.indexOf('PASTE-') === 0) return;
+    // PatronDB (db.js) already handles whole-device sync including gym data via
+    // the patron-device-snapshot row. Running this per-page sync in parallel
+    // causes the po-coach row to overwrite workouts that db.js just merged in.
+    // Defer to PatronDB when it is active — it covers everything this does.
+    if (window.PatronDB && PatronDB.isCloud && PatronDB.isCloud()) return;
     pcSupa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     try {
       const { data, error } = await pcSupa
