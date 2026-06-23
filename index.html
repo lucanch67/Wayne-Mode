@@ -696,16 +696,46 @@ body::before {
   background: transparent; border: 0; cursor: pointer;
   transition: background 200ms, color 200ms; text-decoration: none;
 }
+/* sidebar entrance */
+@keyframes sdSlideIn {
+  from { opacity: 0; transform: translateX(-10px) scale(0.88); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.sidebar-dock-btn { opacity: 0; animation: sdSlideIn 380ms var(--ease-premium) forwards; }
+.sidebar-dock-btn:nth-child(1) { animation-delay:  80ms }
+.sidebar-dock-btn:nth-child(2) { animation-delay: 130ms }
+.sidebar-dock-btn:nth-child(3) { animation-delay: 180ms }
+.sidebar-dock-btn:nth-child(4) { animation-delay: 230ms }
+.sidebar-dock-btn:nth-child(5) { animation-delay: 280ms }
+.sidebar-dock-btn:nth-child(6) { animation-delay: 330ms }
+.sidebar-dock-btn:nth-child(7) { animation-delay: 380ms }
+.sidebar-dock-btn:nth-child(8) { animation-delay: 430ms }
+@media (prefers-reduced-motion: reduce) { .sidebar-dock-btn { animation: none; opacity: 1; } }
 .sidebar-dock-btn:hover, .sidebar-dock-btn.sdActive { background: var(--brand-soft); }
 .sidebar-dock-btn .wm-icon {
   width: 36px; height: 36px; border-radius: 11px;
-  background: transparent; border: 0; box-shadow: none; animation: none;
-  pointer-events: none;
+  background: transparent; border: 1px solid transparent; box-shadow: none;
+  color: var(--muted); pointer-events: none;
+  transition: background .28s ease, border-color .28s ease, color .28s ease, box-shadow .28s ease;
 }
-.sidebar-dock-btn .wm-icon::before { display: none; }
+.sidebar-dock-btn .wm-icon::before { opacity: 0.18; }
 .sidebar-dock-btn:hover .wm-icon, .sidebar-dock-btn.sdActive .wm-icon {
-  background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand);
+  background: var(--brand-soft); border-color: var(--brand-line); color: var(--brand);
+  box-shadow: 0 0 12px var(--brand-glow), inset 0 0 10px var(--brand-soft);
 }
+.sidebar-dock-btn:hover .wm-icon::before, .sidebar-dock-btn.sdActive .wm-icon::before { opacity: 1; }
+/* per-icon micro-animations triggered by button hover */
+.sidebar-dock-btn:hover .ic-sports { animation: wm-flash .55s steps(1,end) infinite; transform-origin: center; }
+.sidebar-dock-btn:hover .ic-water .drop   { animation: wm-squish .9s ease-in-out infinite; transform-origin: 12px 18px; }
+.sidebar-dock-btn:hover .ic-water .ripple { animation: wm-ripple 1.1s ease-out infinite; transform-origin: 12px 19px; }
+.sidebar-dock-btn:hover .ic-progress .trend { animation: wm-grow .9s ease-out infinite; transform-origin: 4px 20px; }
+.sidebar-dock-btn:hover .ic-goals .ping { animation: wm-ping 1s ease-out infinite; transform-origin: 12px 12px; }
+.sidebar-dock-btn:hover .ic-goals .bull { animation: wm-beat .7s ease-in-out infinite; transform-origin: 12px 12px; }
+.sidebar-dock-btn:hover .ic-finance { animation: wm-flip 1.1s ease-in-out infinite; transform-origin: center; }
+.sidebar-dock-btn:hover .ic-supp { animation: wm-spin 1.2s linear infinite; transform-origin: center; }
+.sidebar-dock-btn:hover .ic-home { animation: wm-bob .7s ease-in-out infinite; transform-origin: center; }
+.sidebar-dock-btn:hover .ic-stim { animation: wm-steam 1.1s ease-in-out infinite; transform-origin: center bottom; }
+.sidebar-dock-btn:hover .ic-biz { animation: wm-rise 0.9s ease-in-out infinite; transform-origin: center bottom; }
 .sidebar-dock-tooltip {
   position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
   background: rgba(0,0,0,0.88); color: #fff; font-family: var(--font-ui); font-size: 11px; font-weight: 600;
