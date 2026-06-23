@@ -145,13 +145,47 @@ window.PatronDB = (function () {
     } catch (_) {}
     return null;
   }
-  // Write a cloud snapshot's keys into localStorage. Additive/overwrite — never
-  // deletes local-only keys, so it can't wipe data the cloud hasn't seen.
+  // Merge workout logs from two po_coach_v1 JSON strings — keeps every unique
+  // set entry (identified by date ISO string) from both sides so no logged set
+  // is ever lost when two devices diverge and then reconcile.
+  function _mergeGymState(localStr, remoteStr) {
+    try {
+      var local = JSON.parse(localStr), remote = JSON.parse(remoteStr);
+      if (!local || !remote) return remoteStr;
+      var merged = Object.assign({}, remote);
+      merged.logs = Object.assign({}, remote.logs || {});
+      var ll = local.logs || {};
+      for (var exId in ll) {
+        if (!merged.logs[exId]) { merged.logs[exId] = ll[exId]; continue; }
+        var remoteDates = {};
+        (merged.logs[exId] || []).forEach(function(e){ remoteDates[e.date] = true; });
+        var extra = (ll[exId] || []).filter(function(e){ return !remoteDates[e.date]; });
+        if (extra.length) {
+          merged.logs[exId] = merged.logs[exId].concat(extra)
+            .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+        }
+      }
+      // Also merge workout-done markers
+      if (local.doneDays && remote.doneDays) {
+        merged.doneDays = Object.assign({}, local.doneDays, remote.doneDays);
+      }
+      return JSON.stringify(merged);
+    } catch (_) { return remoteStr; }
+  }
+
+  // Write a cloud snapshot's keys into localStorage. For workout logs, merges
+  // both sides so no entry is lost when devices diverge.
   function _adopt(blob) {
-    let changed = false;
-    for (const k in blob) {
+    var changed = false;
+    for (var k in blob) {
       if (_skip(k)) continue;
-      if (localStorage.getItem(k) !== blob[k]) { try { localStorage.setItem(k, blob[k]); changed = true; } catch (_) {} }
+      var local = localStorage.getItem(k);
+      var incoming = blob[k];
+      // Merge gym workout logs instead of overwriting — prevents data loss
+      if (k === 'po_coach_v1' && local && local !== incoming) {
+        incoming = _mergeGymState(local, incoming);
+      }
+      if (local !== incoming) { try { localStorage.setItem(k, incoming); changed = true; } catch (_) {} }
     }
     return changed;
   }
