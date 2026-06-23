@@ -1275,6 +1275,7 @@ img, video, canvas, svg { max-width: 100%; }
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="po-btn-secondary" id="setSupaSave">Save &amp; sync</button>
         <button class="po-btn-secondary" id="setSupaClear">Disconnect</button>
+        <button class="po-btn-secondary" id="setSupaPull" style="display:none">⬇ Pull from cloud</button>
       </div>
       <div id="setSupaStatus" style="font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.4));margin-top:8px"></div>
     </div>
@@ -2204,7 +2205,10 @@ img, video, canvas, svg { max-width: 100%; }
     const su = $('setSupaUrl'), sk = $('setSupaKey'), ss = $('setSupaStatus');
     if (su) su.value = localStorage.getItem('po_supabase_url') || '';
     if (sk) sk.value = localStorage.getItem('po_supabase_key') || '';
-    if (ss) ss.textContent = localStorage.getItem('po_supabase_url') ? '✓ Synced to your Supabase project.' : 'Local-only — data stays on this device.';
+    const isCloud = !!(localStorage.getItem('po_supabase_url') || (window.PatronDB && PatronDB.isCloud && PatronDB.isCloud()));
+    if (ss) ss.textContent = isCloud ? '✓ Synced to your Supabase project.' : 'Local-only — data stays on this device.';
+    const pullBtn = $('setSupaPull');
+    if (pullBtn) pullBtn.style.display = isCloud ? '' : 'none';
     $('setModalBg').classList.add('show');
   });
   if ($('setSupaSave')) $('setSupaSave').addEventListener('click', () => {
@@ -2216,6 +2220,36 @@ img, video, canvas, svg { max-width: 100%; }
   if ($('setSupaClear')) $('setSupaClear').addEventListener('click', () => {
     localStorage.removeItem('po_supabase_url'); localStorage.removeItem('po_supabase_key');
     location.reload();
+  });
+  if ($('setSupaPull')) $('setSupaPull').addEventListener('click', async () => {
+    const btn = $('setSupaPull');
+    const ss = $('setSupaStatus');
+    btn.textContent = 'Pulling…'; btn.disabled = true;
+    try {
+      // Pull from both sync systems — per-page (po-coach) takes priority for gym data
+      let gotData = false;
+      if (window.pcSupa) {
+        const { data } = await pcSupa.from('app_state').select('data').eq('key', 'po-coach').maybeSingle();
+        if (data && data.data && Object.keys(data.data).length > 0) {
+          pcApplyRemoteState(data.data);
+          gotData = true;
+        }
+      }
+      if (!gotData && window.PatronDB) {
+        const r = await PatronDB.pullAll();
+        if (r.ok) gotData = true;
+      }
+      if (gotData) {
+        if (ss) ss.textContent = '✓ Pulled latest data — reloading…';
+        setTimeout(() => location.reload(), 800);
+      } else {
+        if (ss) ss.textContent = 'Nothing to pull — already up to date.';
+        btn.textContent = '⬇ Pull from cloud'; btn.disabled = false;
+      }
+    } catch (e) {
+      if (ss) ss.textContent = 'Pull failed — check your connection.';
+      btn.textContent = '⬇ Pull from cloud'; btn.disabled = false;
+    }
   });
   $('setModalClose').addEventListener('click', () => {
     $('setModalBg').classList.remove('show');
