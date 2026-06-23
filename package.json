@@ -1,0 +1,20 @@
+{
+  "name": "wayne-mode",
+  "version": "1.0.0",
+  "description": "Luca - a self-hosted personal dashboard",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'No build step required - static site'",
+    "dev": "echo 'Open index.html in browser'"
+  },
+  "keywords": [
+    "dashboard",
+    "personal",
+    "analytics"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
