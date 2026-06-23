@@ -2452,6 +2452,29 @@ img, video, canvas, svg { max-width: 100%; }
     try { renderLiftTicker(); } catch {}
   }
 
+  // Merge po_coach_v1 logs from two JSON strings — keeps every unique set entry
+  // from both sides so the po-coach row never overwrites locally-logged workouts.
+  function pcMergeGymLogs(localStr, remoteObj) {
+    try {
+      const local = JSON.parse(localStr);
+      const remote = typeof remoteObj === 'string' ? JSON.parse(remoteObj) : remoteObj;
+      if (!local || !remote) return JSON.stringify(remote || local);
+      const merged = Object.assign({}, remote);
+      merged.logs = Object.assign({}, remote.logs || {});
+      const ll = local.logs || {};
+      for (const exId in ll) {
+        if (!merged.logs[exId]) { merged.logs[exId] = ll[exId]; continue; }
+        const remoteDates = new Set((merged.logs[exId] || []).map(e => e.date));
+        const extra = (ll[exId] || []).filter(e => !remoteDates.has(e.date));
+        if (extra.length) {
+          merged.logs[exId] = [...merged.logs[exId], ...extra]
+            .sort((a, b) => a.date < b.date ? -1 : 1);
+        }
+      }
+      return JSON.stringify(merged);
+    } catch (_) { return JSON.stringify(remoteObj); }
+  }
+
   function pcApplyRemoteState(remote) {
     if (!remote || typeof remote !== 'object') return false;
     pcSuppressSync = true;
@@ -2459,8 +2482,20 @@ img, video, canvas, svg { max-width: 100%; }
     try {
       for (const k of PC_SYNCED_KEYS) {
         if (k in remote) {
-          const incoming = JSON.stringify(remote[k]);
           const local = localStorage.getItem(k);
+          let incoming;
+          // Merge workout logs instead of overwriting — prevents the po-coach row
+          // from erasing workouts that db.js just merged in from patron-device-snapshot.
+          if (k === 'po_coach_v1' && local) {
+            incoming = pcMergeGymLogs(local, remote[k]);
+          } else if (k === 'po_coach_workout_done' && local) {
+            try {
+              const merged = Object.assign({}, JSON.parse(local), remote[k]);
+              incoming = JSON.stringify(merged);
+            } catch (_) { incoming = JSON.stringify(remote[k]); }
+          } else {
+            incoming = JSON.stringify(remote[k]);
+          }
           if (local !== incoming) { try { _pcOrigSet(k, incoming); changed = true; } catch {} }
         } else if (localStorage.getItem(k) != null) {
           try { _pcOrigRemove(k); changed = true; } catch {}
