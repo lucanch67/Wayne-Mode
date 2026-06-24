@@ -211,7 +211,11 @@ body::before {
 .themeSwatch { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 0 1px var(--border-strong) inset; flex-shrink: 0; }
 .themeBtnActive, .themeBtnActive:hover { background: var(--brand-soft); color: var(--fg); }
 .themeBtnActive .themeSwatch { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--brand); }
-@media (max-width: 640px) { .themeSeg { display: none; } }
+@media (max-width: 640px) {
+  .themeSeg { padding: 2px; gap: 1px; }
+  .themeBtn { padding: 5px 6px; gap: 0; font-size: 0; } /* hide label text via font-size:0 */
+  .themeSwatch { width: 14px; height: 14px; }
+}
 
 /* ── Profile chip + gear ── */
 .profileChip {
@@ -896,11 +900,11 @@ body::before {
 [data-theme="vision"] .qa-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }
 
 /* ── Vision: keyframe animations ── */
-@keyframes vision-card-glow {
-  0%,100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset, 0 22px 56px -28px rgba(0,0,0,0.80); }
-  50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.13) inset, 0 0 32px -10px rgba(255,255,255,0.05), 0 22px 56px -28px rgba(0,0,0,0.80); }
+@keyframes vision-top-line {          /* breathe the card top-edge highlight */
+  0%,100% { opacity: 0.40; }
+  50%      { opacity: 1; }
 }
-@keyframes vision-shimmer {
+@keyframes vision-shimmer {           /* card hover sweep */
   0%   { transform: translateX(-160%); }
   100% { transform: translateX(160%); }
 }
@@ -912,12 +916,8 @@ body::before {
   0%,100% { border-color: rgba(255,255,255,0.10); }
   50%      { border-color: rgba(255,255,255,0.24); }
 }
-/* card glow breathe — staggered per grid position */
-[data-theme="vision"] .card { animation: vision-card-glow 5s ease-in-out infinite; }
-[data-theme="vision"] .card:nth-child(2n)  { animation-delay: 1.0s; }
-[data-theme="vision"] .card:nth-child(3n)  { animation-delay: 2.0s; }
-[data-theme="vision"] .card:nth-child(5n)  { animation-delay: 0.5s; }
-[data-theme="vision"] .card:nth-child(7n)  { animation-delay: 3.2s; }
+/* top-edge line breathes on every card (::after, no conflict with fadeUp opacity) */
+[data-theme="vision"] .card::after { animation: vision-top-line 4s ease-in-out infinite; }
 /* shimmer sweep on hover */
 [data-theme="vision"] .card::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
