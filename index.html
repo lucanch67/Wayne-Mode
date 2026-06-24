@@ -894,6 +894,41 @@ body::before {
 [data-theme="vision"] .ob-track { background: rgba(255,255,255,0.06); }
 [data-theme="vision"] .qa-btn { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.06); }
 [data-theme="vision"] .qa-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }
+
+/* ── Vision: keyframe animations ── */
+@keyframes vision-card-glow {
+  0%,100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset, 0 22px 56px -28px rgba(0,0,0,0.80); }
+  50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.13) inset, 0 0 32px -10px rgba(255,255,255,0.05), 0 22px 56px -28px rgba(0,0,0,0.80); }
+}
+@keyframes vision-shimmer {
+  0%   { transform: translateX(-160%); }
+  100% { transform: translateX(160%); }
+}
+@keyframes vision-header-glow {
+  0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 4px 28px -8px rgba(0,0,0,0.60); }
+  50%      { box-shadow: 0 1px 0 rgba(255,255,255,0.16), 0 4px 44px -6px rgba(255,255,255,0.04); }
+}
+@keyframes vision-vitals-pulse {
+  0%,100% { border-color: rgba(255,255,255,0.10); }
+  50%      { border-color: rgba(255,255,255,0.24); }
+}
+/* card glow breathe — staggered per grid position */
+[data-theme="vision"] .card { animation: vision-card-glow 5s ease-in-out infinite; }
+[data-theme="vision"] .card:nth-child(2n)  { animation-delay: 1.0s; }
+[data-theme="vision"] .card:nth-child(3n)  { animation-delay: 2.0s; }
+[data-theme="vision"] .card:nth-child(5n)  { animation-delay: 0.5s; }
+[data-theme="vision"] .card:nth-child(7n)  { animation-delay: 3.2s; }
+/* shimmer sweep on hover */
+[data-theme="vision"] .card::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+  transform: translateX(-160%);
+  transition: none;
+}
+[data-theme="vision"] .card:hover::before { animation: vision-shimmer 0.7s ease-out forwards; }
+/* header + vitals animations */
+[data-theme="vision"] .glass-header { animation: vision-header-glow 7s ease-in-out infinite; }
+[data-theme="vision"] .vitals { animation: vision-vitals-pulse 4s ease-in-out infinite; }
 .stat-pills { flex: 1; display: flex; align-items: center; gap: clamp(6px, 1.4vw, 18px); flex-wrap: nowrap; overflow: hidden; min-width: 0; }
 .stat-pill {
   display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px;
@@ -1903,6 +1938,14 @@ applyTheme(currentTheme);
     });
   }
 
+  /* Vision constellation particles — pre-computed once */
+  var visionPts = [];
+  for (var vi = 0; vi < 62; vi++){
+    visionPts.push({ x: Math.random(), y: Math.random()*0.84,
+      dx: (Math.random()-0.5)*0.00014, dy: (Math.random()-0.5)*0.000095,
+      r: Math.random()*0.85+0.25, phase: Math.random()*6.28, spd: Math.random()*0.10+0.04 });
+  }
+
   /* ── Shooting stars (rare) ── */
   var shoots = [];
   var nextShoot = 0;
@@ -1946,7 +1989,7 @@ applyTheme(currentTheme);
       ctx.beginPath();
       ctx.moveTo(sh.x, sh.y);
       ctx.lineTo(sh.x - sh.vx*12, sh.y - sh.vy*12);
-      var shCol = isNocturne ? '80,255,160' : '210,205,255';
+      var shCol = isNocturne ? '80,255,160' : isVision ? '255,255,255' : '210,205,255';
       var g = ctx.createLinearGradient(sh.x,sh.y, sh.x-sh.vx*12, sh.y-sh.vy*12);
       g.addColorStop(0, 'rgba('+shCol+','+(sh.life*0.55).toFixed(2)+')');
       g.addColorStop(1, 'rgba('+shCol+',0)');
@@ -2028,8 +2071,12 @@ applyTheme(currentTheme);
       }
     }
 
-    /* ── Vision: 3D Earth globe ── */
-    if (isVision) { renderEarth(ctx, W, H, t); }
+    /* ── Vision: nebula orbs + constellation + Earth ── */
+    if (isVision) {
+      renderVisionOrbs(ctx, W, H, t);
+      renderVisionParticles(ctx, W, H, t);
+      renderEarth(ctx, W, H, t);
+    }
   }
 
   /* ── Continent land boxes [minLat,maxLat,minLon,maxLon] ── */
@@ -2056,10 +2103,61 @@ applyTheme(currentTheme);
   for(var _lo=-175;_lo<=180;_lo+=5) _LO.push(_lo);
   for(var _i=0;_i<_LS.length;_i++){ _LG[_i]=[]; for(var _j=0;_j<_LO.length;_j++) _LG[_i][_j]=_isLand(_LS[_i],_LO[_j]); }
 
+  /* ── Vision: 3 large drifting nebula glow orbs ── */
+  function renderVisionOrbs(c,W2,H2,t2){
+    var od=[
+      {bx:0.12,by:0.28,r:0.46,spd:0.007,ph:0.00},
+      {bx:0.68,by:0.16,r:0.40,spd:0.009,ph:2.09},
+      {bx:0.44,by:0.60,r:0.38,spd:0.005,ph:4.19},
+    ];
+    for(var i=0;i<od.length;i++){
+      var o=od[i];
+      var ox=(o.bx+0.07*Math.sin(t2*o.spd+o.ph))*W2;
+      var oy=(o.by+0.05*Math.cos(t2*o.spd*0.72+o.ph))*H2;
+      var rr=Math.min(W2,H2)*o.r;
+      var g=c.createRadialGradient(ox,oy,0,ox,oy,rr);
+      g.addColorStop(0,'rgba(255,255,255,0.032)');
+      g.addColorStop(0.38,'rgba(225,230,255,0.013)');
+      g.addColorStop(0.70,'rgba(200,210,255,0.004)');
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      c.fillStyle=g; c.beginPath(); c.arc(ox,oy,rr,0,6.28); c.fill();
+    }
+  }
+
+  /* ── Vision: drifting constellation particle mesh ── */
+  function renderVisionParticles(c,W2,H2,t2){
+    var cdist=Math.min(W2,H2)*0.155;
+    for(var i=0;i<visionPts.length;i++){
+      visionPts[i].x=(visionPts[i].x+visionPts[i].dx+1)%1;
+      visionPts[i].y=(visionPts[i].y+visionPts[i].dy+1)%1;
+    }
+    /* connection lines */
+    for(var i=0;i<visionPts.length;i++){
+      var p=visionPts[i], px2=p.x*W2, py2=p.y*H2;
+      for(var j=i+1;j<visionPts.length;j++){
+        var q=visionPts[j], qx=q.x*W2, qy=q.y*H2;
+        var d=Math.sqrt((px2-qx)*(px2-qx)+(py2-qy)*(py2-qy));
+        if(d<cdist){
+          c.beginPath(); c.moveTo(px2,py2); c.lineTo(qx,qy);
+          c.strokeStyle='rgba(255,255,255,'+((1-d/cdist)*0.09).toFixed(3)+')';
+          c.lineWidth=0.5; c.stroke();
+        }
+      }
+    }
+    /* dots */
+    for(var i=0;i<visionPts.length;i++){
+      var p=visionPts[i];
+      var a=0.10+0.28*(0.5+0.5*Math.sin(t2*p.spd+p.phase));
+      c.beginPath(); c.arc(p.x*W2,p.y*H2,p.r,0,6.28);
+      c.fillStyle='rgba(255,255,255,'+a.toFixed(2)+')'; c.fill();
+    }
+  }
+
   function renderEarth(c,W2,H2,t2){
     var mob=W2<900;
-    var cx=mob?W2*0.50:W2*0.74, cy=mob?H2*0.60:H2*0.50;
-    var R=Math.min(W2,H2)*(mob?0.42:0.36);
+    /* large sphere in bottom-right corner — only upper arc is visible */
+    var R=Math.min(W2,H2)*(mob?0.52:0.66);
+    var cx=mob?W2*0.78:W2*0.88, cy=mob?H2*0.94:H2*1.05;
     /* outer atmosphere halo — very soft white glow ring */
     var atm=c.createRadialGradient(cx,cy,R*0.68,cx,cy,R*1.55);
     atm.addColorStop(0,'rgba(220,228,255,0.045)');
