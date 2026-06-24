@@ -24,7 +24,7 @@ img{max-width:100%;height:auto}
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css" />
 
-<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"aurora");}catch(e){document.documentElement.setAttribute("data-theme","aurora");}</script>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"vision");}catch(e){document.documentElement.setAttribute("data-theme","vision");}</script>
 <title>Progressive Overload Coach</title>
 
 <!-- =============================================================
@@ -168,6 +168,22 @@ const CONFIG = {
   --tabbar-grad: linear-gradient(180deg, rgba(243,242,250,0) 0%, rgba(243,242,250,0.85) 40%, rgba(243,242,250,0.97) 100%);
   --tabbar-pill: rgba(255,255,255,0.92);
 }
+[data-theme="vision"] {
+  color-scheme: dark;
+  --bg: #050505; --bg-card: #0D0D0D;
+  --text-1: #F5F5F5; --text-2: rgba(255,255,255,0.72); --text-3: rgba(255,255,255,0.45); --text-4: rgba(255,255,255,0.28);
+  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.14);
+  --accent: #FFFFFF; --good: #22C55E; --warn: #F59E0B; --bad: #EF4444;
+  --brand: #FFFFFF; --brand-2: rgba(255,255,255,0.68); --brand-ink: #000000;
+  --brand-soft: rgba(255,255,255,0.06); --brand-line: rgba(255,255,255,0.14); --brand-glow: rgba(255,255,255,0.20);
+  --good-rgb: 34,197,94;
+  --fill-1: rgba(255,255,255,0.025); --fill-2: rgba(255,255,255,0.045); --fill-3: rgba(255,255,255,0.07); --fill-4: rgba(255,255,255,0.10);
+  --body-glow: rgba(255,255,255,0.04);
+  --tabbar-grad: linear-gradient(180deg, rgba(5,5,5,0) 0%, rgba(5,5,5,0.82) 40%, rgba(5,5,5,0.95) 100%);
+  --tabbar-pill: rgba(13,13,13,0.92);
+}
+[data-theme="vision"] .card{background:rgba(255,255,255,0.025);backdrop-filter:blur(24px) saturate(1.1);-webkit-backdrop-filter:blur(24px) saturate(1.1);border-color:rgba(255,255,255,0.07);}
+[data-theme="vision"] .card:hover{background:rgba(255,255,255,0.045);border-color:rgba(255,255,255,0.16);box-shadow:0 0 0 1px rgba(255,255,255,0.12) inset,0 0 40px -12px rgba(255,255,255,0.07);}
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
@@ -1020,7 +1036,7 @@ img, video, canvas, svg { max-width: 100%; }
   <div class="po-header">
     <h1 class="po-title" id="appTitle">Progressive Overload Coach</h1>
     <div class="po-header-right">
-      <div class="themeSeg" role="radiogroup" aria-label="Theme"><button type="button" class="themeBtn" data-theme="nocturne"><span class="themeSwatch" style="background:#00FF88"></span><span class="themeBtnLabel">Nocturne</span></button><button type="button" class="themeBtn" data-theme="aurora"><span class="themeSwatch" style="background:linear-gradient(135deg,#8B7BFF,#4FE3D0)"></span><span class="themeBtnLabel">Aurora</span></button><button type="button" class="themeBtn" data-theme="daylight"><span class="themeSwatch" style="background:#6A45FF"></span><span class="themeBtnLabel">Daylight</span></button></div>
+      <div class="themeSeg" role="radiogroup" aria-label="Theme"><button type="button" class="themeBtn" data-theme="vision"><span class="themeSwatch" style="background:linear-gradient(135deg,#FFFFFF,#888888)"></span><span class="themeBtnLabel">Vision</span></button><button type="button" class="themeBtn" data-theme="nocturne"><span class="themeSwatch" style="background:#00FF88"></span><span class="themeBtnLabel">Nocturne</span></button><button type="button" class="themeBtn" data-theme="aurora"><span class="themeSwatch" style="background:linear-gradient(135deg,#8B7BFF,#4FE3D0)"></span><span class="themeBtnLabel">Aurora</span></button><button type="button" class="themeBtn" data-theme="daylight"><span class="themeSwatch" style="background:#6A45FF"></span><span class="themeBtnLabel">Daylight</span></button></div>
     <button class="po-icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -2683,7 +2699,7 @@ img, video, canvas, svg { max-width: 100%; }
 })();
 </script>
 
-<script>(function(){function cur(){try{return localStorage.getItem("patron_theme")||"aurora";}catch(e){return "aurora";}}function paint(){var c=cur();document.querySelectorAll(".themeBtn").forEach(function(b){b.classList.toggle("themeBtnActive",b.dataset.theme===c);});}document.addEventListener("click",function(e){var b=e.target.closest(".themeBtn");if(!b)return;var n=b.dataset.theme;document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("patron_theme",n);}catch(e){}paint();});paint();})();</script>
+<script>(function(){function cur(){try{return localStorage.getItem("patron_theme")||"vision";}catch(e){return "vision";}}function paint(){var c=cur();document.querySelectorAll(".themeBtn").forEach(function(b){b.classList.toggle("themeBtnActive",b.dataset.theme===c);});}document.addEventListener("click",function(e){var b=e.target.closest(".themeBtn");if(!b)return;var n=b.dataset.theme;document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("patron_theme",n);}catch(e){}paint();});paint();})();</script>
 <script>
 (function(){
   var css=[

@@ -68,6 +68,22 @@
   --glow-1: rgba(106,69,255,0.07); --glow-2: rgba(14,158,100,0.04);
   --grain-opacity: 0.02; --overlay: rgba(28,26,52,0.4);
 }
+[data-theme="vision"] {
+  color-scheme: dark;
+  --bg: #050505; --bg-elevated: #0D0D0D;
+  --surface: rgba(255,255,255,0.03); --surface-2: rgba(255,255,255,0.055);
+  --fg: #F5F5F5; --muted: rgba(255,255,255,0.45); --muted-strong: rgba(255,255,255,0.72);
+  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.14);
+  --brand: #FFFFFF; --brand-2: rgba(255,255,255,0.68); --brand-ink: #000000;
+  --brand-soft: rgba(255,255,255,0.06); --brand-line: rgba(255,255,255,0.14); --brand-glow: rgba(255,255,255,0.20);
+  --pos: #22C55E; --pos-soft: rgba(34,197,94,0.10); --pos-line: rgba(34,197,94,0.26);
+  --neg: #EF4444; --neg-soft: rgba(239,68,68,0.10); --neg-line: rgba(239,68,68,0.26);
+  --warn: #F59E0B; --warn-soft: rgba(245,158,11,0.10); --warn-line: rgba(245,158,11,0.26);
+  --track: rgba(255,255,255,0.06);
+  --card-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset, 0 22px 56px -28px rgba(0,0,0,0.80);
+  --glow-1: rgba(255,255,255,0.04); --glow-2: rgba(255,255,255,0.02);
+  --grain-opacity: 0.038; --overlay: rgba(5,5,5,0.92);
+}
 
 /* ---- Base reset + page shell ---- */
 * { box-sizing: border-box; }
@@ -108,6 +124,14 @@ body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index
   border-color: rgba(139,123,255,0.36);
   box-shadow: 0 0 18px rgba(124,107,255,0.42), 0 0 0 1px rgba(139,123,255,0.32) inset;
 }
+
+/* Vision: monochrome glass */
+[data-theme="vision"] .card { background: rgba(255,255,255,0.025); backdrop-filter: blur(24px) saturate(1.1); -webkit-backdrop-filter: blur(24px) saturate(1.1); border-color: rgba(255,255,255,0.07); }
+[data-theme="vision"] .card::before { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); }
+[data-theme="vision"] .card:hover { background: rgba(255,255,255,0.045); border-color: rgba(255,255,255,0.16); box-shadow: 0 0 0 1px rgba(255,255,255,0.12) inset, 0 0 40px -12px rgba(255,255,255,0.07), var(--card-shadow); }
+[data-theme="vision"] .tab-btn.tabActive,
+[data-theme="vision"] .stTabOn,
+[data-theme="vision"] .srcTabActive { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); box-shadow: 0 0 12px rgba(255,255,255,0.07), 0 0 0 1px rgba(255,255,255,0.12) inset; }
 
 /* ---- Card (generic content panel) ---- */
 .card { position: relative; display:flex; flex-direction:column; gap: var(--space-3); padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--card-shadow); color: var(--fg); overflow:hidden; transition: border-color 220ms, background 220ms, transform 220ms, box-shadow 220ms; }
