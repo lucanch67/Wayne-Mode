@@ -817,7 +817,7 @@ body::before {
 .stat-pill-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .stat-pill-lbl { color: var(--muted); font-size: 10px; }
 .stat-pill-val { color: var(--fg); font-weight: 600; }
-.header-search { flex: 0 0 clamp(160px, 18vw, 300px); position: relative; }
+.header-search { flex: 0 0 clamp(160px, 22vw, 440px); position: relative; }
 .header-search-input {
   width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 999px; padding: 6px 12px 6px 30px; color: var(--fg);
@@ -847,6 +847,16 @@ body::before {
 @media (max-width: 640px) {
   .glass-header { padding-left: 16px; padding-right: 16px; gap: 8px; }
   .stat-pills { gap: 6px; }
+}
+@media (min-width: 901px) {
+  .glass-header {
+    margin-left: -96px;
+    width: calc(100% + 96px);
+    padding-left: calc(96px + 20px);
+    gap: 16px;
+  }
+  .stat-pill { padding: 6px 14px; font-size: 12px; }
+  .stat-pill-lbl { font-size: 11px; }
 }
 
 /* ── Page layout override ── */
