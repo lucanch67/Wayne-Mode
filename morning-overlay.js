@@ -18,6 +18,14 @@
     'Another day to build.',
   ];
 
+  const LATE_SUBTITLES = [
+    'But the day is still yours.',
+    'There\'s still time to make it count.',
+    'Late start. Strong finish.',
+    'The afternoon is yours to own.',
+    'Better now than never.',
+  ];
+
   /* ── Storage keys ──────────────────────────────────────── */
   const KEY_LAST_SHOWN  = 'morning_last_shown';
   const KEY_STREAK      = 'morning_streak_count';
@@ -548,6 +556,51 @@
 </div>`;
   }
 
+  /* ── Late overlay HTML ────────────────────────────────── */
+  function buildLateHTML() {
+    const now    = new Date();
+    const subIdx = now.getDate() % LATE_SUBTITLES.length;
+
+    const tilesHtml = snapshot.length
+      ? snapshot.map(tileHtml).join('')
+      : '<p style="font-size:.85rem;color:var(--muted)">No health data yet — connect Whoop or log manually.</p>';
+
+    const chipsHtml = ''
+      + (highTasks.length ? '<span class="mo-chip mo-chip-h">' + highTasks.length + ' critical</span>' : '')
+      + (medTasks.length  ? '<span class="mo-chip mo-chip-m">' + medTasks.length  + ' focus</span>'    : '')
+      + (lowTasks.length  ? '<span class="mo-chip mo-chip-l">' + lowTasks.length  + ' optional</span>' : '');
+
+    const focusHtml = focusTask
+      ? '<span>' + esc(LATE_SUBTITLES[subIdx]) + '</span>'
+        + '<span class="mo-focus-arrow">→</span>'
+        + '<span class="mo-focus-task">' + esc(focusTask.name) + '</span>'
+      : '';
+
+    return `
+<canvas id="mo-canvas"></canvas>
+<div class="mo-nebula"></div>
+<div class="mo-nebula mo-nebula-b"></div>
+<div class="mo-topbar">
+  <span id="mo-hud-time"></span>
+  <span id="mo-hud-date"></span>
+</div>
+<div class="mo-screen">
+  <div class="mo-greeting">
+    <div class="mo-hello">You're late, <span class="mo-name">${esc(NAME)}.</span></div>
+    <p class="mo-morning">But there's still time.</p>
+    <p class="mo-date-line">${esc(fmtDateLong(now))}</p>
+  </div>
+  <hr class="mo-divider" />
+  <div class="mo-data-row">${tilesHtml}</div>
+  ${focusHtml ? '<hr class="mo-divider" style="margin:20px auto" /><div class="mo-focus-line">' + focusHtml + '</div>' : ''}
+  ${chipsHtml ? '<div class="mo-chips">' + chipsHtml + '</div>' : ''}
+  <div class="mo-cta">
+    <button class="mo-enter-btn" id="mo-enter">Let's go</button>
+    <button class="mo-skip-btn"  id="mo-skip">Skip</button>
+  </div>
+</div>`;
+  }
+
   /* ── Starfield ─────────────────────────────────────────── */
   function initStarfield() {
     const canvas = document.getElementById('mo-canvas');
@@ -733,20 +786,27 @@
       });
 
     } else {
-      root.innerHTML = buildBanner();
-      const topbar = document.getElementById('topbar-root');
-      if (topbar && topbar.parentNode) topbar.parentNode.insertBefore(root, topbar.nextSibling);
-      else document.body.insertBefore(root, document.body.firstChild);
+      root.innerHTML = buildLateHTML();
+      document.body.appendChild(root);
 
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          const bn = document.getElementById('mo-banner');
-          if (bn) bn.classList.add('mo-banner-visible');
+      initStarfield();
+      startClock();
+
+      const dateEl = document.getElementById('mo-hud-date');
+      if (dateEl) dateEl.textContent = fmtDateLong();
+
+      setTimeout(function() {
+        document.querySelectorAll('.mo-tile-fill[data-pct]').forEach(function(el) {
+          const pct = parseFloat(el.getAttribute('data-pct'));
+          if (isFinite(pct)) el.style.width = Math.min(100, pct) + '%';
         });
-      });
+      }, 2300);
 
-      const closeBtn = document.getElementById('mo-banner-close');
-      if (closeBtn) closeBtn.addEventListener('click', dismissBanner);
+      document.getElementById('mo-enter').addEventListener('click', dismiss);
+      document.getElementById('mo-skip').addEventListener('click', dismiss);
+      document.addEventListener('keydown', function handler(e) {
+        if (e.key === 'Escape') { dismiss(); document.removeEventListener('keydown', handler); }
+      });
     }
   }
 
