@@ -1,4 +1,4 @@
-// GET /api/fitbit/callback — Fitbit redirects here with ?code & ?state.
+// GET /api/fitbit/callback — Google redirects here with ?code & ?state.
 // Verifies state, exchanges the code for tokens (server-side, with the secret),
 // stores the refresh token in an httpOnly cookie, and returns to the dashboard.
 const L = require('./_lib');
@@ -14,21 +14,19 @@ module.exports = async (req, res) => {
   const back = (status) => { res.statusCode = 302; res.setHeader('Location', '/?fitbit=' + status); res.end(); };
 
   if (oauthErr) return back('denied');
-  if (!code || !state || state !== cookies.fitbit_state) return back('error');
+  if (!code || !state || state !== cookies.gh_state) return back('error');
 
-  let id;
-  try { ({ id } = L.creds()); }
-  catch (e) { res.statusCode = 500; res.end('Fitbit not configured'); return; }
+  try { L.creds(); }
+  catch (e) { res.statusCode = 500; res.end('Google Health not configured'); return; }
 
   try {
     const tok = await L.tokenRequest({
       grant_type: 'authorization_code',
       code,
-      client_id: id,
       redirect_uri: L.redirectUri(req),
     });
-    const out = [L.clearCookie('fitbit_state', secure)];
-    if (tok.refresh_token) out.push(L.cookie('fitbit_refresh', tok.refresh_token, { maxAge: 60 * 60 * 24 * 365, secure }));
+    const out = [L.clearCookie('gh_state', secure)];
+    if (tok.refresh_token) out.push(L.cookie('gh_refresh', tok.refresh_token, { maxAge: 60 * 60 * 24 * 365, secure }));
     res.setHeader('Set-Cookie', out);
     return back(tok.refresh_token ? 'connected' : 'error');
   } catch (e) {

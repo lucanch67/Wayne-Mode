@@ -1,14 +1,16 @@
-// Shared helpers for the Fitbit OAuth serverless functions (Vercel, Node runtime).
-// Mirrors api/whoop/_lib.js. The client secret lives only here (server-side, from
-// env). Tokens are kept in httpOnly cookies — never exposed to the browser.
-// Difference vs WHOOP: Fitbit's token endpoint authenticates with an HTTP Basic
-// header (base64 of client_id:client_secret), not body params.
+// Shared helpers for Google Fit OAuth serverless functions.
+// Client secret lives only here (server-side, from env).
+// Tokens are kept in httpOnly cookies — never exposed to the browser.
 const crypto = require('crypto');
 
-const AUTH_URL = 'https://www.fitbit.com/oauth2/authorize';
-const TOKEN_URL = 'https://api.fitbit.com/oauth2/token';
-const API_BASE = 'https://api.fitbit.com';
-const SCOPE = 'sleep heartrate profile';
+const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const API_BASE = 'https://health.googleapis.com/v1';
+const SCOPE = [
+  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
+  'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly',
+  'https://www.googleapis.com/auth/googlehealth.sleep.readonly',
+].join(' ');
 
 function getOrigin(req) {
   const proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
@@ -38,25 +40,23 @@ function clearCookie(name, secure) {
 }
 
 function creds() {
-  const id = process.env.FITBIT_CLIENT_ID, secret = process.env.FITBIT_CLIENT_SECRET;
-  if (!id || !secret) { const e = new Error('FITBIT_NOT_CONFIGURED'); e.code = 'FITBIT_NOT_CONFIGURED'; throw e; }
+  const id = process.env.GOOGLE_CLIENT_ID, secret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!id || !secret) { const e = new Error('GOOGLE_NOT_CONFIGURED'); e.code = 'GOOGLE_NOT_CONFIGURED'; throw e; }
   return { id, secret };
 }
-// Fitbit token requests use HTTP Basic auth (client_id:client_secret), unlike WHOOP.
+
+// Google token requests use body params (client_id + client_secret in body).
 async function tokenRequest(params) {
   const { id, secret } = creds();
-  const basic = Buffer.from(id + ':' + secret).toString('base64');
+  const body = new URLSearchParams({ ...params, client_id: id, client_secret: secret });
   const r = await fetch(TOKEN_URL, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + basic,
-    },
-    body: new URLSearchParams(params).toString(),
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) {
-    const msg = (j.errors && j.errors[0] && j.errors[0].message) || j.error_description || j.error || '';
+    const msg = j.error_description || j.error || '';
     const e = new Error('token ' + r.status + ' ' + msg); e.status = r.status; throw e;
   }
   return j;
