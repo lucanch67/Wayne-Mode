@@ -303,32 +303,6 @@ body::before {
   font-family:var(--font-mono); font-size:9px; letter-spacing:.22em;
   text-transform:uppercase; color:var(--muted); margin-bottom:var(--space-3);
 }
-.srcPills { display:flex; flex-direction:column; gap:var(--space-2); }
-.srcPill {
-  display:flex; align-items:center; gap:var(--space-3);
-  padding:10px var(--space-4); border-radius:var(--r-md);
-  border:1px solid var(--border);
-  background:transparent; color:var(--muted-strong);
-  font-family:var(--font-ui); font-size:var(--text-sm); font-weight:600;
-  cursor:pointer; text-align:left;
-  transition:background var(--dur) var(--ease), border-color var(--dur) var(--ease),
-             color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
-}
-.srcPill:hover { background:var(--surface); border-color:var(--border-strong); color:var(--fg); transform:translateX(2px); }
-.srcPill.active {
-  background:var(--brand-soft); border-color:var(--brand-line); color:var(--fg);
-  box-shadow:0 0 0 1px var(--brand-line) inset;
-}
-.srcPillIcon {
-  width:18px; height:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-  color:var(--muted-strong);
-}
-.srcPill.active .srcPillIcon { color:var(--brand); }
-.srcPillDot {
-  width:6px; height:6px; border-radius:50%; background:var(--pos); flex-shrink:0;
-  margin-left:auto; box-shadow:0 0 6px var(--pos-glow);
-  animation:dotPulse 2s ease-in-out infinite;
-}
 @keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
 /* ── Actions section ── */
@@ -721,12 +695,6 @@ body::before {
     <!-- Recovery ring -->
     <div class="ringSection" id="ringPanel"></div>
 
-    <!-- Source selector -->
-    <div class="srcSection">
-      <div class="sideLabel">Data source</div>
-      <div class="srcPills" id="srcPills"></div>
-    </div>
-
     <!-- Actions -->
     <div class="actionsSection" id="sideActions"></div>
 
@@ -1021,63 +989,26 @@ function coachHtml(d){
    CONNECT PANEL
    ═══════════════════════════════════════════════════ */
 function connectPanelHtml(){
-  let body='';
-  if(connectSource==='apple'){
-    const a=appleData||{}, v=k=>(a[k]!=null?a[k]:'');
-    body='<p class="connectIntro">Add today\'s <em>recovery</em>, <em>sleep</em> &amp; <em>HRV</em> from Apple Health.</p>'
-      +(appleData?'<p style="font-size:var(--text-xs);color:var(--muted)">Editing your saved Apple Watch readings.</p>':'')
-      +'<div class="fieldGrid">'
-      +'<div class="field"><label class="fieldLabel" for="a-rec">Recovery / readiness %</label><input id="a-rec" class="fieldInput" type="number" placeholder="—" value="'+esc(v('recovery'))+'" min="0" max="100" inputmode="numeric"/></div>'
-      +'<div class="field"><label class="fieldLabel" for="a-sleep">Sleep (hours)</label><input id="a-sleep" class="fieldInput" type="number" placeholder="7.5" value="'+esc(v('sleepHours'))+'" min="0" max="24" step="0.1"/></div>'
-      +'<div class="field"><label class="fieldLabel" for="a-hrv">HRV (ms)</label><input id="a-hrv" class="fieldInput" type="number" placeholder="—" value="'+esc(v('hrv'))+'" min="0" max="300"/></div>'
-      +'<div class="field"><label class="fieldLabel" for="a-rhr">Resting HR (bpm)</label><input id="a-rhr" class="fieldInput" type="number" placeholder="—" value="'+esc(v('rhr'))+'" min="20" max="150"/></div>'
-      +'<div class="field"><label class="fieldLabel" for="a-strain">Strain (0–21)</label><input id="a-strain" class="fieldInput" type="number" placeholder="—" value="'+esc(v('strain'))+'" min="0" max="21" step="0.1"/></div>'
-      +'<div class="field fieldFull"><label class="fieldLabel" for="a-target">Sleep target (h)</label><input id="a-target" class="fieldInput" type="number" placeholder="8" value="'+esc(a.sleepTargetHours??8)+'" min="4" max="12" step="0.5"/></div>'
-      +'</div>'
-      +'<p class="setupNote"><strong>Note:</strong> Apple Health has no web API — copy today\'s numbers from the Health app.</p>'
-      +'<div class="formActions">'+(appleData?'<button type="button" class="btn btn-link" data-action="remove-apple">Remove</button>':'')
-      +'<button type="button" class="btn btn-primary" data-action="save-apple">Save readings</button></div>';
-  } else if(connectSource==='fitbit'){
-    body='<p class="connectIntro">Bring your <em>sleep</em> and <em>resting HR</em> into Luca via <strong>Google Health</strong>.</p>'
-      +'<p style="font-size:var(--text-sm);color:var(--muted);line-height:1.6">One tap. Sign in with Google, allow access, you\'re back here. We never see your password.</p>'
-      +(ON_SERVER
-        ?'<a class="btn btn-primary" href="/api/fitbit/login" style="align-self:flex-start">Connect Google Health</a>'
-          +'<p class="setupNote"><strong>Setup note:</strong> needs GOOGLE_CLIENT_ID &amp; GOOGLE_CLIENT_SECRET in Vercel env vars.</p>'
-        :'<p class="setupNote"><strong>Setup note:</strong> Google Health sync runs on the deployed app. Locally, use <strong>Apple Health</strong> to enter readings by hand.</p>');
-  } else {
-    body='<p class="connectIntro">Bring your <em>recovery</em>, <em>sleep</em>, and <em>strain</em> into Luca.</p>'
-      +'<p style="font-size:var(--text-sm);color:var(--muted);line-height:1.6">One tap. Sign in with WHOOP, allow access, you\'re back here. Recovery, sleep &amp; strain sync automatically.</p>'
-      +(ON_SERVER
-        ?'<a class="btn btn-primary" href="/api/whoop/login" style="align-self:flex-start">Connect WHOOP</a>'
-          +'<p class="setupNote"><strong>Setup note:</strong> needs WHOOP_CLIENT_ID &amp; SECRET on the host. See WHOOP_SETUP.md.</p>'
-        :'<button type="button" class="btn btn-primary" data-action="connect" style="align-self:flex-start">Preview with sample data</button>'
-          +'<p class="setupNote"><strong>Setup note:</strong> live WHOOP sync runs on the deployed app. Click above to preview with sample numbers.</p>');
-  }
+  const body='<p class="connectIntro">Bring your <em>sleep</em> and <em>resting HR</em> into Luca via <strong>Google Health</strong>.</p>'
+    +'<p style="font-size:var(--text-sm);color:var(--muted);line-height:1.6">One tap. Sign in with Google, allow access, you\'re back here. We never see your password.</p>'
+    +(ON_SERVER
+      ?'<a class="btn btn-primary" href="/api/fitbit/login" style="align-self:flex-start">Connect Google Health</a>'
+        +'<p class="setupNote"><strong>Setup note:</strong> needs GOOGLE_CLIENT_ID &amp; GOOGLE_CLIENT_SECRET in Vercel env vars.</p>'
+      :'<p class="setupNote"><strong>Setup note:</strong> Google Health sync runs on the deployed app.</p>');
   return '<div class="connectWrap"><div class="card connectPanel">'
-    +'<div class="connectHeading">Connect a source</div>'
+    +'<div class="connectHeading">Connect Google Health</div>'
     +body+'</div></div>';
 }
 
 /* ═══════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════ */
-const LS_KEY='whoop_standalone_connected_v1';
 const HEALTH_KEY='patron_health_v1';
-const WHOOP_SHARE_KEY='patron_whoop_data_v1';
 const ON_SERVER=location.protocol==='http:'||location.protocol==='https:';
 
-let liveData=null,liveConnected=false;
-let fitbitData=null,fitbitConnected=false;
-let appleData=null,editingApple=false;
-let connected=false, syncing=false, connectSource='whoop', activeKind=null;
+let fitbitData=null, syncing=false, activeKind=null;
 
-try{connected=localStorage.getItem(LS_KEY)==='1';}catch{}
-
-function loadApple(){try{const c=JSON.parse(localStorage.getItem(HEALTH_KEY)||'null');if(c&&c.source==='apple')appleData=c;}catch{}}
-function clearApple(){appleData=null;try{const c=JSON.parse(localStorage.getItem(HEALTH_KEY)||'null');if(c&&c.source==='apple')localStorage.removeItem(HEALTH_KEY);}catch{}}
-function publishWhoop(d){const s={source:'whoop',connected:true,ts:Date.now(),recovery:d.recovery,hrv:d.hrv,rhr:d.rhr,sleepPerf:d.sleepPerf,sleepHours:d.sleepHours,sleepTargetHours:d.sleepTargetHours,strain:d.strain,vitalityScore:d.vitalityScore};try{localStorage.setItem(WHOOP_SHARE_KEY,JSON.stringify(s));localStorage.setItem(HEALTH_KEY,JSON.stringify(s));}catch{}}
 function publishFitbit(d){const s={source:'fitbit',connected:true,ts:Date.now(),recovery:d.recovery,hrv:d.hrv,rhr:d.rhr,sleepPerf:d.sleepPerf,sleepHours:d.sleepHours,sleepTargetHours:d.sleepTargetHours,strain:d.strain,bedtime:d.bedtime,wakeTime:d.wakeTime,vitalityScore:d.vitalityScore};try{localStorage.setItem(HEALTH_KEY,JSON.stringify(s));}catch{}}
-function clearWhoop(){try{localStorage.removeItem(WHOOP_SHARE_KEY);const c=JSON.parse(localStorage.getItem(HEALTH_KEY)||'null');if(c&&c.source==='whoop')localStorage.removeItem(HEALTH_KEY);}catch{}}
 function clearFitbit(){try{const c=JSON.parse(localStorage.getItem(HEALTH_KEY)||'null');if(c&&c.source==='fitbit')localStorage.removeItem(HEALTH_KEY);}catch{}}
 function buildLiveData(j){
   const trend=Array.isArray(j.recoveryTrend)&&j.recoveryTrend.length?j.recoveryTrend:(j.recovery!=null?[j.recovery]:[]);
@@ -1086,17 +1017,7 @@ function buildLiveData(j){
     recoveryTrend:trend,sleepDebt7d:Array.isArray(j.sleepDebt7d)?j.sleepDebt7d:[],
     sleepTargetHours:j.sleepTargetHours||8,vitalityScore:null,vitalityTier:'',lastSyncedMinutes:0,daysAvailable:trend.length};
 }
-async function syncWhoopLive(){if(!ON_SERVER)return;syncing=true;render();try{const r=await fetch('/api/whoop/data',{cache:'no-store'}),j=await r.json();if(j&&j.connected){liveData=buildLiveData(j);liveConnected=true;}else{liveData=null;liveConnected=false;}}catch{liveData=null;liveConnected=false;}syncing=false;render();}
-async function syncFitbitLive(){if(!ON_SERVER)return;syncing=true;render();try{const r=await fetch('/api/fitbit/data',{cache:'no-store'}),j=await r.json();if(j&&j.connected){fitbitData=buildLiveData(j);fitbitData.bedtime=j.bedtime;fitbitData.wakeTime=j.wakeTime;fitbitConnected=true;}else{fitbitData=null;fitbitConnected=false;}}catch{fitbitData=null;fitbitConnected=false;}syncing=false;render();}
-function saveAppleEntry(){
-  const num=id=>{const el=document.getElementById(id);if(!el||el.value==='')return null;const n=Number(el.value);return isFinite(n)?n:null;};
-  const recovery=num('a-rec'),sleepHours=num('a-sleep'),hrv=num('a-hrv'),rhr=num('a-rhr'),strain=num('a-strain'),target=num('a-target')||8;
-  if(recovery==null&&sleepHours==null&&hrv==null&&rhr==null&&strain==null){alert('Enter at least one reading.');return;}
-  const sleepPerf=sleepHours!=null?Math.round(Math.min(100,(sleepHours/target)*100)):null;
-  const snap={source:'apple',connected:true,ts:Date.now(),recovery,hrv,rhr,sleepPerf,sleepHours,sleepTargetHours:target,strain,vitalityScore:null};
-  appleData=snap;try{localStorage.setItem(HEALTH_KEY,JSON.stringify(snap));}catch{}
-  editingApple=false;render();
-}
+async function syncFitbitLive(){if(!ON_SERVER)return;syncing=true;render();try{const r=await fetch('/api/fitbit/data',{cache:'no-store'}),j=await r.json();if(j&&j.connected){fitbitData=buildLiveData(j);fitbitData.bedtime=j.bedtime;fitbitData.wakeTime=j.wakeTime;}else{fitbitData=null;}}catch{fitbitData=null;}syncing=false;render();}
 
 /* ═══════════════════════════════════════════════════
    THEMES
@@ -1121,17 +1042,6 @@ function renderThemePills(){
     '<button type="button" class="themeBtn '+(t.key===currentTheme?'themeBtnActive':'')+'" data-action="theme" data-theme="'+t.key+'">'
     +'<span class="themeSwatch" style="background:'+t.sw+'"></span>'+t.label+'</button>'
   ).join('');
-}
-
-/* ═══════════════════════════════════════════════════
-   SOURCE ICONS (SVG only)
-   ═══════════════════════════════════════════════════ */
-function srcIcon(key){
-  if(key==='whoop')
-    return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M7 11.5v1"/><path d="M12 10.5v3"/><path d="M17 11.5v1"/></svg>';
-  if(key==='fitbit')
-    return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>';
-  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M9 9h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>';
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1162,58 +1072,28 @@ function renderRingPanel(d){
     +'</div></div>';
 }
 
-function renderSrcPills(){
-  const srcs=[{key:'whoop',label:'WHOOP'},{key:'fitbit',label:'Google Health'},{key:'apple',label:'Apple Health'}];
-  document.getElementById('srcPills').innerHTML=srcs.map(s=>{
-    const isConnected=(s.key==='whoop'&&activeKind==='whoop-live')||(s.key==='fitbit'&&activeKind==='fitbit-live')||(s.key==='apple'&&activeKind==='apple');
-    return '<button type="button" class="srcPill'+(connectSource===s.key?' active':'')+'" data-action="src-tab" data-src="'+s.key+'" aria-pressed="'+(connectSource===s.key)+'">'
-      +'<span class="srcPillIcon">'+srcIcon(s.key)+'</span>'+s.label
-      +(isConnected?'<span class="srcPillDot" aria-label="connected"></span>':'')
-      +'</button>';
-  }).join('');
-}
-
-function renderSideActions(d,kind){
+function renderSideActions(d){
   const el=document.getElementById('sideActions');
   if(!d){el.innerHTML='';return;}
-  let html='';
-  if(kind==='apple'){
-    html='<span class="chip chip-brand"><span class="chipDot" aria-hidden></span>Apple Watch</span>'
-      +'<button type="button" class="btn btn-ghost btn-full" data-action="edit-apple">Edit readings</button>'
-      +'<button type="button" class="btn btn-link btn-full" data-action="remove-apple">Remove</button>';
-  } else if(kind==='sample'){
-    html='<span class="chip chip-warn"><span class="chipDot" aria-hidden></span>Sample data</span>'
-      +'<button type="button" class="btn btn-link btn-full" data-action="disconnect">Disconnect preview</button>';
-  } else {
-    const label=kind==='fitbit-live'?'Google Health · Live':'WHOOP · Live';
-    html='<span class="chip chip-brand"><span class="chipDot" aria-hidden></span>'+label+'</span>'
-      +'<div class="syncRow"><span>'+(d.lastSyncedMinutes!=null?'synced '+d.lastSyncedMinutes+'m ago':'—')+'</span>'
-      +'<button type="button" class="btn btn-ghost" data-action="sync"'+(syncing?' disabled':'')+' style="padding:5px 12px;font-size:11px">'+(syncing?'syncing…':'Sync now')+'</button></div>'
-      +'<button type="button" class="btn btn-link btn-full" data-action="disconnect">Disconnect</button>';
-  }
-  el.innerHTML=html;
+  el.innerHTML='<span class="chip chip-brand"><span class="chipDot" aria-hidden></span>Google Health · Live</span>'
+    +'<div class="syncRow"><span>—</span>'
+    +'<button type="button" class="btn btn-ghost" data-action="sync"'+(syncing?' disabled':'')+' style="padding:5px 12px;font-size:11px">'+(syncing?'syncing…':'Sync now')+'</button></div>'
+    +'<button type="button" class="btn btn-link btn-full" data-action="disconnect">Disconnect</button>';
 }
 
 /* ═══════════════════════════════════════════════════
    RENDER — MAIN
    ═══════════════════════════════════════════════════ */
 function render(){
-  let d=null,kind=null;
-  if(liveData){d=liveData;kind='whoop-live';}
-  else if(fitbitData){d=fitbitData;kind='fitbit-live';}
-  else if(appleData&&!editingApple){d=buildLiveData(appleData);kind='apple';}
-  else if(!ON_SERVER&&connected){d=SAMPLE;kind='sample';}
-  activeKind=kind;
-
-  if(kind==='whoop-live') publishWhoop(liveData);
-  else if(kind==='fitbit-live') publishFitbit(fitbitData);
+  const d=fitbitData||null;
+  activeKind=d?'fitbit-live':null;
+  if(d) publishFitbit(d);
 
   renderRingPanel(d);
-  renderSrcPills();
-  renderSideActions(d,kind);
+  renderSideActions(d);
 
   const main=document.getElementById('mainInner');
-  if(d&&!(kind==='apple'&&editingApple)){
+  if(d){
     main.innerHTML=
       tickerHtml(d)
       +heroCardHtml(d)
@@ -1235,51 +1115,28 @@ document.addEventListener('click',e=>{
   if(!btn) return;
   const action=btn.getAttribute('data-action');
   if(action==='theme'){applyTheme(btn.getAttribute('data-theme'));return;}
-  if(action==='src-tab'){
-    connectSource=btn.getAttribute('data-src');
-    if(connectSource!=='apple') editingApple=false;
-    render();return;
-  }
-  if(action==='save-apple'){saveAppleEntry();return;}
-  if(action==='edit-apple'){editingApple=true;connectSource='apple';render();return;}
-  if(action==='remove-apple'){
-    if(confirm('Remove Apple Health readings?')){clearApple();editingApple=false;render();}return;
-  }
-  if(action==='connect'){connected=true;try{localStorage.setItem(LS_KEY,'1');}catch{}render();return;}
   if(action==='disconnect'){
-    if(activeKind==='fitbit-live'){fetch('/api/fitbit/logout').catch(()=>{}).then(()=>{fitbitConnected=false;fitbitData=null;clearFitbit();render();});}
-    else if(activeKind==='whoop-live'||ON_SERVER){fetch('/api/whoop/logout').catch(()=>{}).then(()=>{liveConnected=false;liveData=null;clearWhoop();render();});}
-    else if(confirm('Disconnect preview?')){connected=false;try{localStorage.setItem(LS_KEY,'0');}catch{}render();}
+    fetch('/api/fitbit/logout').catch(()=>{}).then(()=>{fitbitData=null;clearFitbit();render();});
     return;
   }
-  if(action==='sync'){
-    if(activeKind==='fitbit-live'){syncFitbitLive();}
-    else if(ON_SERVER){syncWhoopLive();}
-    else{syncing=true;render();setTimeout(()=>{syncing=false;render();},900);}
-    return;
-  }
+  if(action==='sync'){syncFitbitLive();return;}
 });
 
 /* ═══════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════ */
-loadApple();
 renderThemePills();
 applyTheme(currentTheme);
 
 (function bootLive(){
   if(!ON_SERVER) return;
   try{
-    const q=new URLSearchParams(location.search);
-    const w=q.get('whoop'),f=q.get('fitbit');
-    if(w||f){
+    const f=new URLSearchParams(location.search).get('fitbit');
+    if(f){
       history.replaceState(null,'',location.pathname);
-      if(w==='error'||w==='denied') alert('WHOOP connection didn\'t complete. Check WHOOP_SETUP.md.');
       if(f==='error'||f==='denied') alert('Google Health connection didn\'t complete — make sure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set in Vercel.');
-      if(f==='connected') connectSource='fitbit';
     }
   }catch{}
-  syncWhoopLive();
   syncFitbitLive();
 })();
 </script>
