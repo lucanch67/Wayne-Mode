@@ -5,10 +5,11 @@ const crypto = require('crypto');
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const API_BASE = 'https://www.googleapis.com/fitness/v1';
+const API_BASE = 'https://health.googleapis.com/v4';
 const SCOPE = [
-  'https://www.googleapis.com/auth/fitness.sleep.read',
-  'https://www.googleapis.com/auth/fitness.heart_rate.read',
+  'https://www.googleapis.com/auth/googlehealth.sleep.readonly',
+  'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly',
+  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
 ].join(' ');
 
 function getOrigin(req) {
