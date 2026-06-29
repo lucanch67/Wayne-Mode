@@ -659,12 +659,24 @@ body::before {
 /* ── Responsive (< 960px) ── */
 @media (max-width:960px) {
   body { overflow:auto; }
-  #shell { display:block; }
+  #shell { position:static; display:block; min-height:calc(100vh - var(--bar-h)); }
   #sidebar { position:static; border-right:none; border-bottom:1px solid var(--border); backdrop-filter:none; overflow:visible; }
   #main { overflow:visible; }
   .statGrid { grid-template-columns:repeat(2,1fr); }
   .bottomRow { grid-template-columns:1fr; }
   .heroCard { grid-template-columns:1fr; }
+}
+
+/* ── Small phones (< 480px) ── */
+@media (max-width:480px) {
+  .sideHead { padding:var(--space-4) var(--space-4) var(--space-4); }
+  .ringSection { padding:var(--space-4) var(--space-4) var(--space-4); }
+  .statGrid { grid-template-columns:1fr 1fr; }
+  .actionsSection { padding:var(--space-4); }
+  .themeSection { padding:var(--space-4); }
+  .connectPanel { padding:var(--space-5); }
+  .heroCard { padding:var(--space-5); }
+  #mainInner { padding:var(--space-4); gap:var(--space-4); }
 }
 
 </style>
