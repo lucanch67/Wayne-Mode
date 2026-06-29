@@ -5,14 +5,15 @@ const L = require('./_lib');
 function pad2(n) { return String(n).padStart(2, '0'); }
 function toRfc3339(ms) { return new Date(ms).toISOString(); }
 
+// Returns parsed JSON on success, or { _err: statusCode } on HTTP error.
 async function ghGet(path, token) {
   try {
     const r = await fetch(L.API_BASE + path, {
       headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
     });
-    if (!r.ok) return null;
+    if (!r.ok) return { _err: r.status };
     return await r.json().catch(() => null);
-  } catch { return null; }
+  } catch { return { _err: 'fetch' }; }
 }
 
 async function ghPost(path, body, token) {
@@ -22,9 +23,9 @@ async function ghPost(path, body, token) {
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!r.ok) return null;
+    if (!r.ok) return { _err: r.status };
     return await r.json().catch(() => null);
-  } catch { return null; }
+  } catch { return { _err: 'fetch' }; }
 }
 
 module.exports = async (req, res) => {
@@ -56,40 +57,56 @@ module.exports = async (req, res) => {
   const dayAgo  = now - 86400000;
 
   // Fetch sleep sessions + resting HR aggregate in parallel.
-  const [sleepData, rhrData] = await Promise.all([
-    // Google Fit sessions endpoint — activityType 72 = sleep
+  const [sleepRes, rhrRes] = await Promise.all([
+    // Sleep sessions — activityType 72 = sleep
     ghGet(`/users/me/sessions?startTime=${toRfc3339(weekAgo)}&endTime=${toRfc3339(now)}&activityType=72`, at),
-    // Google Fit aggregate endpoint — resting heart rate
+    // Daily heart rate aggregate — min value over the day ≈ resting HR
     ghPost('/users/me/dataset:aggregate', {
-      aggregateBy: [{ dataTypeName: 'com.google.heart_rate.resting.summary' }],
+      aggregateBy: [{ dataTypeName: 'com.google.heart_rate.bpm' }],
       bucketByTime: { durationMillis: 86400000 },
       startTimeMillis: String(dayAgo),
       endTimeMillis: String(now),
     }, at),
   ]);
 
-  // Parse resting HR from aggregate buckets.
+  // If both API calls hit auth errors, the stored token lacks the required scopes.
+  // Return connected:false so the UI shows the "Connect" button → user re-authorises.
+  const sleepErrCode = sleepRes && sleepRes._err;
+  const rhrErrCode   = rhrRes   && rhrRes._err;
+  if ((sleepErrCode === 401 || sleepErrCode === 403) && (rhrErrCode === 401 || rhrErrCode === 403)) {
+    res.statusCode = 200;
+    res.end(JSON.stringify({ connected: false, error: 'needs_reconnect' }));
+    return;
+  }
+
+  // Parse resting HR: take the minimum plausible value across all aggregate points.
+  // (min over the day is a reasonable resting-HR proxy when sleep data isn't segmented.)
   let rhr = null;
-  if (rhrData && Array.isArray(rhrData.bucket)) {
-    for (const bucket of rhrData.bucket) {
+  if (rhrRes && !rhrRes._err && Array.isArray(rhrRes.bucket)) {
+    let minVal = Infinity;
+    for (const bucket of rhrRes.bucket) {
       if (!bucket.dataset) continue;
       for (const ds of bucket.dataset) {
         if (!Array.isArray(ds.point)) continue;
         for (const pt of ds.point) {
-          if (pt.value && pt.value[0] != null) {
-            const v = pt.value[0].fpVal ?? pt.value[0].intVal;
-            if (v != null) rhr = Math.round(Number(v));
+          if (!pt.value) continue;
+          for (const v of pt.value) {
+            const n = v.fpVal ?? v.intVal;
+            // Sanity check: resting HR must be in the 30–120 bpm range
+            if (n != null && n >= 30 && n <= 120 && n < minVal) minVal = n;
           }
         }
       }
     }
+    if (minVal !== Infinity) rhr = Math.round(minVal);
   }
 
-  // Most recent sleep session (Google Fit uses startTimeMillis / endTimeMillis as strings).
+  // Parse most recent sleep session.
+  const sleepData = (sleepRes && !sleepRes._err) ? sleepRes : null;
   let sleepHours = null, sleepPerf = null, bedtime = null, wakeTime = null;
   if (sleepData && Array.isArray(sleepData.session) && sleepData.session.length) {
     const sessions = sleepData.session
-      .filter(s => s.activityType === 72)
+      .filter(s => Number(s.activityType) === 72)   // coerce — API may return string
       .sort((a, b) => Number(b.startTimeMillis) - Number(a.startTimeMillis));
     const s = sessions[0];
     if (s) {
@@ -102,7 +119,7 @@ module.exports = async (req, res) => {
         const endD   = new Date(endMs);
         bedtime  = pad2(startD.getHours()) + ':' + pad2(startD.getMinutes());
         wakeTime = pad2(endD.getHours())   + ':' + pad2(endD.getMinutes());
-        if (s.activeTimeMillis != null && durMs > 0) {
+        if (s.activeTimeMillis != null) {
           sleepPerf = Math.round((Number(s.activeTimeMillis) / durMs) * 100);
         }
       }
@@ -113,7 +130,7 @@ module.exports = async (req, res) => {
   res.end(JSON.stringify({
     connected: true, source: 'fitbit', ts: Date.now(),
     recovery: null,   // Google Fit has no recovery score
-    hrv: null,        // Google Fit aggregate HRV requires extra scope + Pixel Watch
+    hrv: null,        // HRV requires extra scope + Pixel Watch 2+
     rhr,
     sleepPerf,
     sleepHours,
