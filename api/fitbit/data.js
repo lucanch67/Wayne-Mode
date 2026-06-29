@@ -56,8 +56,8 @@ module.exports = async (req, res) => {
   const weekAgo = now - 7 * 86400000;
   const dayAgo  = now - 86400000;
 
-  // Fetch sleep sessions + resting HR aggregate in parallel.
-  const [sleepRes, rhrRes] = await Promise.all([
+  // Fetch sleep, resting HR, and HRV in parallel.
+  const [sleepRes, rhrRes, hrvRes] = await Promise.all([
     // Sleep sessions — activityType 72 = sleep
     ghGet(`/users/me/sessions?startTime=${toRfc3339(weekAgo)}&endTime=${toRfc3339(now)}&activityType=72`, at),
     // Daily heart rate aggregate — min value over the day ≈ resting HR
@@ -67,20 +67,26 @@ module.exports = async (req, res) => {
       startTimeMillis: String(dayAgo),
       endTimeMillis: String(now),
     }, at),
+    // HRV (RMSSD) — written by Fitbit via Health Connect
+    ghPost('/users/me/dataset:aggregate', {
+      aggregateBy: [{ dataTypeName: 'com.google.heart_rate.variability.rmssd.wrist' }],
+      bucketByTime: { durationMillis: 86400000 },
+      startTimeMillis: String(dayAgo),
+      endTimeMillis: String(now),
+    }, at),
   ]);
 
-  // If both API calls hit auth errors, the stored token lacks the required scopes.
+  // If all data API calls hit auth errors, the stored token lacks the required scopes.
   // Return connected:false so the UI shows the "Connect" button → user re-authorises.
-  const sleepErrCode = sleepRes && sleepRes._err;
-  const rhrErrCode   = rhrRes   && rhrRes._err;
+  const sleepErrCode = sleepRes?._err;
+  const rhrErrCode   = rhrRes?._err;
   if ((sleepErrCode === 401 || sleepErrCode === 403) && (rhrErrCode === 401 || rhrErrCode === 403)) {
     res.statusCode = 200;
     res.end(JSON.stringify({ connected: false, error: 'needs_reconnect' }));
     return;
   }
 
-  // Parse resting HR: take the minimum plausible value across all aggregate points.
-  // (min over the day is a reasonable resting-HR proxy when sleep data isn't segmented.)
+  // Parse resting HR: minimum plausible value over the day ≈ resting HR.
   let rhr = null;
   if (rhrRes && !rhrRes._err && Array.isArray(rhrRes.bucket)) {
     let minVal = Infinity;
@@ -92,13 +98,32 @@ module.exports = async (req, res) => {
           if (!pt.value) continue;
           for (const v of pt.value) {
             const n = v.fpVal ?? v.intVal;
-            // Sanity check: resting HR must be in the 30–120 bpm range
             if (n != null && n >= 30 && n <= 120 && n < minVal) minVal = n;
           }
         }
       }
     }
     if (minVal !== Infinity) rhr = Math.round(minVal);
+  }
+
+  // Parse HRV (RMSSD ms) — average of available points.
+  let hrv = null;
+  if (hrvRes && !hrvRes._err && Array.isArray(hrvRes.bucket)) {
+    let sum = 0, count = 0;
+    for (const bucket of hrvRes.bucket) {
+      if (!bucket.dataset) continue;
+      for (const ds of bucket.dataset) {
+        if (!Array.isArray(ds.point)) continue;
+        for (const pt of ds.point) {
+          if (!pt.value) continue;
+          for (const v of pt.value) {
+            const n = v.fpVal ?? v.intVal;
+            if (n != null && n > 0 && n < 300) { sum += n; count++; }
+          }
+        }
+      }
+    }
+    if (count > 0) hrv = Math.round(sum / count);
   }
 
   // Parse most recent sleep session.
@@ -129,8 +154,8 @@ module.exports = async (req, res) => {
   res.statusCode = 200;
   res.end(JSON.stringify({
     connected: true, source: 'fitbit', ts: Date.now(),
-    recovery: null,   // Google Fit has no recovery score
-    hrv: null,        // HRV requires extra scope + Pixel Watch 2+
+    readiness: null,  // Fitbit Daily Readiness requires Fitbit API, not Google Fit
+    hrv,
     rhr,
     sleepPerf,
     sleepHours,

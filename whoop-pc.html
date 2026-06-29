@@ -689,7 +689,7 @@ body::before {
 
     <div class="sideHead">
       <div class="pageTitle">Fitness<br><span class="pageTitleAccent">Band</span></div>
-      <div class="pageSub">Recovery · Sleep · Strain · HRV</div>
+      <div class="pageSub">Readiness · Sleep · HRV · Heart Rate</div>
     </div>
 
     <!-- Recovery ring -->
@@ -841,11 +841,6 @@ function buildTickerItems(d){
     const h=Math.floor(d.sleepHours),m=Math.round((d.sleepHours-h)*60);
     items.push({sym:'SLP',val:h+'h'+String(m).padStart(2,'0'),unit:'',spark,delta,du:'h',tone});
   }
-  if(d.strain!=null){
-    const base=d.strainWeeklyAvg??d.strain;
-    const delta=d.strainWeeklyAvg!=null?Math.round((d.strain-d.strainWeeklyAvg)*10)/10:null;
-    items.push({sym:'STR',val:d.strain.toFixed(1),unit:'',spark:[base,d.strain],delta,du:'',tone:delta!=null&&delta>2?'watch':'good'});
-  }
   return items;
 }
 function tickerHtml(d){
@@ -873,14 +868,14 @@ function tickerHtml(d){
    ═══════════════════════════════════════════════════ */
 function heroCardHtml(d){
   const tone=recoveryTone(d.recovery);
-  const tier=d.recovery!=null?(d.recovery>=67?'Recovered':d.recovery>=34?'Building':'Drained'):'—';
+  const tier=d.recovery!=null?(d.recovery>=67?'Ready':d.recovery>=34?'Building':'Low'):'—';
   const trend=d.recoveryTrend;
   const hasTrend=trend&&trend.length>=2;
   const delta=hasTrend?trend[trend.length-1]-trend[0]:0;
   const spark=hasTrend?heroSparkSvg(trend):'<p class="heroEmpty">Need a few more days of data for the trend.</p>';
   return '<div class="card heroCard">'
     +'<div class="heroLeft">'
-    +  '<div class="heroMetricLabel">Recovery · Today</div>'
+    +  '<div class="heroMetricLabel">Readiness · Today</div>'
     +  '<div class="heroMetricValue" data-tone="'+tone+'">'+(d.recovery!=null?Math.round(d.recovery):'—')+'<span>'+(d.recovery!=null?'%':'')+'</span></div>'
     +  '<div class="heroTierBadge" data-tone="'+tone+'"><svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden><circle cx="4" cy="4" r="4"/></svg>'+tier+'</div>'
     +  (hasTrend?'<div class="heroDelta '+(delta>=0?'up':'down')+'">'+(delta>=0?'↑':'↓')+' '+Math.abs(Math.round(delta))+' pts · '+trend.length+'-day trend</div>':'')
@@ -912,13 +907,14 @@ function statGridHtml(d){
   const hrvSpark=d.hrvBaseline!=null?[d.hrvBaseline,d.hrv]:null;
   const rhrSpark=d.rhrBaseline!=null?[d.rhrBaseline,d.rhr]:null;
   const strSpark=d.strainWeeklyAvg!=null?[d.strainWeeklyAvg,d.strain]:null;
+  const slpSub=d.bedtime&&d.wakeTime?d.bedtime+' → '+d.wakeTime:(d.sleepPerf!=null?Math.round(d.sleepPerf)+'% efficiency':'—');
   return '<div class="statGrid">'
-    +card('Sleep',formatHM(d.sleepHours),'',
-        d.sleepPerf!=null?Math.round(d.sleepPerf)+'% efficiency':'—',
-        null,null,slpTone,sleepSpark)
-    +card('Strain',d.strain!=null?d.strain.toFixed(1):'—','','today',
-        d.strainWeeklyAvg!=null?'wk avg '+d.strainWeeklyAvg.toFixed(1):null,
-        strTone,strTone,strSpark)
+    +card('Sleep',formatHM(d.sleepHours),'',slpSub,
+        d.sleepPerf!=null&&!(d.bedtime&&d.wakeTime)?null:(d.sleepPerf!=null?Math.round(d.sleepPerf)+'% eff.':null),
+        'good',slpTone,sleepSpark)
+    +card('Bedtime',d.bedtime||'—','',
+        d.wakeTime?'↑ wake '+d.wakeTime:'—',
+        null,null,slpTone,null)
     +card('HRV',d.hrv!=null?String(Math.round(d.hrv)):'—','ms',
         d.hrvAnomalous?'flagged reading':'rmssd',
         hrvDelta!=null?(hrvDelta>=0?'↑ +'+hrvDelta+' ms':'↓ '+hrvDelta+' ms'):null,
@@ -974,9 +970,9 @@ function coachHtml(d){
     if(dm<-90) tips.push({s:'Sleep debt '+formatDebt(Math.round(dm))+' across the week.',r:' Add 30 minutes tonight. Going to bed earlier is the cheapest performance intervention you have.'});
   }
   if(d.recovery!=null&&d.recovery<34)
-    tips.unshift({s:'Recovery '+Math.round(d.recovery)+'%. Your ceiling is lower today.',r:' Cut caffeine ~30% and skip a second hard session. Brute-forcing a red day costs you tomorrow.'});
+    tips.unshift({s:'Readiness '+Math.round(d.recovery)+'%. Your ceiling is lower today.',r:' Cut caffeine ~30% and skip a second hard session. Brute-forcing a red day costs you tomorrow.'});
   else if(d.recovery!=null&&d.recovery>=80)
-    tips.unshift({s:'Recovery '+Math.round(d.recovery)+'%. Green light to push.',r:' Stack the hardest training or cognitive session inside the peak window.'});
+    tips.unshift({s:'Readiness '+Math.round(d.recovery)+'%. Green light to push.',r:' Stack the hardest training or cognitive session inside the peak window.'});
   if(!tips.length)
     tips.push({s:'Building your baseline.',r:" Need 7+ days of valid readings before personalized coaching kicks in. You're at "+d.daysAvailable+' now.'});
   const lis=tips.slice(0,3).map(t=>
@@ -1011,8 +1007,9 @@ let fitbitData=null, syncing=false, activeKind=null;
 function publishFitbit(d){const s={source:'fitbit',connected:true,ts:Date.now(),recovery:d.recovery,hrv:d.hrv,rhr:d.rhr,sleepPerf:d.sleepPerf,sleepHours:d.sleepHours,sleepTargetHours:d.sleepTargetHours,strain:d.strain,bedtime:d.bedtime,wakeTime:d.wakeTime,vitalityScore:d.vitalityScore};try{localStorage.setItem(HEALTH_KEY,JSON.stringify(s));}catch{}}
 function clearFitbit(){try{const c=JSON.parse(localStorage.getItem(HEALTH_KEY)||'null');if(c&&c.source==='fitbit')localStorage.removeItem(HEALTH_KEY);}catch{}}
 function buildLiveData(j){
-  const trend=Array.isArray(j.recoveryTrend)&&j.recoveryTrend.length?j.recoveryTrend:(j.recovery!=null?[j.recovery]:[]);
-  return{date:'today',recovery:j.recovery,hrv:j.hrv,rhr:j.rhr,sleepPerf:j.sleepPerf,sleepHours:j.sleepHours,strain:j.strain,
+  const rec=j.readiness??j.recovery??null;
+  const trend=Array.isArray(j.recoveryTrend)&&j.recoveryTrend.length?j.recoveryTrend:(rec!=null?[rec]:[]);
+  return{date:'today',recovery:rec,hrv:j.hrv,rhr:j.rhr,sleepPerf:j.sleepPerf,sleepHours:j.sleepHours,strain:j.strain,
     hrvBaseline:null,rhrBaseline:null,sleepPerfBaseline:null,strainWeeklyAvg:j.strainWeeklyAvg||null,hrvAnomalous:false,
     recoveryTrend:trend,sleepDebt7d:Array.isArray(j.sleepDebt7d)?j.sleepDebt7d:[],
     sleepTargetHours:j.sleepTargetHours||8,vitalityScore:null,vitalityTier:'',lastSyncedMinutes:0,daysAvailable:trend.length};
@@ -1056,10 +1053,10 @@ function renderRingPanel(d){
   const tone=recoveryTone(d.recovery);
   const circ=2*Math.PI*88;
   const fill=d.recovery!=null?circ*(1-d.recovery/100):circ;
-  const tier=d.recovery!=null?(d.recovery>=67?'Recovered':d.recovery>=34?'Building':'Drained'):'—';
+  const tier=d.recovery!=null?(d.recovery>=67?'Ready':d.recovery>=34?'Building':'Low'):'—';
   panel.innerHTML=
     '<div class="ringAura" data-tone="'+tone+'" aria-hidden></div>'
-    +'<div class="recoveryRing" data-tone="'+tone+'" role="img" aria-label="Recovery '+Math.round(d.recovery??0)+'%">'
+    +'<div class="recoveryRing" data-tone="'+tone+'" role="img" aria-label="Readiness '+Math.round(d.recovery??0)+'%">'
     +'<svg viewBox="0 0 200 200" class="ringSvg" aria-hidden>'
     +'<circle cx="100" cy="100" r="88" class="ringTrack"/>'
     +(d.recovery!=null?'<circle cx="100" cy="100" r="88" class="ringFill" style="stroke-dasharray:'+circ.toFixed(2)+';stroke-dashoffset:'+fill.toFixed(2)+'"/>':'')
@@ -1067,7 +1064,7 @@ function renderRingPanel(d){
     +'<div class="ringInner">'
     +'<div class="ringVal" data-tone="'+tone+'">'+(d.recovery!=null?Math.round(d.recovery):'—')+'</div>'
     +(d.recovery!=null?'<div class="ringPct">%</div>':'')
-    +'<div class="ringLabel">Recovery</div>'
+    +'<div class="ringLabel">Readiness</div>'
     +'<div class="ringTier">'+tier+'</div>'
     +'</div></div>';
 }
