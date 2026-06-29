@@ -1038,12 +1038,12 @@ function connectPanelHtml(){
       +'<div class="formActions">'+(appleData?'<button type="button" class="btn btn-link" data-action="remove-apple">Remove</button>':'')
       +'<button type="button" class="btn btn-primary" data-action="save-apple">Save readings</button></div>';
   } else if(connectSource==='fitbit'){
-    body='<p class="connectIntro">Bring your <em>sleep</em>, <em>HRV</em>, and <em>resting HR</em> into Luca automatically.</p>'
-      +'<p style="font-size:var(--text-sm);color:var(--muted);line-height:1.6">One tap. Sign in with Fitbit, allow access, you\'re back here. We never see your password.</p>'
+    body='<p class="connectIntro">Bring your <em>sleep</em> and <em>resting HR</em> into Luca via <strong>Google Health</strong>.</p>'
+      +'<p style="font-size:var(--text-sm);color:var(--muted);line-height:1.6">One tap. Sign in with Google, allow access, you\'re back here. We never see your password.</p>'
       +(ON_SERVER
-        ?'<a class="btn btn-primary" href="/api/fitbit/login" style="align-self:flex-start">Connect Fitbit</a>'
-          +'<p class="setupNote"><strong>Setup note:</strong> needs FITBIT_CLIENT_ID &amp; SECRET on the host. See FITBIT_SETUP.md.</p>'
-        :'<p class="setupNote"><strong>Setup note:</strong> live Fitbit sync runs on the deployed app. Locally, use <strong>Apple Health</strong> to enter readings by hand.</p>');
+        ?'<a class="btn btn-primary" href="/api/fitbit/login" style="align-self:flex-start">Connect Google Health</a>'
+          +'<p class="setupNote"><strong>Setup note:</strong> needs GOOGLE_CLIENT_ID &amp; GOOGLE_CLIENT_SECRET in Vercel env vars.</p>'
+        :'<p class="setupNote"><strong>Setup note:</strong> Google Health sync runs on the deployed app. Locally, use <strong>Apple Health</strong> to enter readings by hand.</p>');
   } else {
     body='<p class="connectIntro">Bring your <em>recovery</em>, <em>sleep</em>, and <em>strain</em> into Luca.</p>'
       +'<p style="font-size:var(--text-sm);color:var(--muted);line-height:1.6">One tap. Sign in with WHOOP, allow access, you\'re back here. Recovery, sleep &amp; strain sync automatically.</p>'
@@ -1163,7 +1163,7 @@ function renderRingPanel(d){
 }
 
 function renderSrcPills(){
-  const srcs=[{key:'whoop',label:'WHOOP'},{key:'fitbit',label:'Fitbit'},{key:'apple',label:'Apple Health'}];
+  const srcs=[{key:'whoop',label:'WHOOP'},{key:'fitbit',label:'Google Health'},{key:'apple',label:'Apple Health'}];
   document.getElementById('srcPills').innerHTML=srcs.map(s=>{
     const isConnected=(s.key==='whoop'&&activeKind==='whoop-live')||(s.key==='fitbit'&&activeKind==='fitbit-live')||(s.key==='apple'&&activeKind==='apple');
     return '<button type="button" class="srcPill'+(connectSource===s.key?' active':'')+'" data-action="src-tab" data-src="'+s.key+'" aria-pressed="'+(connectSource===s.key)+'">'
@@ -1185,7 +1185,7 @@ function renderSideActions(d,kind){
     html='<span class="chip chip-warn"><span class="chipDot" aria-hidden></span>Sample data</span>'
       +'<button type="button" class="btn btn-link btn-full" data-action="disconnect">Disconnect preview</button>';
   } else {
-    const label=kind==='fitbit-live'?'Fitbit · Live':'WHOOP · Live';
+    const label=kind==='fitbit-live'?'Google Health · Live':'WHOOP · Live';
     html='<span class="chip chip-brand"><span class="chipDot" aria-hidden></span>'+label+'</span>'
       +'<div class="syncRow"><span>'+(d.lastSyncedMinutes!=null?'synced '+d.lastSyncedMinutes+'m ago':'—')+'</span>'
       +'<button type="button" class="btn btn-ghost" data-action="sync"'+(syncing?' disabled':'')+' style="padding:5px 12px;font-size:11px">'+(syncing?'syncing…':'Sync now')+'</button></div>'
@@ -1275,7 +1275,7 @@ applyTheme(currentTheme);
     if(w||f){
       history.replaceState(null,'',location.pathname);
       if(w==='error'||w==='denied') alert('WHOOP connection didn\'t complete. Check WHOOP_SETUP.md.');
-      if(f==='error'||f==='denied') alert('Fitbit connection didn\'t complete. Check FITBIT_SETUP.md.');
+      if(f==='error'||f==='denied') alert('Google Health connection didn\'t complete — make sure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set in Vercel.');
       if(f==='connected') connectSource='fitbit';
     }
   }catch{}
