@@ -1193,7 +1193,7 @@ const APPS = [
   { file: 'finance.html',          name: 'Finance',      tag: 'Net worth · subs · orders · wishlist',  icon: 'finance',  wide: true, cats: ['wealth'] },
   { file: 'gym.html',              name: 'Sports',       tag: 'Gym · Activities · Points',              icon: 'sports',   wide: true, cats: ['health', 'lifestyle'] },
   { file: 'supplements.html',      name: 'Supplements',  tag: 'Your stack + smart recommendations',     icon: 'supp',                 cats: ['health'] },
-  { file: 'whoop.html',            name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',      icon: 'band',                 cats: ['health'] },
+  { file: 'whoop-pc.html',          name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',      icon: 'band',                 cats: ['health'] },
   { file: 'water.html',            name: 'Water',        tag: 'Daily hydration target',                 icon: 'water',                cats: ['health', 'lifestyle'] },
   { file: 'goals.html',            name: 'Goals',        tag: 'Goals & streaks',                        icon: 'goals',                cats: ['lifestyle'] },
   { file: 'progress.html',         name: 'Progress',     tag: 'Photos & measurements',                  icon: 'progress',             cats: ['health'] },
@@ -1567,7 +1567,7 @@ function statFor(file){
     else if (file === 'finance.html') { const s = lsGet('finance_standalone_v1'); if (s && Array.isArray(s.accounts) && s.accounts.length) { const nw = s.accounts.reduce((a,x)=>a+(Number(x.amountCHF)||0),0); return { value: 'CHF ' + fmtNum(nw), label: 'net worth' }; } }
     else if (file === 'supplements.html') { const s = lsGet('supplements_standalone_v1'); if (s && Array.isArray(s.items) && s.items.length) { const tk = (s.taken && s.taken[activeDateKey()]) || {}; const n = s.items.filter(i => tk[i.id]).length; return { value: n + '/' + s.items.length, label: 'taken today' }; } }
     else if (file === 'water.html') { const s = lsGet('water_standalone_v1'); if (s && s.logs) { const n = s.logs[localDateKey()] || 0; return { value: String(n), label: (n === 1 ? 'drink' : 'drinks') + ' today' }; } }
-    else if (file === 'whoop.html') { if (health && health.recovery != null) return { value: Math.round(health.recovery) + '%', label: 'recovery' }; }
+    else if (file === 'whoop-pc.html') { if (health && health.recovery != null) return { value: Math.round(health.recovery) + '%', label: 'recovery' }; }
     else if (file === 'caffeine-tracker.html') { const s = lsGet('caffeine_tracker_v1'); if (s && Array.isArray(s.logs) && s.logs.length) { const todayKey = (function(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })(); if (s.dateKey === todayKey) { const total = s.logs.reduce((a,x)=>a+(Number(x.mg)||0),0); return { value: total + ' mg', label: 'today' }; } } }
   } catch (e) {}
   return null;
