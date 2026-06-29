@@ -1,5 +1,5 @@
-// GET /api/fitbit/data — refreshes the Google access token, fetches sleep / resting HR
-// from Google Health API and returns a vitals payload. Same-origin → no CORS.
+// GET /api/fitbit/data — refreshes the Google access token, fetches sleep + resting HR
+// from the Google Fit REST API and returns a vitals payload.
 const L = require('./_lib');
 
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -12,7 +12,19 @@ async function ghGet(path, token) {
     });
     if (!r.ok) return null;
     return await r.json().catch(() => null);
-  } catch (e) { return null; }
+  } catch { return null; }
+}
+
+async function ghPost(path, body, token) {
+  try {
+    const r = await fetch(L.API_BASE + path, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) return null;
+    return await r.json().catch(() => null);
+  } catch { return null; }
 }
 
 module.exports = async (req, res) => {
@@ -23,12 +35,12 @@ module.exports = async (req, res) => {
   if (!refresh) { res.statusCode = 200; res.end(JSON.stringify({ connected: false })); return; }
 
   try { L.creds(); }
-  catch (e) { res.statusCode = 200; res.end(JSON.stringify({ connected: false, error: 'not_configured' })); return; }
+  catch { res.statusCode = 200; res.end(JSON.stringify({ connected: false, error: 'not_configured' })); return; }
 
   let tok;
   try {
     tok = await L.tokenRequest({ grant_type: 'refresh_token', refresh_token: refresh });
-  } catch (e) {
+  } catch {
     res.statusCode = 200;
     res.setHeader('Set-Cookie', L.clearCookie('gh_refresh', secure));
     res.end(JSON.stringify({ connected: false, error: 'expired' }));
@@ -41,37 +53,58 @@ module.exports = async (req, res) => {
   const at = tok.access_token;
   const now = Date.now();
   const weekAgo = now - 7 * 86400000;
+  const dayAgo  = now - 86400000;
 
-  // Fetch sleep sessions (activityType 72 = sleep) and health metrics in parallel.
-  const [sleepData, metricsData] = await Promise.all([
-    ghGet(`/users/-/sessions?startTime=${toRfc3339(weekAgo)}&endTime=${toRfc3339(now)}&activityType=72`, at),
-    ghGet(`/users/-/healthMetrics?startTime=${toRfc3339(now - 86400000)}&endTime=${toRfc3339(now)}`, at),
+  // Fetch sleep sessions + resting HR aggregate in parallel.
+  const [sleepData, rhrData] = await Promise.all([
+    // Google Fit sessions endpoint — activityType 72 = sleep
+    ghGet(`/users/me/sessions?startTime=${toRfc3339(weekAgo)}&endTime=${toRfc3339(now)}&activityType=72`, at),
+    // Google Fit aggregate endpoint — resting heart rate
+    ghPost('/users/me/dataset:aggregate', {
+      aggregateBy: [{ dataTypeName: 'com.google.heart_rate.resting.summary' }],
+      bucketByTime: { durationMillis: 86400000 },
+      startTimeMillis: String(dayAgo),
+      endTimeMillis: String(now),
+    }, at),
   ]);
 
-  // Resting HR from health metrics.
+  // Parse resting HR from aggregate buckets.
   let rhr = null;
-  if (metricsData && Array.isArray(metricsData.healthMetrics)) {
-    const hrMetric = metricsData.healthMetrics.find(m => m.metricType === 'METRIC_TYPE_RESTING_HEART_RATE');
-    if (hrMetric && hrMetric.value != null) rhr = Math.round(Number(hrMetric.value));
+  if (rhrData && Array.isArray(rhrData.bucket)) {
+    for (const bucket of rhrData.bucket) {
+      if (!bucket.dataset) continue;
+      for (const ds of bucket.dataset) {
+        if (!Array.isArray(ds.point)) continue;
+        for (const pt of ds.point) {
+          if (pt.value && pt.value[0] != null) {
+            const v = pt.value[0].fpVal ?? pt.value[0].intVal;
+            if (v != null) rhr = Math.round(Number(v));
+          }
+        }
+      }
+    }
   }
 
-  // Most recent sleep session.
+  // Most recent sleep session (Google Fit uses startTimeMillis / endTimeMillis as strings).
   let sleepHours = null, sleepPerf = null, bedtime = null, wakeTime = null;
   if (sleepData && Array.isArray(sleepData.session) && sleepData.session.length) {
     const sessions = sleepData.session
       .filter(s => s.activityType === 72)
-      .sort((a, b) => String(b.startTime).localeCompare(String(a.startTime)));
+      .sort((a, b) => Number(b.startTimeMillis) - Number(a.startTimeMillis));
     const s = sessions[0];
     if (s) {
-      const start = new Date(s.startTime);
-      const end = new Date(s.endTime);
-      const durationMs = end - start;
-      sleepHours = Math.round((durationMs / 3600000) * 100) / 100;
-      bedtime = pad2(start.getHours()) + ':' + pad2(start.getMinutes());
-      wakeTime = pad2(end.getHours()) + ':' + pad2(end.getMinutes());
-      // activeTime vs total time gives efficiency if available.
-      if (s.activeTimeMillis != null && durationMs > 0) {
-        sleepPerf = Math.round((Number(s.activeTimeMillis) / durationMs) * 100);
+      const startMs = Number(s.startTimeMillis);
+      const endMs   = Number(s.endTimeMillis);
+      const durMs   = endMs - startMs;
+      if (durMs > 0) {
+        sleepHours = Math.round((durMs / 3600000) * 100) / 100;
+        const startD = new Date(startMs);
+        const endD   = new Date(endMs);
+        bedtime  = pad2(startD.getHours()) + ':' + pad2(startD.getMinutes());
+        wakeTime = pad2(endD.getHours())   + ':' + pad2(endD.getMinutes());
+        if (s.activeTimeMillis != null && durMs > 0) {
+          sleepPerf = Math.round((Number(s.activeTimeMillis) / durMs) * 100);
+        }
       }
     }
   }
@@ -79,8 +112,8 @@ module.exports = async (req, res) => {
   res.statusCode = 200;
   res.end(JSON.stringify({
     connected: true, source: 'fitbit', ts: Date.now(),
-    recovery: null,
-    hrv: null,
+    recovery: null,   // Google Fit has no recovery score
+    hrv: null,        // Google Fit aggregate HRV requires extra scope + Pixel Watch
     rhr,
     sleepPerf,
     sleepHours,
