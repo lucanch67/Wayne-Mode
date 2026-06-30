@@ -1123,6 +1123,68 @@ body::before {
 /* ── Spacer between haulix sections ── */
 .haulix-spacer { height: 16px; }
 
+/* ── Peak hero tile ── */
+.card-peak { gap:0; }
+.pk-top { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-4); }
+.pk-src { display:inline-flex; align-items:center; gap:5px; margin-left:auto; font-family:var(--font-mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.pk-src-dot { width:5px; height:5px; border-radius:50%; background:var(--pos); box-shadow:0 0 5px var(--pos); flex-shrink:0; animation:live-pulse 2.4s ease-in-out infinite; }
+.pk-body { display:flex; align-items:center; gap:var(--space-5); flex:1; min-height:72px; }
+.pk-ring-wrap { display:flex; align-items:center; gap:var(--space-3); flex-shrink:0; }
+.pk-ring { position:relative; width:72px; height:72px; display:grid; place-items:center; flex-shrink:0; }
+.pk-ring > svg { position:absolute; inset:0; overflow:visible; }
+.pk-ring-track { fill:none; stroke:var(--track); stroke-width:5; }
+.pk-ring-fill  { fill:none; stroke:var(--pos); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset 1s var(--ease-premium), stroke 500ms; }
+.pk-ring-inner { position:relative; z-index:1; display:flex; align-items:baseline; }
+.pk-score { font-family:var(--font-display); font-style:italic; font-weight:600; font-size:26px; line-height:1; letter-spacing:-.02em; }
+.pk-score-empty { font-family:var(--font-mono); font-size:18px; color:var(--muted); }
+.pk-ring-labels { display:flex; flex-direction:column; gap:3px; }
+.pk-state { font-family:var(--font-display); font-style:italic; font-size:16px; color:var(--fg); line-height:1.1; }
+.pk-ring-lbl { font-family:var(--font-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.pk-spark { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--space-1); align-self:stretch; justify-content:flex-end; }
+.pk-spark-svg { width:100%; height:44px; display:block; overflow:visible; }
+.pk-spark-label { font-family:var(--font-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+@media (max-width:520px) { .pk-spark { display:none; } }
+
+/* Vision peak card */
+[data-theme="vision"] .card-peak {
+  background:
+    radial-gradient(ellipse 55% 65% at 0% 105%, rgba(255,255,255,.06), transparent 65%),
+    rgba(255,255,255,.025);
+  border-color:rgba(255,255,255,.10);
+}
+[data-theme="vision"] .card-peak:hover {
+  background:
+    radial-gradient(ellipse 60% 70% at 0% 105%, rgba(255,255,255,.09), transparent 65%),
+    rgba(255,255,255,.04);
+  border-color:rgba(255,255,255,.20);
+  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset, 0 0 48px -12px rgba(255,255,255,.07), var(--card-shadow);
+}
+/* Aurora peak card */
+[data-theme="aurora"] .card-peak {
+  background:linear-gradient(140deg, rgba(139,123,255,.10) 0%, rgba(79,227,208,.05) 100%);
+  border-color:rgba(139,123,255,.22);
+}
+[data-theme="aurora"] .card-peak:hover {
+  background:linear-gradient(135deg, rgba(139,123,255,.18) 0%, rgba(79,227,208,.09) 100%);
+  border-color:rgba(139,123,255,.38);
+  box-shadow:0 0 0 1px rgba(139,123,255,.34) inset, 0 0 48px -10px rgba(124,107,255,.60), var(--card-shadow);
+}
+/* Nocturne peak card */
+[data-theme="nocturne"] .card-peak { border-color:rgba(0,255,136,.20); background:rgba(0,255,136,.025); }
+[data-theme="nocturne"] .card-peak:hover {
+  border-color:rgba(0,255,136,.36); background:rgba(0,255,136,.05);
+  box-shadow:0 0 0 1px rgba(0,255,136,.14) inset, 0 0 44px -10px rgba(0,255,136,.28), var(--card-shadow);
+}
+/* Daylight peak card */
+[data-theme="daylight"] .card-peak {
+  background:linear-gradient(140deg, rgba(106,69,255,.06) 0%, rgba(255,255,255,.88) 60%);
+  border-color:rgba(106,69,255,.16);
+}
+[data-theme="daylight"] .card-peak:hover {
+  background:linear-gradient(140deg, rgba(106,69,255,.11) 0%, rgba(255,255,255,.96) 60%);
+  border-color:rgba(106,69,255,.30);
+}
+
 /* ── Mobile bottom nav ── */
 .mobileNav {
   display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
@@ -1575,7 +1637,39 @@ function statFor(file){
   } catch (e) {}
   return null;
 }
+function peakCardHtml() {
+  var circ = (2 * Math.PI * 26).toFixed(2);
+  return '<a class="card tileWide card-peak" href="peak.html">'
+    + '<span class="cardArrow" aria-hidden>↗</span>'
+    + '<div class="pk-top">'
+      + wmIcon('peak')
+      + '<span class="cardName">Peak</span>'
+      + '<div class="pk-src"><span class="pk-src-dot"></span>Fitbit · Google Health</div>'
+    + '</div>'
+    + '<div class="pk-body">'
+      + '<div class="pk-ring-wrap">'
+        + '<div class="pk-ring">'
+          + '<svg viewBox="0 0 64 64" style="transform:rotate(-90deg)" aria-hidden="true">'
+            + '<circle class="pk-ring-track" cx="32" cy="32" r="26"/>'
+            + '<circle class="pk-ring-fill" id="pkRingFill" cx="32" cy="32" r="26" style="stroke-dasharray:' + circ + ';stroke-dashoffset:' + circ + '"/>'
+          + '</svg>'
+          + '<div class="pk-ring-inner"><span id="pkScore" class="pk-score-empty">—</span></div>'
+        + '</div>'
+        + '<div class="pk-ring-labels">'
+          + '<div class="pk-state" id="pkState">Readiness</div>'
+          + '<div class="pk-ring-lbl">Daily Peak</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="pk-spark">'
+        + '<svg class="pk-spark-svg" id="pkSparkSvg" viewBox="0 0 180 48" preserveAspectRatio="none"></svg>'
+        + '<div class="pk-spark-label">Energy Curve · Today</div>'
+      + '</div>'
+    + '</div>'
+    + '</a>';
+}
+
 function cardHtml(a){
+  if (a.file === 'peak.html') return peakCardHtml();
   const st = statFor(a.file);
   const tail = st
     ? '<div class="cardStat"><span class="cardStatValue">' + esc(st.value) + '</span><span class="cardStatLabel">' + esc(st.label) + '</span></div>'
@@ -1679,6 +1773,102 @@ function render(){
     + '<div class="suite-section"><div class="suite-label">App Suite</div>'
     + '<div class="bento">' + visibleApps.map(cardHtml).join('') + '</div></div>';
   renderModal();
+  initPeakCard();
+}
+
+function initPeakCard() {
+  var scoreEl = document.getElementById('pkScore');
+  var fillEl  = document.getElementById('pkRingFill');
+  var stateEl = document.getElementById('pkState');
+  var sparkEl = document.getElementById('pkSparkSvg');
+  if (!scoreEl) return;
+
+  var h   = lsGet('patron_health_v1');
+  var pl  = lsGet('peak_log_v1');
+  var score = null, stateTxt = null;
+
+  if (h && h.connected && h.recovery != null) score = Math.round(h.recovery);
+
+  var todayKey2 = localDateKey();
+  if (pl && pl.days && pl.days[todayKey2]) {
+    var d2 = pl.days[todayKey2];
+    if (score == null && d2.overallScore != null) score = Math.round(d2.overallScore);
+    if (d2.stateWord) stateTxt = d2.stateWord;
+  }
+
+  var scoreColor = score != null
+    ? (score >= 70 ? 'var(--pos)' : score >= 40 ? 'var(--warn)' : 'var(--neg)')
+    : null;
+  var hexColor = score != null
+    ? (score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444')
+    : null;
+
+  if (score != null && scoreEl) {
+    scoreEl.textContent = score;
+    scoreEl.className = 'pk-score';
+    if (fillEl) {
+      var circ3 = 2 * Math.PI * 26;
+      fillEl.style.stroke = scoreColor;
+      fillEl.style.filter = 'drop-shadow(0 0 6px ' + scoreColor + ')';
+      fillEl.style.strokeDasharray = circ3;
+      fillEl.style.strokeDashoffset = circ3;
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        fillEl.style.strokeDashoffset = circ3 * (1 - score / 100);
+      }); });
+    }
+    if (stateEl && stateTxt) stateEl.textContent = stateTxt;
+  } else {
+    if (fillEl) { fillEl.style.stroke = 'rgba(255,255,255,0.15)'; fillEl.style.strokeDasharray = '5 9'; fillEl.style.strokeDashoffset = '0'; }
+  }
+
+  if (!sparkEl) return;
+  var stim = lsGet('stimulant_standalone_v1');
+  var logs2 = (stim && Array.isArray(stim.logs)) ? stim.logs : [];
+  var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  var todayMs2 = todayStart.getTime();
+  var KE = Math.LN2 / 5, KA2 = 4.0;
+
+  function cafAt2(tMs) {
+    return logs2.reduce(function(s, l) {
+      var dh = (tMs - l.t) / 3600000;
+      if (dh < 0) return s;
+      var c = (+l.mg || 0) * KA2 / (KA2 - KE) * (Math.exp(-KE * dh) - Math.exp(-KA2 * dh));
+      return s + Math.max(0, c);
+    }, 0);
+  }
+
+  var pts2 = [];
+  for (var hh = 5; hh <= 23; hh++) {
+    var tMs2 = todayMs2 + hh * 3600000;
+    var base = 50 + 28 * Math.sin((hh - 5) * Math.PI / 17);
+    var boost2 = Math.min(32, cafAt2(tMs2) / 4);
+    pts2.push(Math.min(97, Math.max(5, base + boost2)));
+  }
+
+  var N2 = pts2.length, W2 = 180, H2 = 48, pad2 = 3;
+  var area2 = 'M0,' + H2 + ' ', line2 = '';
+  pts2.forEach(function(v, i) {
+    var x = (i / (N2 - 1)) * W2, y = H2 - pad2 - (v / 100) * (H2 - pad2 * 2);
+    area2 += 'L' + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+    line2 += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+  });
+  area2 += 'L' + W2 + ',' + H2 + ' Z';
+
+  var theme2 = document.documentElement.getAttribute('data-theme') || 'vision';
+  var lc = hexColor || (theme2 === 'aurora' ? '#8B7BFF' : theme2 === 'daylight' ? '#6A45FF' : '#22C55E');
+  var nowH = new Date().getHours();
+  var curIdx = Math.max(0, Math.min(N2 - 1, nowH - 5));
+  var dotX = (curIdx / (N2 - 1)) * W2;
+  var dotY = H2 - pad2 - (pts2[curIdx] / 100) * (H2 - pad2 * 2);
+
+  sparkEl.innerHTML =
+    '<defs><linearGradient id="pkGrd" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="' + lc + '" stop-opacity="0.28"/>'
+    + '<stop offset="100%" stop-color="' + lc + '" stop-opacity="0"/>'
+    + '</linearGradient></defs>'
+    + '<path d="' + area2 + '" fill="url(#pkGrd)"/>'
+    + '<path d="' + line2 + '" fill="none" stroke="' + lc + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>'
+    + '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="3" fill="' + lc + '" filter="drop-shadow(0 0 4px ' + lc + ')"/>';
 }
 
 /* ================================================================
