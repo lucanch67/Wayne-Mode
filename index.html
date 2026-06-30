@@ -415,8 +415,8 @@ body::before {
 .wm-icon:hover .ic-biz { animation: wm-rise 0.9s ease-in-out infinite; transform-origin: center bottom; }
 @keyframes wm-rise { 0%,100%{transform:translateY(0) scaleX(1);} 50%{transform:translateY(-2px) scaleX(1.04);} }
 @media (prefers-reduced-motion: reduce) { .wm-icon,.wm-icon::before,.wm-icon * { animation: none !important; } }
-.cardName { font-family: var(--font-ui); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.02em; }
-.cardTag  { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.cardName { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: var(--text-xl); letter-spacing: -0.02em; }
+.cardTag  { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); line-height: 1.5; }
 .cardArrow {
   position: absolute; top: var(--space-5); right: var(--space-5);
   color: var(--muted); font-size: 16px;
@@ -792,7 +792,7 @@ body::before {
 .sidebar-dock-btn:hover .ic-biz { animation: wm-rise 0.9s ease-in-out infinite; transform-origin: center bottom; }
 .sidebar-dock-tooltip {
   position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
-  background: rgba(0,0,0,0.88); color: #fff; font-family: var(--font-ui); font-size: 11px; font-weight: 600;
+  background: rgba(0,0,0,0.88); color: #fff; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
   padding: 5px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none;
   opacity: 0; transition: opacity 150ms; z-index: 99;
 }
@@ -1010,7 +1010,7 @@ body::before {
 .tab-btn {
   appearance: none; background: transparent; border: 1px solid transparent;
   border-radius: 999px; padding: 6px 16px;
-  font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--muted);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
   cursor: pointer; transition: all 200ms var(--ease-premium); white-space: nowrap;
 }
 .tab-btn:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
@@ -1185,7 +1185,6 @@ const WM_ICONS = {
   business: '<svg viewBox="0 0 24 24"><g class="ic ic-biz"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/><line x1="9" y1="13" x2="9" y2="21"/><line x1="15" y1="13" x2="15" y2="21"/></g></svg>',
   learn:    '<svg viewBox="0 0 24 24"><g class="ic ic-learn"><path d="M4 19V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13"/><path d="M4 19h16"/><path d="M9 10h6M9 14h4"/></g></svg>',
   peak:     '<svg viewBox="0 0 24 24"><g class="ic ic-peak"><circle cx="12" cy="12" r="8.5"/><path d="M7.5 14.5l3-5 2.5 3.5 2-2.5 2 4"/></g></svg>',
-  meds:     '<svg viewBox="0 0 24 24"><g class="ic ic-meds"><rect x="2.8" y="9" width="18.4" height="6" rx="3" transform="rotate(45 12 12)"/><path d="M8.5 8.5 15.5 15.5M10.5 10.5h3"/></g></svg>',
 };
 function wmIcon(key, active) {
   return '<span class="wm-icon' + (active ? ' is-active' : '') + '" aria-hidden>' + (WM_ICONS[key] || '') + '</span>';
@@ -1204,7 +1203,6 @@ const APPS = [
   { file: 'business.html',         name: 'Business',     tag: 'Revenue · Pipeline · AI Insights',       icon: 'business',             cats: ['business', 'wealth'] },
   { file: 'learning.html',         name: 'Learning',     tag: 'Skill tree · Study log · Resources',     icon: 'learn',                cats: ['lifestyle'] },
   { file: 'peak.html',             name: 'Peak',         tag: 'Daily readiness · energy curve',          icon: 'peak',     wide: true,   cats: ['health'] },
-  { file: 'meds.html',             name: 'Meds',         tag: 'Doses · peak & comedown timing',          icon: 'meds',                 cats: ['health'] },
 ];
 
 /* ================================================================
@@ -1325,7 +1323,6 @@ function sidebarInnerHtml(){
     { file: 'business.html',   icon: 'business', label: 'Business' },
     { file: 'learning.html',   icon: 'learn',    label: 'Learning' },
     { file: 'peak.html',       icon: 'peak',     label: 'Peak' },
-    { file: 'meds.html',       icon: 'meds',     label: 'Meds' },
   ].forEach(function(a){
     h += '<a href="' + a.file + '" class="sidebar-dock-btn" aria-label="' + a.label + '">'
       + '<span class="wm-icon" aria-hidden>' + (WM_ICONS[a.icon] || '') + '</span>'
