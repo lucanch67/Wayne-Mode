@@ -1145,7 +1145,7 @@ body::before {
 .pk-spark-label { font-family:var(--font-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
 @media (max-width:520px) { .pk-spark { display:none; } }
 
-/* Vision peak card */
+/* Vision peak card — fully monochrome white */
 [data-theme="vision"] .card-peak {
   background:
     radial-gradient(ellipse 55% 65% at 0% 105%, rgba(255,255,255,.06), transparent 65%),
@@ -1159,6 +1159,8 @@ body::before {
   border-color:rgba(255,255,255,.20);
   box-shadow:0 0 0 1px rgba(255,255,255,.14) inset, 0 0 48px -12px rgba(255,255,255,.07), var(--card-shadow);
 }
+[data-theme="vision"] .pk-src-dot { background:rgba(255,255,255,.55); box-shadow:0 0 5px rgba(255,255,255,.22); }
+[data-theme="vision"] .pk-ring-fill { stroke:rgba(255,255,255,.30); }
 /* Aurora peak card */
 [data-theme="aurora"] .card-peak {
   background:linear-gradient(140deg, rgba(139,123,255,.10) 0%, rgba(79,227,208,.05) 100%);
@@ -1796,11 +1798,17 @@ function initPeakCard() {
     if (d2.stateWord) stateTxt = d2.stateWord;
   }
 
+  var theme0 = document.documentElement.getAttribute('data-theme') || 'vision';
+  var isVision = theme0 === 'vision';
   var scoreColor = score != null
-    ? (score >= 70 ? 'var(--pos)' : score >= 40 ? 'var(--warn)' : 'var(--neg)')
+    ? (isVision
+        ? (score >= 70 ? 'rgba(255,255,255,0.88)' : score >= 40 ? '#F59E0B' : '#EF4444')
+        : (score >= 70 ? 'var(--pos)' : score >= 40 ? 'var(--warn)' : 'var(--neg)'))
     : null;
   var hexColor = score != null
-    ? (score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444')
+    ? (isVision
+        ? (score >= 70 ? 'rgba(255,255,255,0.75)' : score >= 40 ? '#F59E0B' : '#EF4444')
+        : (score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444'))
     : null;
 
   if (score != null && scoreEl) {
@@ -1855,7 +1863,7 @@ function initPeakCard() {
   area2 += 'L' + W2 + ',' + H2 + ' Z';
 
   var theme2 = document.documentElement.getAttribute('data-theme') || 'vision';
-  var lc = hexColor || (theme2 === 'aurora' ? '#8B7BFF' : theme2 === 'daylight' ? '#6A45FF' : '#22C55E');
+  var lc = hexColor || (theme2 === 'aurora' ? '#8B7BFF' : theme2 === 'daylight' ? '#6A45FF' : theme2 === 'nocturne' ? '#00FF88' : 'rgba(255,255,255,0.60)');
   var nowH = new Date().getHours();
   var curIdx = Math.max(0, Math.min(N2 - 1, nowH - 5));
   var dotX = (curIdx / (N2 - 1)) * W2;
