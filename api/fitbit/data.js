@@ -1,12 +1,10 @@
 // GET /api/fitbit/data — refresh token, fetch health data from Google Health API v4.
-// Endpoints: /v4/users/me/dataTypes/{type}/dataPoints
-// Scopes: googlehealth.sleep.readonly + googlehealth.health_metrics_and_measurements.readonly
+// No filter params — the API returns most-recent-first by default.
 const L = require('./_lib');
 
 function pad2(n) { return String(n).padStart(2, '0'); }
-function toIso(ms) { return new Date(ms).toISOString(); }
-function toDate(ms) { return new Date(ms).toISOString().slice(0, 10); }
-function qs(params) { return '?' + new URLSearchParams(params).toString(); }
+// Parse "7200s" or "-3600s" UTC offset strings into milliseconds.
+function offsetMs(s) { const n = parseInt(s || '0', 10); return isNaN(n) ? 0 : n * 1000; }
 
 async function ghGet(path, token) {
   try {
@@ -42,29 +40,15 @@ module.exports = async (req, res) => {
   }
 
   const at = tok.access_token;
-  const now = Date.now();
-  const today     = toDate(now);
-  const yesterday = toDate(now - 86400000);
-  const weekAgo   = toIso(now - 7 * 86400000);
-  const nowIso    = toIso(now);
 
-  // Fetch sleep, resting HR, and HRV in parallel via Google Health API v4.
-  // Endpoint path: /v4/users/me/dataTypes/{kebab-case}/dataPoints
-  // Filter uses snake_case data type names per AIP-160 spec.
+  // No filter — API returns most-recent entries first. pageSize=3 is enough to pick the latest.
   const [sleepRes, rhrRes, hrvRes] = await Promise.all([
-    ghGet('/users/me/dataTypes/sleep/dataPoints' + qs({
-      filter: `sleep.interval.start_time >= "${weekAgo}" AND sleep.interval.start_time <= "${nowIso}"`,
-      pageSize: 7,
-    }), at),
-    ghGet('/users/me/dataTypes/daily-resting-heart-rate/dataPoints' + qs({
-      filter: `daily_resting_heart_rate.date >= "${yesterday}" AND daily_resting_heart_rate.date <= "${today}"`,
-    }), at),
-    ghGet('/users/me/dataTypes/heart-rate-variability/dataPoints' + qs({
-      filter: `heart_rate_variability.date >= "${yesterday}" AND heart_rate_variability.date <= "${today}"`,
-    }), at),
+    ghGet('/users/me/dataTypes/sleep/dataPoints?pageSize=3', at),
+    ghGet('/users/me/dataTypes/daily-resting-heart-rate/dataPoints?pageSize=3', at),
+    ghGet('/users/me/dataTypes/heart-rate-variability/dataPoints?pageSize=3', at),
   ]);
 
-  // If sleep + resting HR both fail with auth errors → token needs new scopes → ask to reconnect.
+  // Detect auth failure → ask user to reconnect.
   if ((sleepRes?._err === 401 || sleepRes?._err === 403) &&
       (rhrRes?._err === 401 || rhrRes?._err === 403)) {
     res.statusCode = 200;
@@ -73,66 +57,49 @@ module.exports = async (req, res) => {
   }
 
   // ── Parse most recent sleep session ──────────────────────────────────────
+  // startUtcOffset / endUtcOffset ("7200s") must be applied to get local clock time.
   let sleepHours = null, sleepPerf = null, bedtime = null, wakeTime = null;
   if (sleepRes && !sleepRes._err && Array.isArray(sleepRes.dataPoints) && sleepRes.dataPoints.length) {
-    const sessions = sleepRes.dataPoints
-      .filter(p => p.sleep?.interval?.startTime && p.sleep?.interval?.endTime)
-      .sort((a, b) => new Date(b.sleep.interval.startTime) - new Date(a.sleep.interval.startTime));
-    const s = sessions[0]?.sleep;
+    const pts = sleepRes.dataPoints.filter(p => p.sleep?.interval?.startTime);
+    const s = pts[0]?.sleep;  // already sorted most-recent-first
     if (s) {
-      const startMs = new Date(s.interval.startTime).getTime();
-      const endMs   = new Date(s.interval.endTime).getTime();
-      const durMs   = endMs - startMs;
-      if (durMs > 0) {
-        const sd = new Date(startMs), ed = new Date(endMs);
-        bedtime  = pad2(sd.getHours()) + ':' + pad2(sd.getMinutes());
-        wakeTime = pad2(ed.getHours()) + ':' + pad2(ed.getMinutes());
-        // minutesAsleep is actual sleep time; minutesInSleepPeriod is total time in bed.
-        const asleep = s.summary?.minutesAsleep != null ? Number(s.summary.minutesAsleep) : null;
-        const inBed  = s.summary?.minutesInSleepPeriod != null ? Number(s.summary.minutesInSleepPeriod) : null;
-        sleepHours = asleep != null ? Math.round((asleep / 60) * 100) / 100
-                                    : Math.round((durMs / 3600000) * 100) / 100;
-        if (asleep != null && inBed != null && inBed > 0) {
-          sleepPerf = Math.round((asleep / inBed) * 100);
-        }
+      const startUtc = new Date(s.interval.startTime).getTime();
+      const endUtc   = new Date(s.interval.endTime).getTime();
+      const startLocal = startUtc + offsetMs(s.interval.startUtcOffset);
+      const endLocal   = endUtc   + offsetMs(s.interval.endUtcOffset);
+      const sd = new Date(startLocal), ed = new Date(endLocal);
+      bedtime  = pad2(sd.getUTCHours()) + ':' + pad2(sd.getUTCMinutes());
+      wakeTime = pad2(ed.getUTCHours()) + ':' + pad2(ed.getUTCMinutes());
+
+      const asleep = s.summary?.minutesAsleep != null ? Number(s.summary.minutesAsleep) : null;
+      const inBed  = s.summary?.minutesInSleepPeriod != null ? Number(s.summary.minutesInSleepPeriod) : null;
+      const durMs  = endUtc - startUtc;
+      sleepHours = asleep != null ? Math.round((asleep / 60) * 100) / 100
+                                  : Math.round((durMs / 3600000) * 100) / 100;
+      if (asleep != null && inBed != null && inBed > 0) {
+        sleepPerf = Math.round((asleep / inBed) * 100);
       }
     }
   }
 
-  // ── Parse resting HR ─────────────────────────────────────────────────────
-  // Response field: dataPoints[].dailyRestingHeartRate.beatsPerMinute (int64 string)
+  // ── Parse resting HR (most recent daily value) ───────────────────────────
   let rhr = null;
   if (rhrRes && !rhrRes._err && Array.isArray(rhrRes.dataPoints) && rhrRes.dataPoints.length) {
-    const sorted = rhrRes.dataPoints
-      .filter(p => p.dailyRestingHeartRate?.beatsPerMinute != null)
-      .sort((a, b) => {
-        const da = a.dailyRestingHeartRate.date, db = b.dailyRestingHeartRate.date;
-        return (db.year * 10000 + db.month * 100 + db.day) -
-               (da.year * 10000 + da.month * 100 + da.day);
-      });
-    const bpm = Number(sorted[0]?.dailyRestingHeartRate?.beatsPerMinute);
+    const bpm = Number(rhrRes.dataPoints[0]?.dailyRestingHeartRate?.beatsPerMinute);
     if (bpm >= 30 && bpm <= 120) rhr = bpm;
   }
 
-  // ── Parse HRV (RMSSD ms) ─────────────────────────────────────────────────
-  // Response field: dataPoints[].dailyHeartRateVariability.averageHeartRateVariabilityMilliseconds
+  // ── Parse HRV (most recent daily value) ──────────────────────────────────
   let hrv = null;
   if (hrvRes && !hrvRes._err && Array.isArray(hrvRes.dataPoints) && hrvRes.dataPoints.length) {
-    const sorted = hrvRes.dataPoints
-      .filter(p => p.dailyHeartRateVariability?.averageHeartRateVariabilityMilliseconds != null)
-      .sort((a, b) => {
-        const da = a.dailyHeartRateVariability.date, db = b.dailyHeartRateVariability.date;
-        return (db.year * 10000 + db.month * 100 + db.day) -
-               (da.year * 10000 + da.month * 100 + da.day);
-      });
-    const ms = Number(sorted[0]?.dailyHeartRateVariability?.averageHeartRateVariabilityMilliseconds);
+    const ms = Number(hrvRes.dataPoints[0]?.dailyHeartRateVariability?.averageHeartRateVariabilityMilliseconds);
     if (ms > 0 && ms < 300) hrv = Math.round(ms);
   }
 
   res.statusCode = 200;
   res.end(JSON.stringify({
     connected: true, source: 'fitbit', ts: Date.now(),
-    readiness: null,   // Fitbit Daily Readiness requires Fitbit Web API (not Google Health)
+    readiness: null,
     hrv,
     rhr,
     sleepPerf,
