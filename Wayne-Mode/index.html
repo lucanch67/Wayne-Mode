@@ -987,6 +987,8 @@ const WM_ICONS = {
   stim:     '<svg viewBox="0 0 24 24"><g class="ic ic-stim"><path d="M3 9h14v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9Z"/><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 4c0 0 .5-1 1.5-1s2 1 2 1 .5-1 1.5-1 1.5 1 1.5 1"/></g></svg>',
   business: '<svg viewBox="0 0 24 24"><g class="ic ic-biz"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/><line x1="9" y1="13" x2="9" y2="21"/><line x1="15" y1="13" x2="15" y2="21"/></g></svg>',
   learn:    '<svg viewBox="0 0 24 24"><g class="ic ic-learn"><path d="M4 19V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13"/><path d="M4 19h16"/><path d="M9 10h6M9 14h4"/></g></svg>',
+  peak:     '<svg viewBox="0 0 24 24"><g class="ic ic-peak"><circle cx="12" cy="12" r="8.5"/><path d="M7.5 14.5l3-5 2.5 3.5 2-2.5 2 4"/></g></svg>',
+  meds:     '<svg viewBox="0 0 24 24"><g class="ic ic-meds"><rect x="2.8" y="9" width="18.4" height="6" rx="3" transform="rotate(45 12 12)"/><path d="M8.5 8.5 15.5 15.5M10.5 10.5h3"/></g></svg>',
 };
 function wmIcon(key, active) {
   return '<span class="wm-icon' + (active ? ' is-active' : '') + '" aria-hidden>' + (WM_ICONS[key] || '') + '</span>';
@@ -1004,6 +1006,8 @@ const APPS = [
   { file: 'caffeine-tracker.html', name: 'Stimulant',    tag: 'Peak · Crash · Half-life · 90+ drinks',  icon: 'stim',                 cats: ['health', 'lifestyle'] },
   { file: 'business.html',         name: 'Business',     tag: 'Revenue · Pipeline · AI Insights',       icon: 'business',             cats: ['business', 'wealth'] },
   { file: 'learning.html',         name: 'Learning',     tag: 'Skill tree · Study log · Resources',     icon: 'learn',                cats: ['lifestyle'] },
+  { file: 'peak.html',             name: 'Peak',         tag: 'Daily readiness · energy curve',          icon: 'peak',     wide: true,   cats: ['health'] },
+  { file: 'meds.html',             name: 'Meds',         tag: 'Doses · peak & comedown timing',          icon: 'meds',                 cats: ['health'] },
 ];
 
 /* ================================================================
@@ -1123,6 +1127,8 @@ function sidebarInnerHtml(){
     { file: 'goals.html',      icon: 'goals',    label: 'Goals' },
     { file: 'business.html',   icon: 'business', label: 'Business' },
     { file: 'learning.html',   icon: 'learn',    label: 'Learning' },
+    { file: 'peak.html',       icon: 'peak',     label: 'Peak' },
+    { file: 'meds.html',       icon: 'meds',     label: 'Meds' },
   ].forEach(function(a){
     h += '<a href="' + a.file + '" class="sidebar-dock-btn" aria-label="' + a.label + '">'
       + '<span class="wm-icon" aria-hidden>' + (WM_ICONS[a.icon] || '') + '</span>'
