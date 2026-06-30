@@ -1255,7 +1255,7 @@ function wmIcon(key, active) {
 }
 
 const APPS = [
-  { file: 'finance.html',          name: 'Finance',      tag: 'Net worth · subs · orders · wishlist',  icon: 'finance',  wide: true, cats: ['wealth'] },
+  { file: 'peak.html',             name: 'Peak',         tag: 'Daily readiness · energy curve',          icon: 'peak',     wide: true,   cats: ['health'] },
   { file: 'gym.html',              name: 'Sports',       tag: 'Gym · Activities · Points',              icon: 'sports',   wide: true, cats: ['health', 'lifestyle'] },
   { file: 'supplements.html',      name: 'Supplements',  tag: 'Your stack + smart recommendations',     icon: 'supp',                 cats: ['health'] },
   { file: 'whoop-pc.html',          name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',      icon: 'band',                 cats: ['health'] },
@@ -1266,7 +1266,7 @@ const APPS = [
   { file: 'caffeine-tracker.html', name: 'Stimulant',    tag: 'Peak · Crash · Half-life · 90+ drinks',  icon: 'stim',                 cats: ['health', 'lifestyle'] },
   { file: 'business.html',         name: 'Business',     tag: 'Revenue · Pipeline · AI Insights',       icon: 'business',             cats: ['business', 'wealth'] },
   { file: 'learning.html',         name: 'Learning',     tag: 'Skill tree · Study log · Resources',     icon: 'learn',                cats: ['lifestyle'] },
-  { file: 'peak.html',             name: 'Peak',         tag: 'Daily readiness · energy curve',          icon: 'peak',     wide: true,   cats: ['health'] },
+  { file: 'finance.html',          name: 'Finance',      tag: 'Net worth · subs · orders · wishlist',  icon: 'finance',  wide: true, cats: ['wealth'] },
 ];
 
 /* ================================================================
@@ -1662,10 +1662,6 @@ function peakCardHtml() {
           + '<div class="pk-ring-lbl">Daily Peak</div>'
         + '</div>'
       + '</div>'
-      + '<div class="pk-spark">'
-        + '<svg class="pk-spark-svg" id="pkSparkSvg" viewBox="0 0 180 48" preserveAspectRatio="none"></svg>'
-        + '<div class="pk-spark-label">Energy Curve · Today</div>'
-      + '</div>'
     + '</div>'
     + '</a>';
 }
@@ -1829,54 +1825,6 @@ function initPeakCard() {
     if (fillEl) { fillEl.style.stroke = 'rgba(255,255,255,0.15)'; fillEl.style.strokeDasharray = '5 9'; fillEl.style.strokeDashoffset = '0'; }
   }
 
-  if (!sparkEl) return;
-  var stim = lsGet('stimulant_standalone_v1');
-  var logs2 = (stim && Array.isArray(stim.logs)) ? stim.logs : [];
-  var todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  var todayMs2 = todayStart.getTime();
-  var KE = Math.LN2 / 5, KA2 = 4.0;
-
-  function cafAt2(tMs) {
-    return logs2.reduce(function(s, l) {
-      var dh = (tMs - l.t) / 3600000;
-      if (dh < 0) return s;
-      var c = (+l.mg || 0) * KA2 / (KA2 - KE) * (Math.exp(-KE * dh) - Math.exp(-KA2 * dh));
-      return s + Math.max(0, c);
-    }, 0);
-  }
-
-  var pts2 = [];
-  for (var hh = 5; hh <= 23; hh++) {
-    var tMs2 = todayMs2 + hh * 3600000;
-    var base = 50 + 28 * Math.sin((hh - 5) * Math.PI / 17);
-    var boost2 = Math.min(32, cafAt2(tMs2) / 4);
-    pts2.push(Math.min(97, Math.max(5, base + boost2)));
-  }
-
-  var N2 = pts2.length, W2 = 180, H2 = 48, pad2 = 3;
-  var area2 = 'M0,' + H2 + ' ', line2 = '';
-  pts2.forEach(function(v, i) {
-    var x = (i / (N2 - 1)) * W2, y = H2 - pad2 - (v / 100) * (H2 - pad2 * 2);
-    area2 += 'L' + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
-    line2 += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
-  });
-  area2 += 'L' + W2 + ',' + H2 + ' Z';
-
-  var theme2 = document.documentElement.getAttribute('data-theme') || 'vision';
-  var lc = hexColor || (theme2 === 'aurora' ? '#8B7BFF' : theme2 === 'daylight' ? '#6A45FF' : theme2 === 'nocturne' ? '#00FF88' : 'rgba(255,255,255,0.60)');
-  var nowH = new Date().getHours();
-  var curIdx = Math.max(0, Math.min(N2 - 1, nowH - 5));
-  var dotX = (curIdx / (N2 - 1)) * W2;
-  var dotY = H2 - pad2 - (pts2[curIdx] / 100) * (H2 - pad2 * 2);
-
-  sparkEl.innerHTML =
-    '<defs><linearGradient id="pkGrd" x1="0" y1="0" x2="0" y2="1">'
-    + '<stop offset="0%" stop-color="' + lc + '" stop-opacity="0.28"/>'
-    + '<stop offset="100%" stop-color="' + lc + '" stop-opacity="0"/>'
-    + '</linearGradient></defs>'
-    + '<path d="' + area2 + '" fill="url(#pkGrd)"/>'
-    + '<path d="' + line2 + '" fill="none" stroke="' + lc + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>'
-    + '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="3" fill="' + lc + '" filter="drop-shadow(0 0 4px ' + lc + ')"/>';
 }
 
 /* ================================================================
