@@ -318,14 +318,14 @@ body{ background:var(--bg); color:var(--fg); font-family:var(--ui); -webkit-font
 <script src="db.js?v=15"></script>
 <script>
 /* ============================================================
- * PEAK TRACKER â one place for all vitals.
+ * PEAK TRACKER — one place for all vitals.
  * Source switch (Manual / Fitbit · Google Health) feeds the shared
  * health record (patron_health_v1). From recovery + sleep + caffeine
  * we build a daily "overall" score and an hour-by-hour energy curve.
  * All scores reuse the suite's real calculation logic.
  * ============================================================ */
 function readLS(k){ try{ const r=localStorage.getItem(k); return r?JSON.parse(r):null; }catch(e){ return null; } }
-// per-render caches (the energy curve reads these hundreds of times) â cleared at the top of render()
+// per-render caches (the energy curve reads these hundreds of times) — cleared at the top of render()
 let _hl,_prof,_stim,_feelC,_med,_recHist,_hrvB,_rhrB,_sdebt,_smoker,_hab,_chrono;
 function clearCaches(){ _hl=_prof=_stim=_feelC=_med=_recHist=_hrvB=_rhrB=_sdebt=_smoker=_hab=_chrono=undefined; }
 
@@ -369,7 +369,7 @@ function estRecovery(h){
   return Math.max(1,Math.min(99,Math.round(s/sw)));
 }
 function isEst(h){ return !!(h&&(h.subjective||(h.recovery==null&&estRecovery(h)!=null))); }
-/* subjective readiness â for the Manual no-band form (Hooper Index model) */
+/* subjective readiness — for the Manual no-band form (Hooper Index model) */
 function subjReadiness(s){
   if(!s) return null;
   const up=v=>(v-1)/4*100, down=v=>(5-v)/4*100;
@@ -412,9 +412,9 @@ function suppsToday(){ const s=readLS('supplements_standalone_v1'); if(!s||!Arra
 function suppsScore(){ const su=suppsToday(); if(!su||su.taken===0) return null; return Math.round(su.taken/su.total*100); }
 
 /* ============================================================
- * Meds & substances â search any prescription / nicotine / nootropic.
- * Each has an onsetâpeakâwear-off profile; logging a dose shapes the energy
- * curve (with a comedown). Informational only â never a dosing suggestion.
+ * Meds & substances — search any prescription / nicotine / nootropic.
+ * Each has an onset→peak→wear-off profile; logging a dose shapes the energy
+ * curve (with a comedown). Informational only — never a dosing suggestion.
  * ============================================================ */
 const SUB_DB=[
   // ADHD / stimulants
@@ -447,7 +447,7 @@ function medLogs(){ if(_med!==undefined)return _med; _med=medStore().logs; retur
 function saveMed(s){ try{ localStorage.setItem(MEDLOG,JSON.stringify(s)); }catch(e){} if(window.PatronDB&&PatronDB.isCloud())PatronDB.set('peakmeds',s); render(); }
 function medCustoms(){ return medStore().custom; }
 function allSubs(){ return medCustoms().concat(SUB_DB); }
-// smooth onsetâpeakâexponential-decay; peaks exactly at tPeak, ~11% left by `dur`
+// smooth onset→peak→exponential-decay; peaks exactly at tPeak, ~11% left by `dur`
 function subNorm(tau,tPeak,dur){ if(tau<0)return 0; tPeak=tPeak||1; dur=dur||4; if(tau<=tPeak)return 0.5-0.5*Math.cos(Math.PI*tau/tPeak); const decay=Math.max(0.3,(dur-tPeak)/2.2); return Math.exp(-(tau-tPeak)/decay); }
 function medEffectOf(l,tMs){ const tau=(tMs-l.t)/3600000; const dose=Math.min(2.2,(l.mg||l.ref||1)/(l.ref||l.mg||1)); return (l.lift||15)*dose*subNorm(tau,l.tPeak,l.dur); }
 function medBoost(t){ const ms=tToMs(t); return medLogs().reduce((s,l)=>s+medEffectOf(l,ms),0); }
@@ -465,11 +465,11 @@ function addCustomMed(name,mg){ name=String(name).trim()||'Custom'; mg=Math.max(
 function medTodayLogs(){ const k=dKey(); return medLogs().filter(l=>dayKey(new Date(l.t))===k).sort((a,b)=>b.t-a.t); }
 function medMostUsed(n){ const freq={},last={}; medLogs().forEach(l=>{ freq[l.name]=(freq[l.name]||0)+1; last[l.name]=l; }); return Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).slice(0,n).map(nm=>last[nm]); }
 function medQuickList(){ const out=[],seen={}; const add=d=>{ const k=String(d.name).toLowerCase(); if(!seen[k]){ seen[k]=1; out.push(d); } }; medCustoms().forEach(add); medMostUsed(5).forEach(add); if(out.length<5)SUB_DB.slice(0,6).forEach(add); return out.slice(0,8); }
-function medResultsHtml(q){ q=(q||'').trim().toLowerCase(); if(!q)return ''; const m=allSubs().filter(d=>String(d.name).toLowerCase().includes(q)).slice(0,8); if(!m.length)return '<div class="cafNoMatch">No match â add it as a custom below â</div>'; return m.map(d=>'<div class="cafResult" data-medname="'+esc(d.name)+'"><span class="cafResultName">'+esc(d.name)+'</span><span class="cafResultMg">'+d.mg+'mg <em>+'+Math.round(d.lift)+'</em></span></div>').join(''); }
-function medCoach(){ const logs=medTodayLogs(); if(!logs.length) return {icon:'ð',txt:'Log a med or pouch (Concerta, Zyn, anything) and it shapes your focus curve â onset, peak &amp; wear-off.'};
+function medResultsHtml(q){ q=(q||'').trim().toLowerCase(); if(!q)return ''; const m=allSubs().filter(d=>String(d.name).toLowerCase().includes(q)).slice(0,8); if(!m.length)return '<div class="cafNoMatch">No match — add it as a custom below ↓</div>'; return m.map(d=>'<div class="cafResult" data-medname="'+esc(d.name)+'"><span class="cafResultName">'+esc(d.name)+'</span><span class="cafResultMg">'+d.mg+'mg <em>+'+Math.round(d.lift)+'</em></span></div>').join(''); }
+function medCoach(){ const logs=medTodayLogs(); if(!logs.length) return {icon:'💊',txt:'Log a med or pouch (Concerta, Zyn, anything) and it shapes your focus curve — onset, peak &amp; wear-off.'};
   const l=logs[0]; const pk=new Date(l.t+(l.tPeak||1)*3600000), off=new Date(l.t+(l.dur||4)*3600000);
   const pkC=clockOf(pk.getHours()+pk.getMinutes()/60), offC=clockOf(off.getHours()+off.getMinutes()/60);
-  return {icon:'ð',txt:'<b>'+esc(l.name)+'</b> peaks ~<b>'+pkC+'</b>, fades ~<b>'+offC+'</b>. Stack your deep work before the fade. <span style="color:var(--muted)">(Informational, not dosing advice.)</span>'}; }
+  return {icon:'💊',txt:'<b>'+esc(l.name)+'</b> peaks ~<b>'+pkC+'</b>, fades ~<b>'+offC+'</b>. Stack your deep work before the fade. <span style="color:var(--muted)">(Informational, not dosing advice.)</span>'}; }
 function bindMed(){ const s=document.getElementById('medSearch'); if(!s)return; s.addEventListener('input',()=>{ medQuery=s.value; const r=document.getElementById('medResults'); if(r)r.innerHTML=medResultsHtml(medQuery); }); }
 let medOpen=false;
 function medCardHtml(){
@@ -477,32 +477,32 @@ function medCardHtml(){
   const chips=medQuickList().slice(0,4).map(d=>'<button class="cafChip" data-medname="'+esc(d.name)+'"><span class="cafChipName">'+esc(d.name)+'</span><span class="cafChipMg">'+d.mg+'mg <em>+'+Math.round(d.lift)+'</em></span></button>').join('');
   const searchIcon='<span class="cafSearchIcon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>';
   const searchBlock = medOpen
-    ? '<div class="cafSearchWrap">'+searchIcon+'<input class="cafSearchIn" id="medSearch" type="text" placeholder="Search any med, pouch, nootropicâ¦" value="'+esc(medQuery)+'" autocomplete="off"></div>'
+    ? '<div class="cafSearchWrap">'+searchIcon+'<input class="cafSearchIn" id="medSearch" type="text" placeholder="Search any med, pouch, nootropic…" value="'+esc(medQuery)+'" autocomplete="off"></div>'
       +'<div class="cafResults" id="medResults">'+medResultsHtml(medQuery)+'</div>'
-      +'<div class="cafAddRow"><input class="cafAddName" id="medCustName" placeholder="Add a custom med/substanceâ¦"><input class="cafAddMg" id="medCustMg" type="number" inputmode="numeric" placeholder="mg"><button class="cafAddBtn" data-addmed="1">Add</button></div>'
+      +'<div class="cafAddRow"><input class="cafAddName" id="medCustName" placeholder="Add a custom med/substance…¦"><input class="cafAddMg" id="medCustMg" type="number" inputmode="numeric" placeholder="mg"><button class="cafAddBtn" data-addmed="1">Add</button></div>'
     : '';
   return '<div class="card cafCard">'
-    +'<div class="cafHero"><div class="cafHeroV">'+(board>0?'+'+board:'0')+'<small> focus on board</small></div><div class="cafCeil">rx Â· nicotine Â· nootropics</div></div>'
+    +'<div class="cafHero"><div class="cafHeroV">'+(board>0?'+'+board:'0')+'<small> focus on board</small></div><div class="cafCeil">rx · nicotine · nootropics</div></div>'
     +'<div class="trackRow"><div class="cafChips">'+chips+'</div><button class="searchToggle'+(medOpen?' on':'')+'" data-medsearch="1" title="Search">'+searchIcon+'</button></div>'
     + searchBlock
     + medLogsHtml()
     +'<div class="cafTip"><span class="cafTipIcon">'+tip.icon+'</span><span class="cafTipTxt">'+tip.txt+'</span></div>'
-    +'<a class="trackLink" href="meds.html">Open Meds tracker â</a>'
+    +'<a class="trackLink" href="meds.html">Open Meds tracker →</a>'
     +'</div>';
 }
-function medLogsHtml(){ const logs=medTodayLogs(); if(!logs.length)return ''; return '<div class="cafLogsHead"><span class="cafLogsLab">Todayâs doses</span><button class="cafClear" data-clearmed="1">clear all</button></div><div class="cafLogs">'+logs.map(l=>'<span class="cafLog"><b>'+esc(l.name)+'</b> '+Math.round(l.mg)+'mg Â· '+fmtClockMs(l.t)+'<span class="cafLogX" data-rmmed="'+esc(l.id||'')+'" title="Remove">Ã</span></span>').join('')+'</div>'; }
+function medLogsHtml(){ const logs=medTodayLogs(); if(!logs.length)return ''; return '<div class="cafLogsHead"><span class="cafLogsLab">Today’s doses</span><button class="cafClear" data-clearmed="1">clear all</button></div><div class="cafLogs">'+logs.map(l=>'<span class="cafLog"><b>'+esc(l.name)+'</b> '+Math.round(l.mg)+'mg · '+fmtClockMs(l.t)+'<span class="cafLogX" data-rmmed="'+esc(l.id||'')+'" title="Remove">×</span></span>').join('')+'</div>'; }
 
 /* ---- compact Water card (syncs water_standalone_v1) ---- */
 function logWater(n){ const s=readLS('water_standalone_v1')||{logs:{}}; if(!s.logs)s.logs={}; const k=dKey(); s.logs[k]=Math.max(0,(s.logs[k]||0)+n); try{ localStorage.setItem('water_standalone_v1',JSON.stringify(s)); }catch(e){} render(); }
 function waterCardHtml(){
   const c=drinksToday(), t=waterTarget(); const pct=Math.min(100,Math.round(c/t*100)); const done=c>=t;
   return '<div class="card cafCard">'
-    +'<div class="cafHero"><div class="cafHeroV">'+c+'<small> / '+t+' today</small></div><div class="cafCeil">'+(done?'target hit â':'hydration')+'</div></div>'
+    +'<div class="cafHero"><div class="cafHeroV">'+c+'<small> / '+t+' today</small></div><div class="cafCeil">'+(done?'target hit ✓':'hydration')+'</div></div>'
     +'<div class="cafBar"><div class="cafBarFill" style="width:'+pct+'%"></div></div>'
     +'<div class="cafChips"><button class="cafChip" data-water="1"><span class="cafChipName">+1 glass</span><span class="cafChipMg">~250 ml</span></button>'
     +'<button class="cafChip" data-water="2"><span class="cafChipName">+2 glasses</span><span class="cafChipMg">~500 ml</span></button>'
-    +(c>0?'<button class="cafChip" data-water="-1"><span class="cafChipName">â undo</span><span class="cafChipMg">last glass</span></button>':'')+'</div>'
-    +'<a class="trackLink" href="water.html">Open Water tracker â</a></div>';
+    +(c>0?'<button class="cafChip" data-water="-1"><span class="cafChipName">− undo</span><span class="cafChipMg">last glass</span></button>':'')+'</div>'
+    +'<a class="trackLink" href="water.html">Open Water tracker →</a></div>';
 }
 
 /* ---- compact Supplements card (tap to mark taken; syncs supplements_standalone_v1) ---- */
@@ -512,14 +512,14 @@ function suppTakenMap(){ const s=readLS('supplements_standalone_v1'); return (s&
 function toggleSupp(id){ const s=readLS('supplements_standalone_v1')||{items:[],taken:{}}; if(!s.taken)s.taken={}; const k=suppDateKey(); const day=Object.assign({},s.taken[k]||{}); if(day[id])delete day[id]; else day[id]=true; s.taken[k]=day; try{ localStorage.setItem('supplements_standalone_v1',JSON.stringify(s)); }catch(e){} render(); }
 function suppCardHtml(){
   const items=suppItems();
-  if(!items.length) return '<div class="card cafCard"><div class="cafHero"><div class="cafHeroV" style="font-size:20px">No stack yet</div><div class="cafCeil">supplements</div></div><a class="trackLink" href="supplements.html">Set up Supplements â</a></div>';
+  if(!items.length) return '<div class="card cafCard"><div class="cafHero"><div class="cafHeroV" style="font-size:20px">No stack yet</div><div class="cafCeil">supplements</div></div><a class="trackLink" href="supplements.html">Set up Supplements →</a></div>';
   const tk=suppTakenMap(); const taken=items.filter(i=>tk[i.id]).length;
-  const chips=items.map(i=>'<button class="cafChip'+(tk[i.id]?' suppOn':'')+'" data-supp="'+esc(i.id)+'"><span class="cafChipName">'+(tk[i.id]?'â ':'')+esc(i.name)+'</span></button>').join('');
+  const chips=items.map(i=>'<button class="cafChip'+(tk[i.id]?' suppOn':'')+'" data-supp="'+esc(i.id)+'"><span class="cafChipName">'+(tk[i.id]?'✓ ':'')+esc(i.name)+'</span></button>').join('');
   return '<div class="card cafCard">'
     +'<div class="cafHero"><div class="cafHeroV">'+taken+'<small> / '+items.length+' taken</small></div><div class="cafCeil">tap to log</div></div>'
     +'<div class="cafBar"><div class="cafBarFill" style="width:'+Math.round(taken/items.length*100)+'%"></div></div>'
     +'<div class="cafChips">'+chips+'</div>'
-    +'<a class="trackLink" href="supplements.html">Open Supplements â</a></div>';
+    +'<a class="trackLink" href="supplements.html">Open Supplements →</a></div>';
 }
 
 /* ---- profile stats for the header ticker ---- */
@@ -543,7 +543,7 @@ function tToMs(t){ const d=new Date(); d.setHours(0,0,0,0); return d.getTime()+t
 /* ---- scores ---- */
 function sleepPerfOf(h){ if(!h)return null; if(typeof h.sleepPerf==='number')return Math.min(100,h.sleepPerf); if(typeof h.sleepHours==='number')return Math.round(clamp01(h.sleepHours/(h.sleepTargetHours||8))*100); return null; }
 /* Daily overall score. Recovery + Sleep always count; Water, Macros and Gym are
- * OPTIONAL â they only join the blend on days you actually logged them (no penalty
+ * OPTIONAL — they only join the blend on days you actually logged them (no penalty
  * for skipping). Weights renormalise over whatever's present. */
 function overall(){
   const h=health();
@@ -558,7 +558,7 @@ function overall(){
   const sw=w.reduce((a,b)=>a+b,0); let s=0; for(let i=0;i<parts.length;i++)s+=parts[i]*w[i];
   const objective=Math.round(s/sw);
   // Blend + learn: your "how I feel" pulls the score toward your felt state. The
-  // pull starts gentle (30%) and grows as your check-ins prove reliable (â50%
+  // pull starts gentle (30%) and grows as your check-ins prove reliable (→50%
   // over 30 days), so the more you use it the more it trusts you.
   const f=latestFeelToday();
   let score=objective, adj=0, feelW=0;
@@ -579,7 +579,7 @@ function addFeel(pct){ const f=loadFeel(); const now=Date.now(); const last=f.ch
 function latestFeelToday(){ const f=loadFeel(); const today=dKey(); let best=null; for(const c of f.checks){ if(dayKey(new Date(c.t))===today)best=c; } return best?best.pct:null; }
 function feelDays(){ const f=loadFeel(); const set={}; f.checks.forEach(c=>{ set[dayKey(new Date(c.t))]=1; }); return Object.keys(set).length; }
 // Personal calibration: average gap between how you FELT and what we PREDICTED,
-// applied gradually â full strength only after ~30 days of check-ins.
+// applied gradually — full strength only after ~30 days of check-ins.
 function personalBias(){ const f=loadFeel(); if(f.checks.length<3)return 0; let s=0,n=0; f.checks.forEach(c=>{ if(typeof c.pred==='number'&&typeof c.pct==='number'){ s+=(c.pct-c.pred); n++; } }); if(!n)return 0; return clamp(s/n,-25,25); }
 // time-of-day calibration: learns that YOUR morning/afternoon/evening differs from the model
 function feelBucket(hr){ hr=((hr%24)+24)%24; return hr<12?'m':hr<17?'a':'e'; }
@@ -587,15 +587,15 @@ function personalBiasAt(t){ const f=loadFeel(); if(f.checks.length<3)return pers
 function personalAdjAt(t){ return personalBiasAt(t)*calibStrength(); }
 function calibStrength(){ return Math.min(1, feelDays()/30); }
 function personalAdj(){ return personalBias()*calibStrength(); }
-function toneOf(v){ if(v==null)return {c:'var(--muted)',word:'â'}; if(v>=80)return {c:'var(--accent)',word:'Prime'}; if(v>=67)return {c:'var(--accent)',word:'Solid'}; if(v>=45)return {c:'var(--warn)',word:'Moderate'}; if(v>=30)return {c:'var(--warn)',word:'Low'}; return {c:'var(--low)',word:'Depleted'}; }
+function toneOf(v){ if(v==null)return {c:'var(--muted)',word:'—'}; if(v>=80)return {c:'var(--accent)',word:'Prime'}; if(v>=67)return {c:'var(--accent)',word:'Solid'}; if(v>=45)return {c:'var(--warn)',word:'Moderate'}; if(v>=30)return {c:'var(--warn)',word:'Low'}; return {c:'var(--low)',word:'Depleted'}; }
 
 /* ---- energy curve model ----
  * Two circadian peaks (morning ~3h after wake, evening ~3h before bed),
  * amplitude scaled by recovery, plus a caffeine boost from the PK model. */
 function recScale(){ const rec=estRecovery(health()); const r=rec==null?70:rec; let s=0.58+0.42*(r/100); s*=(1-clamp(sleepDebt()*0.025,0,0.18)); return s; } // multi-day sleep debt lowers the ceiling
 /* Physiologically-grounded circadian arousal (0..~0.9):
- * sleep inertia after waking â broad daytime plateau â a SHALLOW post-lunch dip
- * (~45% through your waking day) â an evening second-wind â wind-down before bed â
+ * sleep inertia after waking → broad daytime plateau → a SHALLOW post-lunch dip
+ * (~45% through your waking day) → an evening second-wind → wind-down before bed →
  * a proper low through the night (lowest mid-sleep). The afternoon dip is gentle,
  * never below your nighttime level. */
 function shape(t,wake,bed){
@@ -603,9 +603,9 @@ function shape(t,wake,bed){
   let aw=(((t-wake)%24)+24)%24;                  // hours since waking
   if(aw>L){                                      // asleep
     const into=aw-L, sleepLen=24-L||8, mid=sleepLen/2;
-    return 0.12 - 0.07*(1-Math.abs(into-mid)/mid); // 0.05 mid-sleep â 0.12 near edges
+    return 0.12 - 0.07*(1-Math.abs(into-mid)/mid); // 0.05 mid-sleep → 0.12 near edges
   }
-  const inertia=0.55+0.45*(1-Math.exp(-aw/1.0));        // groggy â alert over ~3h
+  const inertia=0.55+0.45*(1-Math.exp(-aw/1.0));        // groggy → alert over ~3h
   const decline=1-0.16*(aw/L);                          // homeostatic sleep pressure
   const winddown=1-0.40*clamp((aw-(L-1.5))/1.5,0,1);    // taper in the last 1.5h
   const dip=0.13*Math.exp(-Math.pow(aw-L*0.45,2)/(2*1.7*1.7));  // post-lunch dip (shallow)
@@ -621,7 +621,7 @@ function caffNet(t){
   const rebound=Math.min(13, Math.max(0, mx-cur)*0.10);
   return boost-rebound;
 }
-// raw prediction (no personal calibration) â used to measure the feel-gap
+// raw prediction (no personal calibration) — used to measure the feel-gap
 function energyRaw(t){ const {wake,bed}=wakeBed(); const rs=recScale(); const base=clamp(shape(t,wake,bed)*100*rs,1,100); return clamp(base+caffNet(t)+medNet(t),1,100); }
 function energyAt(t){
   const {wake,bed}=wakeBed(); const rs=recScale();
@@ -735,21 +735,21 @@ function nowStatus(){ const e=energyAt(nowT()).e;
   return 'Low. Rest, hydrate, and protect your evening wind-down.'; }
 function recommendations(){
   const h=health(); const rec=estRecovery(h); const out=[];
-  if(rec!=null){ const adv=rec>=67?'Stack your hardest training or thinking session inside the peak window.':rec>=40?'Train smart â quality over max intensity today.':'Go easy: light movement, hydration, protect tonightâs sleep.';
+  if(rec!=null){ const adv=rec>=67?'Stack your hardest training or thinking session inside the peak window.':rec>=40?'Train smart — quality over max intensity today.':'Go easy: light movement, hydration, protect tonight’s sleep.';
     out.push([false,'Recovery '+Math.round(rec)+'%.',adv]); }
   if(waterLoggedToday()){ const dr=drinksToday(),tgt=waterTarget();
-    if(dr<tgt) out.push([false,dr+' / '+tgt+' drinks.','Youâre behind on water â top up to hold your afternoon energy.']);
-    else out.push([false,'Hydration on target.','Nicely topped up â that protects your focus curve.']);
+    if(dr<tgt) out.push([false,dr+' / '+tgt+' drinks.','You’re behind on water — top up to hold your afternoon energyy.']);
+    else out.push([false,'Hydration on target.','Nicely topped up — that protects your focus curve.']);
   }
-  const ms=macrosScore(); if(ms!=null){ const m=macrosToday(); out.push([ms<60,'Protein '+m.p+'g / '+proteinTarget()+'g.', ms<60?'Behind on protein â itâs the lever for recovery + muscle.':'Solid protein intake today.']); }
-  const su=suppsToday(); if(su) out.push([su.taken<su.total,'Supplements '+su.taken+'/'+su.total+'.', su.taken>=su.total?'Full stack in â that compounds into recovery over weeks.':'A few left â consistency is where supplements actually pay off.']);
-  if(gymLoggedToday()) out.push([false,'Trained today. â','Session logged â recovery tonight is what banks the gains.']);
+  const ms=macrosScore(); if(ms!=null){ const m=macrosToday(); out.push([ms<60,'Protein '+m.p+'g / '+proteinTarget()+'g.', ms<60?'Behind on protein — it’s the lever for recovery + muscle.':'Solid protein intake today.']); }
+  const su=suppsToday(); if(su) out.push([su.taken<su.total,'Supplements '+su.taken+'/'+su.total+'.', su.taken>=su.total?'Full stack in — that compounds into recovery over weeks.':'A few left — consistency is where supplements actually pay off.']);
+  if(gymLoggedToday()) out.push([false,'Trained today. ✓','Session logged — recovery tonight is what banks the gains.']);
   if(!out.length) out.push([false,'Add your vitals.','Pick a source above and your day fills in.']);
   return out;
 }
 
 /* ============================================================
- * Caffeine â quick-log + crash coaching
+ * Caffeine — quick-log + crash coaching
  * ============================================================ */
 const CAF_QUICK=[['Espresso',63],['Double esp.',126],['Coffee',95],['Cold brew',155],['Tea',47],['Energy drink',160]];
 let cafQuery='';
@@ -777,7 +777,7 @@ function caffQuickList(){ const out=[],seen={}; const add=d=>{ const k=String(d.
   return out.slice(0,8); }
 function cafResultsHtml(q){ q=(q||'').trim().toLowerCase(); if(!q) return '';
   const matches=allDrinks().filter(d=>String(d.name).toLowerCase().includes(q)).slice(0,8);
-  if(!matches.length) return '<div class="cafNoMatch">No match â add it as a custom below â</div>';
+  if(!matches.length) return '<div class="cafNoMatch">No match — add it as a custom below ↓</div>';
   return matches.map(d=>'<div class="cafResult" data-caf="'+d.mg+'" data-cafname="'+esc(d.name)+'"><span class="cafResultName">'+esc(d.name)+'</span><span class="cafResultMg">'+d.mg+'mg <em>+'+caffLift(d.mg)+'</em></span></div>').join(''); }
 function addCustomCaff(name,mg){ const s=readLS('stimulant_standalone_v1')||{logs:[],custom:[]}; if(!Array.isArray(s.custom))s.custom=[]; if(!Array.isArray(s.logs))s.logs=[];
   name=String(name).trim()||'Custom'; mg=Math.max(0,Math.round(+mg||0));
@@ -796,7 +796,7 @@ function caffTodayLogs(){ const k=dKey(); return stimLogs().filter(l=>dayKey(new
 function removeCaffLog(id){ const s=readLS('stimulant_standalone_v1')||{logs:[],custom:[]}; if(Array.isArray(s.logs))s.logs=s.logs.filter(l=>String(l.id)!==String(id)); saveStim(s); }
 function clearCaffToday(){ const k=dKey(); const s=readLS('stimulant_standalone_v1')||{logs:[],custom:[]}; if(Array.isArray(s.logs))s.logs=s.logs.filter(l=>dayKey(new Date(l.t))!==k); saveStim(s); }
 function fmtClockMs(ms){ const d=new Date(ms); let h=d.getHours(),m=d.getMinutes(); const ap=h<12?'am':'pm'; h=h%12||12; return h+':'+String(m).padStart(2,'0')+ap; }
-// find the lowest point of the curve in the next `hrs` hours â the upcoming dip/crash
+// find the lowest point of the curve in the next `hrs` hours → the upcoming dip/crash
 function upcomingLow(fromT,hrs){ let lowT=fromT,lowE=energyAt(fromT).e; for(let t=fromT; t<=fromT+hrs; t+=0.25){ const e=energyAt(t).e; if(e<lowE){ lowE=e; lowT=t; } } return {t:lowT,e:lowE}; }
 /* ---- caffeine intelligence: limits, timing, clearance, dose impact ---- */
 function caffConsumedToday(){ const k=dKey(); return stimLogs().filter(l=>dayKey(new Date(l.t))===k).reduce((s,l)=>s+(+l.mg||0),0); }
@@ -807,21 +807,21 @@ function caffCutoffClock(){ const {bed}=wakeBed(); let c=((bed-caffClearHrs())%2
 function caffClearsClock(){ const thr=25; if(caffeineNowMg()<thr) return null; for(let t=nowT(); t<=nowT()+24; t+=0.25){ if(bodyAt(tToMs(t))<thr) return clockOf(t); } return null; }
 function caffLift(mg){ const k=ke(); const tmax=Math.log(KA/k)/(KA-k); return Math.round(Math.min(22, doseAmount(mg,tmax)*0.14)); } // projected peak energy lift
 function pastCutoff(){ const {bed}=wakeBed(); const hrsToBed=((bed-nowT())+24)%24; return hrsToBed>0 && hrsToBed<caffClearHrs(); }
-// simulate a dose taken now â max energy from now to bed (uses the cached stim log array)
+// simulate a dose taken now → max energy from now to bed (uses the cached stim log array)
 function peakFromNow(){ let mx=2; const {bed}=wakeBed(); const end=bed>nowT()?bed:nowT()+4; for(let t=nowT(); t<=end; t+=0.25){ const e=energyAt(t).e; if(e>mx)mx=e; } return mx; }
 function peakWithExtra(mg){ const logs=stimLogs(); logs.push({mg:mg,t:Date.now()}); const v=peakFromNow(); logs.pop(); return v; }
 
 function caffeineCoach(){
   const caf=caffeineNowMg(); const {wake,bed}=wakeBed(); const t=nowT();
   const consumed=caffConsumedToday(), ceil=caffCeiling();
-  if(consumed>=ceil) return {warn:true,icon:'â ï¸',txt:'Youâve hit <b>'+Math.round(consumed)+'mg</b> â at/over your <b>'+ceil+'mg</b> daily ceiling. More now risks jitters + a worse crash.'};
-  if(pastCutoff()) return {warn:true,icon:'ð',txt:'Past your caffeine cut-off (<b>'+caffCutoffClock()+'</b>). Anything now is still in your system at bedtime and will cost you deep sleep.'};
+  if(consumed>=ceil) return {warn:true,icon:'⚠️',txt:'You’ve hit <b>'+Math.round(consumed)+'mg</b> — at/over your <b>'+ceil+'mg</b> daily ceiling. More now risks jitters + a worse crash.'};
+  if(pastCutoff()) return {warn:true,icon:'🌙',txt:'Past your caffeine cut-off (<b>'+caffCutoffClock()+'</b>). Anything now is still in your system at bedtime and will cost you deep sleep.'};
   const dip=upcomingLow(t+0.5,4);
   if(caf<40 && dip.e<58 && (dip.t-t)<4.5){ const dbl=caffSweetDose()*1.4|0; const np=Math.round(peakWithExtra(dbl)); const crash=upcomingLow(dip.t+1.5,5);
-    return {warn:false,icon:'â',txt:'Energy dips to <b>'+Math.round(dip.e)+'</b> near <b>'+clockOf(dip.t)+'</b>. A ~'+dbl+'mg hit now would push your peak to <b>'+np+'</b> â but watch for a comedown around <b>'+clockOf(crash.t)+'</b>.'}; }
-  if(caf<20 && t>=wake && t<wake+4) return {warn:false,icon:'â',txt:'Youâre in your morning rise â a <b>'+caffSweetDose()+'mg</b> dose now sharpens the first peak with the least sleep cost later.'};
-  if(caf>0) return {warn:false,icon:'â',txt:'<b>'+Math.round(caf)+'mg</b> on board, '+Math.round(consumed)+'/'+ceil+'mg today. Timingâs clean â clears by '+(caffClearsClock()||'bedtime')+'.'};
-  return {warn:false,icon:'â',txt:'Nothing logged yet. Your ideal dose is ~<b>'+caffSweetDose()+'mg</b>; tap a drink to see it lift the curve.'};
+    return {warn:false,icon:'☕',txt:'Energy dips to <b>'+Math.round(dip.e)+'</b> near <b>'+clockOf(dip.t)+'</b>. A ~'+dbl+'mg hit now would push your peak to <b>'+np+'</b> — but watch for a comedown around <b>'+clockOf(crash.t)+'</b>.'}; }
+  if(caf<20 && t>=wake && t<wake+4) return {warn:false,icon:'☕',txt:'You’re in your morning rise — a <b>'+caffSweetDose()+'mg</b> dose now sharpens the first peak with the least sleep cost later.'};
+  if(caf>0) return {warn:false,icon:'✅',txt:'<b>'+Math.round(caf)+'mg</b> on board, '+Math.round(consumed)+'/'+ceil+'mg today. Timing’s clean — clears by '+(caffClearsClock()||'bedtime')+'.'};
+  return {warn:false,icon:'☕',txt:'Nothing logged yet. Your ideal dose is ~<b>'+caffSweetDose()+'mg</b>; tap a drink to see it lift the curve.'};
 }
 
 /* ============================================================
@@ -834,16 +834,16 @@ function tickerItems(){
   // vitals
   const rec=estRecovery(h);
   items.push(['Source', srcName((h&&h.source)||'manual')]);
-  items.push(['Recovery', rec!=null?Math.round(rec)+'%':'â']);
-  items.push(['HRV', (h&&typeof h.hrv==='number')?Math.round(h.hrv)+'ms':'â']);
+  items.push(['Recovery', rec!=null?Math.round(rec)+'%':'—']);
+  items.push(['HRV', (h&&typeof h.hrv==='number')?Math.round(h.hrv)+'ms':'—']);
   const sp=sleepPerfOf(h);
   if(h&&typeof h.sleepHours==='number'){ const debt=Math.max(0,(h.sleepTargetHours||8)-h.sleepHours); items.push(['Sleep debt',(Math.round(debt*10)/10)+'h']); }
-  else items.push(['Sleep', sp!=null?sp+'%':'â']);
+  else items.push(['Sleep', sp!=null?sp+'%':'—']);
   // optional logs (only if used today)
   if(waterLoggedToday()) items.push(['Water', drinksToday()+'/'+waterTarget()]);
   const m=macrosToday(); if(m) items.push(['Protein', m.p+'g']);
   const su=suppsToday(); if(su&&su.taken>0) items.push(['Supps', su.taken+'/'+su.total]);
-  if(gymLoggedToday()) items.push(['Gym','â done']);
+  if(gymLoggedToday()) items.push(['Gym','✔ done']);
   if(caffeineNowMg()>0) items.push(['Caffeine', Math.round(caffeineNowMg())+'mg']);
   if(medBoardNow()>2) items.push(['Meds','+'+Math.round(medBoardNow())]);
   return items;
@@ -858,12 +858,12 @@ let infoOpen=false;
 let selectedSrc=null; // which source pill is active (independent of saved data)
 function infoCardHtml(){
   const days=feelDays();
-  return '<div class="infoCard"><span class="infoTag">Estimate Â· learns over 30 days</span>'
-    +'<p>Peak is a <b>science-based estimate from your own data</b> â not a medical measurement.</p>'
+  return '<div class="infoCard"><span class="infoTag">Estimate · learns over 30 days</span>'
+    +'<p>Peak is a <b>science-based estimate from your own data</b> — not a medical measurement.</p>'
     +'<h4>Real inputs</h4><p>Your Fitbit · Google Health / manual vitals, the caffeine + meds/substances you log, supplements (auto-read from that tracker), water, protein, gym, and your weight/age/sex.</p>'
-    +'<h4>The model</h4><p>Energy curve = circadian rhythm (two-process sleep model) Ã your recovery, plus pharmacokinetics for caffeine <b>and any med/substance you log</b> (each with onsetâpeakâwear-off + comedown). Recovery scores HRV + resting HR against <b>your own rolling baseline</b> (not population averages); manual readiness uses the Hooper index.</p>'
+    +'<h4>The model</h4><p>Energy curve = circadian rhythm (two-process sleep model) × your recovery, plus pharmacokinetics for caffeine <b>and any med/substance you log</b> (each with onset→peak→wear-off + comedown). Recovery scores HRV + resting HR against <b>your own rolling baseline</b> (not population averages); manual readiness uses the Hooper index.</p>'
     +'<h4>Tuned to you</h4><p>It already adapts from your suite data: <b>your HRV/RHR baselines</b>, <b>multi-day sleep debt</b>, your <b>chronotype</b> (real wake/bed times), caffeine <b>tolerance</b> from habitual intake, and faster caffeine clearance if you log nicotine.</p>'
-    +'<h4>Learns you</h4><p>Your âhow I feelâ checks correct the curve toward how you actually feel â <b>by time of day</b> (your mornings vs afternoons), gradually reaching full strength after ~30 days. <b>'+days+'/30 days</b> in so far.</p></div>';
+    +'<h4>Learns you</h4><p>Your “how I feel” checks correct the curve toward how you actually feel — <b>by time of day</b> (your mornings vs afternoons), gradually reaching full strength after ~30 days. <b>'+days+'/30 days</b> in so far.</p></div>';
 }
 
 /* ---- per-day manual log (history for the day cards) ---- */
@@ -902,21 +902,21 @@ function render(){
 
   const head='<div class="top">'+gem
     +'<div class="hgroup"><h1 class="htitle">Your <em>peak</em> today</h1><p class="hdate">'+esc(dateStr)+'</p></div>'
-    +'<a class="backLink" href="index.html">â Dashboard</a></div>';
+    +'<a class="backLink" href="index.html">← Dashboard</a></div>';
 
   const srcRow='<div class="srcRow"><span class="srcLab">Source</span>'+pill('manual','Manual')+pill('fitbit','Fitbit · Google Health')+'</div>';
 
   // tiny always-on "how I feel right now" bar (blends now + calibrates over 30 days)
   const feelBar = feelBarHtml();
 
-  // Inline daily check-in card â shows whenever Manual is the chosen source.
+  // Inline daily check-in card — shows whenever Manual is the chosen source.
   const mCard = (cur==='manual') ? manualCard(h) : '';
 
   if(!h){
     document.getElementById('app').innerHTML=head+srcRow+feelBar+mCard
       +(cur==='manual' ? '' :
         '<div class="card empty"><div class="emptyTitle">No vitals yet</div>'
-        +'<p class="emptyBody">Pick a source above â rate how you feel (Manual), or connect your Fitbit u00B7 Google Health. Your day then builds into a score and an energy curve.</p></div>');
+        +'<p class="emptyBody">Pick a source above — rate how you feel (Manual), or connect your Fitbit · Google Health. Your day then builds into a score and an energy curve.</p></div>');
     bindFeel();
     return;
   }
@@ -932,7 +932,7 @@ function render(){
     +'<svg viewBox="0 0 200 200"><circle class="tr" cx="100" cy="100" r="90"/>'
     +(ov.score!=null?'<circle class="fl" cx="100" cy="100" r="90" style="stroke-dasharray:'+c1+';stroke-dashoffset:'+(c1*(1-sv/100))+'"/>':'')
     +'</svg>'
-    +'<div class="bigInner"><div class="bigNum">'+(ov.score!=null?ov.score:'â')+'</div><div class="bigWord">'+ot.word+'</div><div class="bigCap">Today overall</div></div></div>';
+    +'<div class="bigInner"><div class="bigNum">'+(ov.score!=null?ov.score:'—')+'</div><div class="bigWord">'+ot.word+'</div><div class="bigCap">Today overall</div></div></div>';
   let whyRows = ov.labels.map(l=>'<div class="whyRow"><span>'+l[0]+'</span><b>'+Math.round(l[1])+'%</b></div>').join('');
   if(ov.feel!=null){
     whyRows += '<div class="whyRow"><span>Objective blend</span><b>'+ov.objective+'%</b></div>'
@@ -940,12 +940,12 @@ function render(){
       + '<div class="whyRow" style="border-top-color:var(--line2)"><span style="color:var(--accent2)">Today overall</span><b style="color:var(--accent2)">'+ov.score+'%</b></div>';
   }
   const why='<div class="whyBox'+(whyOpen?' on':'')+'" id="whyBox">'+whyRows+'</div>';
-  const scoreCard='<div class="card scoreCard">'+ovRing+'<button class="whyLink" id="whyLink">Why this score â</button>'+why+'</div>';
+  const scoreCard='<div class="card scoreCard">'+ovRing+'<button class="whyLink" id="whyLink">Why this score →</button>'+why+'</div>';
 
   const recs=recommendations();
   const todayCard='<div class="card"><p class="todayEyebrow">Today</p>'
     +'<h2 class="todayHead">'+nowStatus()+'</h2>'
-    +'<p class="todaySub">Best hour today is <b style="color:var(--accent2)">'+clockOf(PEAK.t)+'</b> â block it for what matters most.</p>'
+    +'<p class="todaySub">Best hour today is <b style="color:var(--accent2)">'+clockOf(PEAK.t)+'</b> — block it for what matters most.</p>'
     + recs.map(r=>'<div class="recRow'+(r[0]?' warn':'')+'"><span class="recDot"></span><span class="recTxt"><b>'+esc(r[1])+'</b> '+esc(r[2])+'</span></div>').join('')
     +'</div>';
 
@@ -959,39 +959,39 @@ function render(){
     +'<circle class="fl" id="peakFill" cx="42" cy="42" r="38" style="stroke-dasharray:'+c2+';stroke-dashoffset:'+(c2*(1-PEAK.e/100))+'"/></svg>'
     +'<div class="peakNum" id="peakNum">'+Math.round(PEAK.e)+'</div></div>';
   const sp=optimalSleep();
-  const sleepPlan='<div class="sleepPlan"><span class="spItem">ð Bed <b>'+clockOf(sp.bed)+'</b></span><span class="spDot">Â·</span><span class="spItem">âï¸ Wake <b>'+clockOf(sp.wake)+'</b></span><span class="spNote">your optimal '+sp.need+'h sleep window</span></div>';
+  const sleepPlan='<div class="sleepPlan"><span class="spItem">🌙 Bed <b>'+clockOf(sp.bed)+'</b></span><span class="spDot">·</span><span class="spItem">☀️ Wake <b>'+clockOf(sp.wake)+'</b></span><span class="spNote">your optimal '+sp.need+'h sleep window</span></div>';
   const cc=caffeineCrash(), mc=medCrash();
   let crashLabels='';
-  if(cc) crashLabels+='<div class="crashMark" style="left:'+clamp(cc.t/24*100,6,94)+'%">â crash '+clockOf(cc.t)+'</div>';
-  if(mc&&(!cc||Math.abs(mc.t-cc.t)>0.3)) crashLabels+='<div class="crashMark" style="left:'+clamp(mc.t/24*100,6,94)+'%">ð comedown '+clockOf(mc.t)+'</div>';
+  if(cc) crashLabels+='<div class="crashMark" style="left:'+clamp(cc.t/24*100,6,94)+'%">☕ crash '+clockOf(cc.t)+'</div>';
+  if(mc&&(!cc||Math.abs(mc.t-cc.t)>0.3)) crashLabels+='<div class="crashMark" style="left:'+clamp(mc.t/24*100,6,94)+'%">💊 comedown '+clockOf(mc.t)+'</div>';
   const curveCard='<div class="card curveCard">'+sleepPlan+'<div class="curveTop">'+peakRing
     +'<div class="curveLabel"><div class="curveTitleRow"><span class="curveWord" id="curveWord">Peak</span><span class="curveAt" id="curveAt">at '+clockOf(PEAK.t)+'</span><span class="curveScrub" id="curveScrub"><span class="d"></span>Scrubbing</span></div>'
-    +'<p class="curveDesc"><span class="curveEyebrow">Todayâs energy curve</span><br>Your predicted score, hour by hour. Hover or drag to scrub. Red = a caffeine crash or med comedown.</p></div>'
+    +'<p class="curveDesc"><span class="curveEyebrow">Today’s energy curve</span><br>Your predicted score, hour by hour. Hover or drag to scrub. Red = a caffeine crash or med comedown.</p></div>'
     +'<div class="seg">'+['line','bars','stack'].map(t=>'<button class="segBtn '+(chartType===t?'on':'')+'" data-chart="'+t+'">'+t+'</button>').join('')+'</div></div>'
     + feelBarHtml()
     +'<div class="chartWrap" id="chartWrap">'+chartSvg()
-    +'<div class="sleepMarks"><div class="sleepMark" style="left:'+clamp(sp.bed/24*100,5,95)+'%">ð '+clockOf(sp.bed)+'</div><div class="sleepMark" style="left:'+clamp(sp.wake/24*100,5,95)+'%">âï¸ '+clockOf(sp.wake)+'</div></div>'
+    +'<div class="sleepMarks"><div class="sleepMark" style="left:'+clamp(sp.bed/24*100,5,95)+'%">🌙 '+clockOf(sp.bed)+'</div><div class="sleepMark" style="left:'+clamp(sp.wake/24*100,5,95)+'%">☀️ '+clockOf(sp.wake)+'</div></div>'
     +'<div class="crashMarks">'+crashLabels+'</div>'
     +'<div class="scrubLine" id="scrubLine"></div><div class="scrubDot" id="scrubDot"></div><div class="scrubTip" id="scrubTip"></div></div>'
     +'<div class="xAxis">'+X_LABELS.map(l=>'<span>'+l+'</span>').join('')+'</div>'
-    +'<div class="plan"><p class="planLabel">Todayâs plan</p><div class="planEmpty">Nothing scheduled Â· plan your day around your peak</div></div>'
+    +'<div class="plan"><p class="planLabel">Today’s plan</p><div class="planEmpty">Nothing scheduled · plan your day around your peak</div></div>'
     +'</div>';
   const daySec='<div class="sec"><span class="secNum">01</span><span class="secTitle">Your day</span><span class="secLine"></span></div>'+curveCard;
 
-  // compact trackers â quick log + expandable search + link to the full page
+  // compact trackers — quick log + expandable search + link to the full page
   const cafSec='<div class="sec"><span class="secNum">03</span><span class="secTitle">Caffeine</span><span class="secLine"></span></div>'+caffeineCardHtml();
   const medSec='<div class="sec"><span class="secNum">04</span><span class="secTitle">Meds &amp; substances</span><span class="secLine"></span></div>'+medCardHtml();
   const waterSec='<div class="sec"><span class="secNum">05</span><span class="secTitle">Water</span><span class="secLine"></span></div>'+waterCardHtml();
   const suppSec='<div class="sec"><span class="secNum">06</span><span class="secTitle">Supplements</span><span class="secLine"></span></div>'+suppCardHtml();
 
-  const footNote='<p class="footNote">Peak is a science-based estimate from your own data â not a medical measurement. It personalizes to you over ~30 days. Tap the âiâ to see how itâs calculated. Meds are modeled for information only, never as dosing advice.</p>';
+  const footNote='<p class="footNote">Peak is a science-based estimate from your own data — not a medical measurement. It personalizes to you over ~30 days. Tap the “i” to see how it’s calculated. Meds are modeled for information only, never as dosing advice.</p>';
   document.getElementById('app').innerHTML=head+srcRow+mCard+tk+daySec+nowSec+cafSec+medSec+waterSec+suppSec+footNote;
   bindScrub(); bindFeel(); bindCaf(); bindMed();
 }
 function feelBarHtml(){
   const f=latestFeelToday(); const val=f!=null?f:Math.round(energyAt(nowT()).e);
   const days=feelDays();
-  const note = days>=30 ? 'Tailored to your last 30 days â' : (days>0?'Currently building a more detailed analysis Â· '+days+'/30 days':'Set this daily and Iâll tailor your model over 30 days');
+  const note = days>=30 ? 'Tailored to your last 30 days →' : (days>0?'Currently building a more detailed analysis · '+days+'/30 days':'Set this daily and I’ll tailor your model over 30 days');
   return '<div class="feelBar"><div class="feelHead"><div class="feelTitle">How do you feel right now?</div><div class="feelNote'+(days>=30?' ready':'')+'">'+note+'</div></div>'
     +'<div class="feelSliderWrap"><input class="feelSlider" id="feelSlider" type="range" min="0" max="100" value="'+val+'"><span class="feelPct" id="feelPct">'+val+'%</span></div></div>';
 }
@@ -1008,24 +1008,24 @@ function caffeineCardHtml(){
   const chips=caffQuickList().slice(0,4).map(d=>{ const lift=caffLift(d.mg); return '<button class="cafChip" data-caf="'+d.mg+'" data-cafname="'+esc(d.name)+'"><span class="cafChipName">'+esc(d.name)+'</span><span class="cafChipMg">'+d.mg+'mg <em>+'+lift+'</em></span></button>'; }).join('');
   const searchIcon='<span class="cafSearchIcon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>';
   const searchBlock = cafOpen
-    ? '<div class="cafSearchWrap">'+searchIcon+'<input class="cafSearchIn" id="cafSearch" type="text" placeholder="Search 40+ drinksâ¦" value="'+esc(cafQuery)+'" autocomplete="off"></div>'
+    ? '<div class="cafSearchWrap">'+searchIcon+'<input class="cafSearchIn" id="cafSearch" type="text" placeholder="Search 40+ drinks…" value="'+esc(cafQuery)+'" autocomplete="off"></div>'
       +'<div class="cafResults" id="cafResults">'+cafResultsHtml(cafQuery)+'</div>'
-      +'<div class="cafAddRow"><input class="cafAddName" id="cafCustName" placeholder="Add a custom drinkâ¦"><input class="cafAddMg" id="cafCustMg" type="number" inputmode="numeric" placeholder="mg"><button class="cafAddBtn" data-addcust="1">Add</button></div>'
+      +'<div class="cafAddRow"><input class="cafAddName" id="cafCustName" placeholder="Add a custom drink…¦"><input class="cafAddMg" id="cafCustMg" type="number" inputmode="numeric" placeholder="mg"><button class="cafAddBtn" data-addcust="1">Add</button></div>'
     : '';
   return '<div class="card cafCard">'
-    +'<div class="cafHero"><div class="cafHeroV">'+consumed+'<small> mg today</small></div><div class="cafCeil">'+board+'mg on board Â· clears '+(caffClearsClock()||'â')+'</div></div>'
+    +'<div class="cafHero"><div class="cafHeroV">'+consumed+'<small> mg today</small></div><div class="cafCeil">'+board+'mg on board · clears '+(caffClearsClock()||'—')+'</div></div>'
     +'<div class="cafBar"><div class="cafBarFill '+barCls+'" style="width:'+pct+'%"></div></div>'
     +'<div class="trackRow"><div class="cafChips">'+chips+'</div><button class="searchToggle'+(cafOpen?' on':'')+'" data-cafsearch="1" title="Search drinks">'+searchIcon+'</button></div>'
     + searchBlock
     + caffLogsHtml()
     +'<div class="cafTip'+(tip.warn?' warn':'')+'"><span class="cafTipIcon">'+tip.icon+'</span><span class="cafTipTxt">'+tip.txt+'</span></div>'
-    +'<a class="trackLink" href="stimulant.html">Open Caffeine tracker â</a>'
+    +'<a class="trackLink" href="stimulant.html">Open Caffeine tracker →</a>'
     +'</div>';
 }
 function caffLogsHtml(){
   const logs=caffTodayLogs(); if(!logs.length) return '';
-  return '<div class="cafLogsHead"><span class="cafLogsLab">Todayâs intake</span><button class="cafClear" data-clearcaf="1">clear all</button></div>'
-    +'<div class="cafLogs">'+logs.map(l=>'<span class="cafLog"><b>'+esc(l.name||'Caffeine')+'</b> '+Math.round(l.mg)+'mg Â· '+fmtClockMs(l.t)+'<span class="cafLogX" data-rmcaf="'+esc(l.id||'')+'" title="Remove">Ã</span></span>').join('')+'</div>';
+  return '<div class="cafLogsHead"><span class="cafLogsLab">Today’s intake</span><button class="cafClear" data-clearcaf="1">clear all</button></div>'
+    +'<div class="cafLogs">'+logs.map(l=>'<span class="cafLog"><b>'+esc(l.name||'Caffeine')+'</b> '+Math.round(l.mg)+'mg · '+fmtClockMs(l.t)+'<span class="cafLogX" data-rmcaf="'+esc(l.id||'')+'" title="Remove">×</span></span>').join('')+'</div>';
 }
 
 /* ============================================================
@@ -1049,10 +1049,10 @@ async function pickSource(src){
   }
 }
 function manualSel(id,label,opts,cur){
-  return '<div class="f"><label class="fLab" for="'+id+'">'+label+'</label><select id="'+id+'" class="fIn"><option value="">â</option>'
-    +opts.map((t,i)=>{ const v=i+1; return '<option value="'+v+'"'+(String(cur)===String(v)?' selected':'')+'>'+v+' Â· '+t+'</option>'; }).join('')+'</select></div>';
+  return '<div class="f"><label class="fLab" for="'+id+'">'+label+'</label><select id="'+id+'" class="fIn"><option value="">—</option>'
+    +opts.map((t,i)=>{ const v=i+1; return '<option value="'+v+'"'+(String(cur)===String(v)?' selected':'')+'>'+v+' · '+t+'</option>'; }).join('')+'</select></div>';
 }
-/* Inline "Daily check-in" card â tap-only. Day cards (history) + 1-tap ratings
+/* Inline "Daily check-in" card — tap-only. Day cards (history) + 1-tap ratings
  * + a wake-time / hours-slept chip system that derives bedtime automatically. */
 const RATINGS=[
   ['sleepQ','Sleep quality',['Terrible','Poor','OK','Good','Great'],false],
@@ -1066,7 +1066,7 @@ function dayCardsHtml(){
   for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const k=dayKey(d);
     const wk=d.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase();
     const rec=log.days[k]&&log.days[k].readiness; const tn=toneOf(rec);
-    const scoreHtml=rec!=null?'<div class="dayScore" style="--dsc:'+tn.c+'">'+Math.round(rec)+'</div>':'<div class="dayScore empty2">Â·</div>';
+    const scoreHtml=rec!=null?'<div class="dayScore" style="--dsc:'+tn.c+'">'+Math.round(rec)+'</div>':'<div class="dayScore empty2">·</div>';
     out.push('<button class="dayCard'+(k===selectedDate?' on':'')+(k===today?' today':'')+'" data-day="'+k+'"><div class="dayWk">'+(k===today?'TODAY':wk)+'</div><div class="dayNum">'+d.getDate()+'</div>'+scoreHtml+'</button>');
   }
   return '<div class="dayRow">'+out.join('')+'</div>';
@@ -1088,7 +1088,7 @@ function manualCard(h){
   const hrChips=SLEEP_HRS.map(v=>'<button class="chip'+(draft.sleepHours===v?' on':'')+'" data-hrs="'+v+'">'+v+'</button>').join('');
   const bed=deriveBed(draft.wakeTime,draft.sleepHours);
   const derived=(draft.wakeTime&&draft.sleepHours!=null)
-    ? '<div class="derived">â In bed around <b>'+clockOf(hmToFloat(bed))+'</b> Â· <b>'+draft.sleepHours+'h</b> sleep</div>'
+    ? '<div class="derived">→ In bed around <b>'+clockOf(hmToFloat(bed))+'</b> · <b>'+draft.sleepHours+'h</b> sleep</div>'
     : '<div class="derived">Pick a wake time + hours and we work out your bedtime.</div>';
   return '<div class="card manualCard">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><p class="todayEyebrow" style="margin:0">Daily check-in</p><span class="srcLab" style="margin:0">'+esc(dateLabel)+'</span></div>'
@@ -1104,14 +1104,14 @@ function manualCard(h){
     +'<button class="pulseBtn" data-pulse="10">10s</button><button class="pulseBtn" data-pulse="30">30s</button>'
     +'<span class="pulseRing" id="pulseRing"><svg viewBox="0 0 34 34"><circle class="pt" cx="17" cy="17" r="14"/><circle class="pf" id="pulseFill" cx="17" cy="17" r="14"/></svg><span class="pulseCount" id="pulseCount"></span></span>'
     +'<span class="chipWord" id="pulseHint" style="color:var(--muted);font-style:normal;font-family:var(--mono);font-size:10px">tap 10s/30s &amp; count beats</span></div></div>'
-    +'<button class="primary" id="mSave">'+(isToday?'Save todayâs readiness':'Save '+dObj.toLocaleDateString('en-US',{month:'short',day:'numeric'}))+'</button></div>';
+    +'<button class="primary" id="mSave">'+(isToday?'Save today’s readiness':'Save '+dObj.toLocaleDateString('en-US',{month:'short',day:'numeric'}))+'</button></div>';
 }
 function saveManual(){
   // pull resting pulse (the one free-typed field) into the draft
   const rEl=document.getElementById('m-rhr'); if(rEl){ const n=Number(rEl.value); draft.rhr=(rEl.value!==''&&isFinite(n))?n:null; }
   const {sleepQ,energy,mood,soreness,stress,wakeTime,sleepHours,rhr}=draft;
   const readiness=subjReadiness({sleepQ,energy,mood,soreness,stress});
-  if(readiness==null&&sleepHours==null&&rhr==null){ alert('Tap at least how you feel â or pick your sleep.'); return; }
+  if(readiness==null&&sleepHours==null&&rhr==null){ alert('Tap at least how you feel — or pick your sleep.'); return; }
   const target=8;
   const sleepPerf=sleepHours!=null?Math.round(Math.min(100,sleepHours/target*100)):null;
   const bedtime=deriveBed(wakeTime,sleepHours);
@@ -1127,14 +1127,14 @@ function saveManual(){
 
 /* events */
 function captureRhr(){ const el=document.getElementById('m-rhr'); if(el&&draft){ const n=Number(el.value); draft.rhr=(el.value!==''&&isFinite(n))?n:null; } }
-/* pulse-counter timer: a ring fills over 10s/30s; you count beats, it â BPM */
+/* pulse-counter timer: a ring fills over 10s/30s; you count beats, it → BPM */
 let pulseIntv=null;
 function startPulse(dur){
   if(pulseIntv){ clearInterval(pulseIntv); pulseIntv=null; }
   const ring=document.getElementById('pulseRing'), fill=document.getElementById('pulseFill'), count=document.getElementById('pulseCount'), hint=document.getElementById('pulseHint');
   if(!ring||!fill) return;
   const C=2*Math.PI*14; fill.style.strokeDasharray=C; fill.style.strokeDashoffset=C;
-  ring.classList.add('on'); if(hint)hint.textContent='countingâ¦ '+dur+'s';
+  ring.classList.add('on'); if(hint)hint.textContent='counting¦ '+dur+'s';
   const start=Date.now();
   pulseIntv=setInterval(()=>{
     const el=(Date.now()-start)/1000, frac=Math.min(1,el/dur);
@@ -1145,7 +1145,7 @@ function startPulse(dur){
       try{ if(navigator.vibrate)navigator.vibrate(200); }catch(e){}
       const beats=prompt('How many beats did you count in '+dur+' seconds?');
       ring.classList.remove('on'); if(count)count.textContent=''; if(hint)hint.textContent='tap 10s/30s & count beats';
-      if(beats!=null){ const b=Math.max(0,Math.round(+beats)); if(b){ const bpm=Math.round(b*(60/dur)); const inp=document.getElementById('m-rhr'); if(inp)inp.value=bpm; if(typeof draft!=='undefined'&&draft)draft.rhr=bpm; if(hint)hint.textContent='â '+bpm+' bpm'; } }
+      if(beats!=null){ const b=Math.max(0,Math.round(+beats)); if(b){ const bpm=Math.round(b*(60/dur)); const inp=document.getElementById('m-rhr'); if(inp)inp.value=bpm; if(typeof draft!=='undefined'&&draft)draft.rhr=bpm; if(hint)hint.textContent='✓ '+bpm+' bpm'; } }
     }
   },50);
 }
@@ -1153,7 +1153,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#mSave')){ saveManual(); return; }
   const pb=e.target.closest('[data-pulse]'); if(pb){ startPulse(parseInt(pb.dataset.pulse,10)||30); return; }
   const rm=e.target.closest('[data-rmcaf]'); if(rm){ removeCaffLog(rm.dataset.rmcaf); return; }
-  const cc=e.target.closest('[data-clearcaf]'); if(cc){ if(confirm('Clear all of todayâs caffeine?')) clearCaffToday(); return; }
+  const cc=e.target.closest('[data-clearcaf]'); if(cc){ if(confirm('Clear all of today’s caffeine?')) clearCaffToday(); return; }
   const ac=e.target.closest('[data-addcust]'); if(ac){ const n=document.getElementById('cafCustName'), m=document.getElementById('cafCustMg'); const mg=Math.round(+((m&&m.value)||0)); if(!mg||mg<=0){ alert('Enter the caffeine amount in mg.'); return; } addCustomCaff((n&&n.value)||'Custom', mg); return; }
   const cf=e.target.closest('[data-caf]'); if(cf){ logCaffeine(+cf.dataset.caf, cf.dataset.cafname||'Caffeine'); return; }
   const cs=e.target.closest('[data-cafsearch]'); if(cs){ cafOpen=!cafOpen; render(); return; }
@@ -1162,7 +1162,7 @@ document.addEventListener('click',e=>{
   const sp=e.target.closest('[data-supp]'); if(sp){ toggleSupp(sp.dataset.supp); return; }
   const md=e.target.closest('[data-medname]'); if(md){ logMedByName(md.dataset.medname); return; }
   const rmm=e.target.closest('[data-rmmed]'); if(rmm){ removeMedLog(rmm.dataset.rmmed); return; }
-  const ccm=e.target.closest('[data-clearmed]'); if(ccm){ if(confirm('Clear all of todayâs meds/substances?')) clearMedToday(); return; }
+  const ccm=e.target.closest('[data-clearmed]'); if(ccm){ if(confirm('Clear all of today’s meds/substances?')) clearMedToday(); return; }
   const am=e.target.closest('[data-addmed]'); if(am){ const n=document.getElementById('medCustName'), m=document.getElementById('medCustMg'); const mg=Math.round(+((m&&m.value)||0)); addCustomMed((n&&n.value)||'Custom', mg); return; }
   const rt=e.target.closest('[data-rate]'); if(rt){ captureRhr(); const f=rt.dataset.rate,v=+rt.dataset.val; draft[f]=(draft[f]===v?null:v); render(); return; }
   const wk=e.target.closest('[data-wake]'); if(wk){ captureRhr(); draft.wakeTime=(draft.wakeTime===wk.dataset.wake?null:wk.dataset.wake); render(); return; }
@@ -1174,7 +1174,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#infoBtn')){ infoOpen=!infoOpen; render(); return; }
 });
 
-/* background sparks â varied size + position + timing for a lively, 3D-ish field */
+/* background sparks — varied size + position + timing for a lively, 3D-ish field */
 (function(){ const d=document.getElementById('dust'); if(!d)return;
   const pos=[[8,18,2],[16,52,3],[24,80,2],[33,28,4],[41,64,2],[50,12,3],[57,46,2],[64,86,3],[72,24,2],[80,58,4],[88,38,2],[94,74,3],[12,38,2],[46,90,2],[68,8,3],[86,16,2]];
   d.innerHTML=pos.map((p,i)=>'<i style="left:'+p[0]+'%;top:'+p[1]+'%;width:'+p[2]+'px;height:'+p[2]+'px;animation-delay:'+(i*0.45).toFixed(2)+'s;animation-duration:'+(5+(i%4))+'s"></i>').join(''); })();
@@ -1182,7 +1182,7 @@ document.addEventListener('click',e=>{
 render();
 setInterval(()=>{ if(health())render(); }, 60000);
 
-/* cloud hydrate â pull the day-log + refresh once the device snapshot lands */
+/* cloud hydrate — pull the day-log + refresh once the device snapshot lands */
 (async function(){ if(!window.PatronDB||!PatronDB.isCloud())return; try{
   const cs=await PatronDB.get('peaklog');
   if(cs&&cs.days){ const local=loadLog(); const merged={days:Object.assign({},cs.days,local.days)}; try{localStorage.setItem(PLOG,JSON.stringify(merged));}catch(e){} }
