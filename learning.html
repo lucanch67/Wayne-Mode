@@ -139,7 +139,7 @@ body::before {
     radial-gradient(58% 42% at 82% 6%, var(--glow-1), transparent 70%),
     radial-gradient(48% 38% at 12% 92%, var(--glow-2), transparent 72%);
 }
-.shell { max-width: 720px; margin: 0 auto; position: relative; z-index: 2; }
+.shell { max-width: 800px; margin: 0 auto; position: relative; z-index: 2; }
 
 /* ── Header ── */
 .header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-8); }
@@ -154,8 +154,16 @@ body::before {
   transition: background var(--duration) var(--ease-premium), border-color var(--duration) var(--ease-premium);
 }
 .back:hover { background: var(--brand-line); border-color: var(--brand); }
+.titleRow { display: flex; align-items: center; gap: 14px; }
 .title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-3xl); line-height: 1.0; letter-spacing: -0.03em; margin: 0; }
 .subtitle { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted); margin: 5px 0 0; }
+.brandOrb { width: 38px; height: 38px; flex-shrink: 0; }
+.brandOrb svg { width: 100%; height: 100%; display: block; animation: orbSpin 14s linear infinite; transform-origin: 50% 50%; }
+.orbTrack { fill: none; stroke: var(--border); stroke-width: 1.5; }
+.orbFill { fill: none; stroke: var(--brand); stroke-width: 1.5; stroke-dasharray: 12 88; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--brand-line)); }
+.orbCore { fill: var(--brand); filter: drop-shadow(0 0 6px var(--brand-glow)); }
+@keyframes orbSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .brandOrb svg { animation: none; } }
 
 /* ── Theme switcher ── */
 .themeSeg { display: inline-flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 3px; gap: 2px; }
@@ -176,6 +184,7 @@ body::before {
 .btn-sm { padding: 0.4rem var(--space-3); font-size: var(--text-xs); }
 .btn-danger { color: var(--neg); border-color: var(--neg-line); }
 .btn-danger:hover { background: var(--neg-soft); }
+.btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 
 /* ── Form fields ── */
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -190,7 +199,8 @@ select.fieldInput option { background: var(--bg-elevated); color: var(--fg); }
 /* ── Modal ── */
 .overlay { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 1000; display: grid; place-items: center; padding: var(--space-4); animation: fade 200ms var(--ease-premium); }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-.panel { width: min(480px, 100%); background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: 0 28px 70px -16px rgba(0,0,0,0.7); animation: rise 320ms var(--ease-premium); max-height: 90dvh; overflow-y: auto; }
+.panel { position: relative; width: min(480px, 100%); background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: 0 28px 70px -16px rgba(0,0,0,0.7); animation: rise 320ms var(--ease-premium); max-height: 90dvh; overflow-y: auto; }
+.panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--border-strong), transparent); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 @keyframes rise { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
 .panelHead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-5); }
 .panelEyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--brand); }
@@ -222,90 +232,115 @@ select.fieldInput option { background: var(--bg-elevated); color: var(--fg); }
  * Page-specific
  * ================================================================ */
 
+/* Radial ring component */
+.ringWrap { position: relative; display: inline-flex; flex-shrink: 0; }
+.ringSvg { display: block; transform: rotate(-90deg); overflow: visible; }
+.ringTrack { fill: none; stroke: var(--track); }
+.ringFill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 900ms var(--ease-premium); }
+
 /* Stats row */
 .statsRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-6); }
 @media (max-width: 600px) { .statsRow { grid-template-columns: repeat(2, 1fr); } }
-.statTile { position: relative; padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--card-shadow); display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.statTile { position: relative; padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--card-shadow); display: flex; flex-direction: column; gap: 6px; overflow: hidden; transition: border-color 220ms, transform 220ms; }
+.statTile:hover { border-color: var(--border-strong); transform: translateY(-1px); }
 .statTile::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent); }
+.statTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .statLabel { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-.statValue { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--fg); }
+.statValue { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--fg); font-variant-numeric: tabular-nums; }
 .statValue em { font-style: normal; font-size: 1rem; color: var(--muted); }
 .statSub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+.statBreakdown { display: flex; height: 4px; border-radius: 3px; overflow: hidden; background: var(--track); margin: 2px 0 1px; }
+.statBreakdown span { display: block; height: 100%; }
+.statFlame svg { width: 17px; height: 17px; color: var(--warn); filter: drop-shadow(0 0 6px var(--warn-line)); transition: opacity 300ms; }
 
 /* Section */
 .sectionGap { margin-bottom: var(--space-8); }
-.sectionHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+.sectionHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); gap: var(--space-3); }
 .sectionTitle { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 
 /* Empty state */
-.emptyState { padding: var(--space-8) var(--space-4); text-align: center; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--muted); font-family: var(--font-mono); font-size: var(--text-sm); }
+.emptyState { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 42px 20px; text-align: center; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--muted); }
+.emptyState svg { width: 28px; height: 28px; color: var(--muted); opacity: 0.55; }
+.emptyState p { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.65; max-width: 34ch; }
 
-/* Skill Tree */
+/* Skill Canopy */
 .skillTree { display: flex; flex-direction: column; gap: var(--space-2); }
-.skillNode { display: flex; flex-direction: column; }
-.skillItem { display: flex; align-items: center; gap: var(--space-3); padding: 10px var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: border-color 180ms var(--ease-premium), background 180ms var(--ease-premium), transform 160ms var(--ease-premium); margin-bottom: var(--space-2); }
+.skillNode { display: flex; flex-direction: column; position: relative; }
+.skillItem { display: flex; align-items: center; gap: 12px; padding: 13px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: border-color 180ms var(--ease-premium), background 180ms var(--ease-premium), transform 160ms var(--ease-premium); }
+.skillItem[data-depth]:not([data-depth="0"]) { padding: 9px 12px; }
 .skillItem:hover { border-color: var(--brand-line); background: var(--brand-soft); transform: translateX(2px); }
-.skillDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.skillDot[data-s="not-started"] { background: var(--track); border: 1.5px solid var(--border-strong); }
-.skillDot[data-s="learning"]    { background: var(--warn); box-shadow: 0 0 8px var(--warn-line); }
-.skillDot[data-s="mastered"]    { background: var(--pos);  box-shadow: 0 0 8px var(--pos-line); }
-.skillName { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600; flex: 1; }
-.skillHrs  { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
-.skillBadge { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-pill); }
+.skillInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.skillName { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skillHrs { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.skillBadge { flex-shrink: 0; font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-pill); }
 .skillBadge[data-s="not-started"] { background: var(--track); color: var(--muted); }
 .skillBadge[data-s="learning"]    { background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); }
 .skillBadge[data-s="mastered"]    { background: var(--pos-soft);  border: 1px solid var(--pos-line);  color: var(--pos); }
-.skillChildren { padding-left: var(--space-6); position: relative; }
-.skillChildren::before { content: ''; position: absolute; left: 18px; top: 0; bottom: var(--space-2); width: 1px; background: var(--border); }
+.skillCount { flex-shrink: 0; font-family: var(--font-mono); font-size: 9px; font-weight: 600; color: var(--muted-strong); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 2px 7px; }
+.skillChildren { padding-left: 34px; position: relative; margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+.skillChildren::before { content: ''; position: absolute; left: 14px; top: -2px; bottom: 18px; width: 1px; background: linear-gradient(180deg, var(--border-strong), transparent); }
+.skillChildren > .skillNode::before { content: ''; position: absolute; left: -20px; top: 20px; width: 20px; height: 1px; background: var(--border-strong); }
 
-/* Log Feed */
-.logFeed { display: flex; flex-direction: column; gap: var(--space-2); }
-.logEntry { display: flex; gap: var(--space-3); align-items: flex-start; padding: 10px var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+/* Log timeline */
+.logFeed { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.logFeed::before { content: ''; position: absolute; left: 26px; top: 4px; bottom: 4px; width: 1px; background: linear-gradient(180deg, var(--border-strong), transparent); z-index: 0; }
+.logEntry { position: relative; z-index: 1; display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); transition: border-color 180ms, background 180ms; }
+.logEntry:hover { border-color: var(--brand-line); }
+.logDot { flex-shrink: 0; width: 9px; height: 9px; margin-top: 5px; margin-left: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 8px var(--brand-line); }
 .logMeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .logSkill { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600; color: var(--fg); }
 .logNotes { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.logResource { font-family: var(--font-mono); font-size: 10px; color: var(--brand); text-decoration: none; }
+.logResource { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 10px; color: var(--brand); text-decoration: none; }
+.logResource svg { width: 11px; height: 11px; }
 .logResource:hover { text-decoration: underline; }
 .logRight { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
 .logDuration { font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700; color: var(--brand); }
 .logDate { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-.logDelete { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 2px; line-height: 1; transition: color 150ms; }
+.logDelete { background: none; border: none; cursor: pointer; color: var(--muted); padding: 3px; line-height: 1; border-radius: 50%; transition: color 150ms; flex-shrink: 0; align-self: flex-start; }
+.logDelete svg { width: 12px; height: 12px; display: block; }
 .logDelete:hover { color: var(--neg); }
 
-/* Resource Table */
-.resourceList { display: flex; flex-direction: column; gap: var(--space-2); }
-.resourceRow { display: flex; align-items: center; gap: var(--space-3); padding: 10px var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); transition: border-color 180ms; }
-.resourceRow:hover { border-color: var(--brand-line); }
-.resBadge { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-pill); flex-shrink: 0; }
+/* Resource cards */
+.resourceGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.resourceRow { display: flex; flex-direction: column; gap: 11px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: border-color 180ms, transform 180ms; }
+.resourceRow:hover { border-color: var(--brand-line); transform: translateY(-2px); }
+.resTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.resBadge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: var(--radius-pill); }
+.resBadge svg { width: 10px; height: 10px; }
 .resBadge.book    { background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); }
 .resBadge.course  { background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand); }
 .resBadge.mentor  { background: var(--pos-soft); border: 1px solid var(--pos-line); color: var(--pos); }
 .resBadge.article { background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--muted-strong); }
+.resDelete { background: none; border: none; cursor: pointer; color: var(--muted); padding: 3px; line-height: 1; transition: color 150ms; flex-shrink: 0; }
+.resDelete svg { width: 12px; height: 12px; display: block; }
+.resDelete:hover { color: var(--neg); }
 .resInfo { flex: 1; min-width: 0; }
 .resTitle { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-decoration: none; }
 a.resTitle:hover { color: var(--brand); }
-.resCost { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
-.resStars { display: flex; gap: 1px; flex-shrink: 0; }
-.resStar { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--track); padding: 0; line-height: 1; transition: color 120ms; }
+.resCost { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
+.resStars { display: flex; gap: 2px; }
+.resStar { background: none; border: none; cursor: pointer; color: var(--track); padding: 1px; line-height: 1; transition: color 120ms, transform 120ms; }
+.resStar svg { width: 14px; height: 14px; display: block; }
+.resStar:hover { transform: scale(1.12); }
 .resStar.on { color: var(--warn); }
-.resDelete { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 2px 0 2px 6px; line-height: 1; transition: color 150ms; }
-.resDelete:hover { color: var(--neg); }
 
 /* Analytics */
 .chartsRow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-@media (max-width: 520px) { .chartsRow { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .chartsRow { grid-template-columns: 1fr; } }
 .chartCard { position: relative; padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--card-shadow); overflow: hidden; }
 .chartCard::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent); }
 .chartTitle { font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--space-3); }
 .chartSvgWrap { width: 100%; }
 .chartSvgWrap svg { width: 100%; display: block; overflow: visible; }
-.skillBarList { display: flex; flex-direction: column; gap: var(--space-2); }
-.skillBar { display: flex; flex-direction: column; gap: 4px; }
+.skillBarList { display: flex; flex-direction: column; gap: 11px; }
+.skillBar { display: flex; align-items: center; gap: 10px; }
+.skillBarRank { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-family: var(--font-mono); font-size: 9px; color: var(--muted-strong); }
+.skillBarBody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .skillBarTop { display: flex; justify-content: space-between; align-items: baseline; }
-.skillBarName { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
+.skillBarName { font-family: var(--font-ui); font-size: var(--text-xs); font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
 .skillBarHrs  { font-family: var(--font-mono); font-size: 10px; color: var(--muted); flex-shrink: 0; }
-.skillBarTrack { height: 4px; background: var(--track); border-radius: 2px; overflow: hidden; }
-.skillBarFill  { height: 100%; background: var(--brand); border-radius: 2px; transition: width 700ms var(--ease-premium); }
+.skillBarTrack { height: 5px; background: var(--track); border-radius: 3px; overflow: hidden; }
+.skillBarFill  { height: 100%; background: linear-gradient(90deg, var(--brand-2), var(--brand)); border-radius: 3px; transition: width 700ms var(--ease-premium); }
 </style>
 </head>
 <body>
@@ -316,8 +351,17 @@ a.resTitle:hover { color: var(--brand); }
     <header class="header">
       <div class="headerLeft">
         <a class="back" href="index.html">← Dashboard</a>
-        <h1 class="title">Learning &amp; Skills</h1>
-        <p class="subtitle">Skill tree · Log · Resources · Analytics</p>
+        <div class="titleRow">
+          <div class="brandOrb" aria-hidden="true">
+            <svg viewBox="0 0 40 40">
+              <circle class="orbTrack" cx="20" cy="20" r="16"></circle>
+              <circle class="orbFill" cx="20" cy="20" r="16"></circle>
+              <circle class="orbCore" cx="20" cy="20" r="3"></circle>
+            </svg>
+          </div>
+          <h1 class="title">Learning &amp; Skills</h1>
+        </div>
+        <p class="subtitle">Skill canopy · Log · Resources · Analytics</p>
       </div>
       <div class="headerRight">
         <div id="themeSeg"></div>
@@ -327,11 +371,11 @@ a.resTitle:hover { color: var(--brand); }
     <!-- Stats -->
     <div class="statsRow" id="statsRow"></div>
 
-    <!-- Skill Tree -->
+    <!-- Skill Canopy -->
     <div class="sectionGap">
       <div class="sectionHead">
-        <span class="sectionTitle">Skill Tree</span>
-        <button class="btn btn-primary btn-sm" onclick="openSkillModal(null)">+ Add Skill</button>
+        <span class="sectionTitle">Skill Canopy</span>
+        <button class="btn btn-primary btn-sm" onclick="openSkillModal(null)"></button>
       </div>
       <div id="skillTreeRoot"></div>
     </div>
@@ -340,7 +384,7 @@ a.resTitle:hover { color: var(--brand); }
     <div class="sectionGap">
       <div class="sectionHead">
         <span class="sectionTitle">Learning Log</span>
-        <button class="btn btn-primary btn-sm" onclick="openLogModal()">+ Log Session</button>
+        <button class="btn btn-primary btn-sm" onclick="openLogModal()"></button>
       </div>
       <div id="logFeed"></div>
     </div>
@@ -349,7 +393,7 @@ a.resTitle:hover { color: var(--brand); }
     <div class="sectionGap">
       <div class="sectionHead">
         <span class="sectionTitle">Resources</span>
-        <button class="btn btn-primary btn-sm" onclick="openResourceModal(null)">+ Add Resource</button>
+        <button class="btn btn-primary btn-sm" onclick="openResourceModal(null)"></button>
       </div>
       <div id="resourceList"></div>
     </div>
@@ -396,6 +440,40 @@ a.resTitle:hover { color: var(--brand); }
 <div id="modalRoot"></div>
 
 <script>
+/* ── Icons (inline, no emoji) ── */
+const ICON = {
+  plus:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  link:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h5v5"/><path d="M19 5l-9 9"/><path d="M9 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12.5 2.4c.9 2.7-1.6 3.9-1.6 6.6a3.1 3.1 0 0 0 6.2 0c0-1.6-.7-2.5-.7-2.5s.6 3.3-1.7 3.3c-1.7 0-1.6-2.1-.9-3.8-2 .3-3.5 2.4-3.5 5a5.7 5.7 0 0 0 11.4 0c0-4.9-4.1-5.9-4.1-8.6-1.5.7-2.1 2.1-2.1 2.1s-1.4-1.1-3-2.1Z"/></svg>',
+  starFill: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.5l2.9 6.4 7 .7-5.3 4.7 1.6 6.9L12 17.6 5.8 20.7l1.6-6.9L2.1 9.6l7-.7L12 2.5Z"/></svg>',
+  starLine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.5l2.9 6.4 7 .7-5.3 4.7 1.6 6.9L12 17.6 5.8 20.7l1.6-6.9L2.1 9.6l7-.7L12 2.5Z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13"/><path d="M4 19h16"/><path d="M9 10h6M9 14h4"/></svg>',
+  course: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5-10-5Z"/><path d="M6 11v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v6"/></svg>',
+  mentor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.3"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>',
+  article: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>',
+};
+const RES_ICON = { book: ICON.book, course: ICON.course, mentor: ICON.mentor, article: ICON.article };
+document.querySelectorAll('.sectionHead .btn-primary').forEach((b,i)=>{
+  const labels = ['Add Skill','Log Session','Add Resource'];
+  b.innerHTML = ICON.plus + labels[i];
+});
+
+/* ── Ring helper ── */
+function ringSvg(pct, opts) {
+  opts = opts || {};
+  const size = opts.size || 44, stroke = opts.stroke || 4;
+  const color = opts.color || 'var(--brand)', glow = opts.glow || 'var(--brand-line)';
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const off = c - (Math.max(0, Math.min(100, pct)) / 100) * c;
+  return `<span class="ringWrap" style="width:${size}px;height:${size}px">
+    <svg class="ringSvg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle class="ringTrack" cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="${stroke}"></circle>
+      <circle class="ringFill" cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="${stroke}" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" style="stroke:${color};filter:drop-shadow(0 0 5px ${glow})"></circle>
+    </svg>
+  </span>`;
+}
+
 /* ── Storage ── */
 const KEY = 'learning_standalone_v1';
 function load() { try { const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
@@ -460,72 +538,110 @@ function masteredPct() {
 function renderStats() {
   const wm = weekMins();
   const whrs = wm>=60 ? (wm/60).toFixed(1) : null;
+  const wPct = Math.min(100, Math.round(wm/300*100));
+  const mPct = masteredPct();
+  const st = streak();
+  const counts = { 'not-started':0, 'learning':0, 'mastered':0 };
+  D.skills.forEach(s=>{ counts[s.status] = (counts[s.status]||0) + 1; });
   document.getElementById('statsRow').innerHTML = `
     <div class="statTile">
-      <div class="statLabel">Skills</div>
+      <div class="statTop"><span class="statLabel">Skills</span></div>
       <div class="statValue">${D.skills.length}</div>
+      <div class="statBreakdown">
+        <span style="flex:${counts['not-started']||0.0001};background:var(--track)"></span>
+        <span style="flex:${counts['learning']||0.0001};background:var(--warn)"></span>
+        <span style="flex:${counts['mastered']||0.0001};background:var(--pos)"></span>
+      </div>
       <div class="statSub">tracked</div>
     </div>
     <div class="statTile">
-      <div class="statLabel">This Week</div>
+      <div class="statTop">
+        <span class="statLabel">This Week</span>
+        ${ringSvg(wPct, {size:32, stroke:3, color:'var(--brand)', glow:'var(--brand-line)'})}
+      </div>
       <div class="statValue">${whrs ? whrs+'<em>h</em>' : wm+'<em>m</em>'}</div>
       <div class="statSub">study time</div>
     </div>
     <div class="statTile">
-      <div class="statLabel">Streak</div>
-      <div class="statValue">${streak()}</div>
-      <div class="statSub">days in a row</div>
+      <div class="statTop">
+        <span class="statLabel">Streak</span>
+        <span class="statFlame" style="opacity:${st?1:0.35}">${ICON.flame}</span>
+      </div>
+      <div class="statValue">${st}</div>
+      <div class="statSub">day${st===1?'':'s'} in a row</div>
     </div>
     <div class="statTile">
-      <div class="statLabel">Mastered</div>
-      <div class="statValue">${masteredPct()}<em>%</em></div>
+      <div class="statTop">
+        <span class="statLabel">Mastered</span>
+        ${ringSvg(mPct, {size:32, stroke:3, color:'var(--pos)', glow:'var(--pos-line)'})}
+      </div>
+      <div class="statValue">${mPct}<em>%</em></div>
       <div class="statSub">of all skills</div>
     </div>`;
 }
 
-/* ── Skill Tree ── */
+/* ── Skill Canopy ── */
 const STATUS_LABEL = { 'not-started':'Not Started', 'learning':'Learning', 'mastered':'Mastered' };
 
-function skillHtml(skill) {
+function skillPct(skill) {
+  if (skill.status === 'mastered') return 100;
+  if (skill.status === 'not-started') return 4;
+  const m = skillMinutes(skill.id);
+  return Math.max(8, Math.min(92, 8 + (m/480)*84));
+}
+function skillRingColor(skill) {
+  if (skill.status === 'mastered') return { color:'var(--pos)', glow:'var(--pos-line)' };
+  if (skill.status === 'learning') return { color:'var(--warn)', glow:'var(--warn-line)' };
+  return { color:'var(--muted)', glow:'var(--border)' };
+}
+
+function skillHtml(skill, depth) {
+  depth = depth || 0;
   const m = skillMinutes(skill.id);
   const children = D.skills.filter(s=>s.parent===skill.id);
+  const rc = skillRingColor(skill);
+  const size = depth ? 34 : 46;
   return `<div class="skillNode">
-    <div class="skillItem" onclick="openSkillModal('${esc(skill.id)}')">
-      <span class="skillDot" data-s="${esc(skill.status)}"></span>
-      <span class="skillName">${esc(skill.name)}</span>
-      ${m ? `<span class="skillHrs">${fmtMins(m)}</span>` : ''}
+    <div class="skillItem" data-depth="${depth}" onclick="openSkillModal('${esc(skill.id)}')">
+      ${ringSvg(skillPct(skill), {size, stroke: depth?3:4, color:rc.color, glow:rc.glow})}
+      <div class="skillInfo">
+        <span class="skillName">${esc(skill.name)}</span>
+        <span class="skillHrs">${m ? fmtMins(m) : 'Not logged yet'}</span>
+      </div>
       <span class="skillBadge" data-s="${esc(skill.status)}">${STATUS_LABEL[skill.status]||skill.status}</span>
+      ${children.length ? `<span class="skillCount">${children.length}</span>` : ''}
     </div>
-    ${children.length ? `<div class="skillChildren">${children.map(skillHtml).join('')}</div>` : ''}
+    ${children.length ? `<div class="skillChildren">${children.map(c=>skillHtml(c, depth+1)).join('')}</div>` : ''}
   </div>`;
 }
 
 function renderSkillTree() {
   const el = document.getElementById('skillTreeRoot');
   const roots = D.skills.filter(s=>!s.parent);
-  if (!D.skills.length) { el.innerHTML = '<div class="emptyState">No skills yet — add your first skill to start mapping your growth</div>'; return; }
-  el.innerHTML = '<div class="skillTree">' + roots.map(skillHtml).join('') + '</div>';
+  if (!D.skills.length) { el.innerHTML = `<div class="emptyState">${ICON.book}<p>No skills yet — plant your first one and watch it grow as you log hours</p></div>`; return; }
+  el.innerHTML = '<div class="skillTree">' + roots.map(s=>skillHtml(s,0)).join('') + '</div>';
 }
 
 /* ── Log Feed ── */
 function renderLog() {
   const el = document.getElementById('logFeed');
   const sorted = [...D.logs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,25);
-  if (!sorted.length) { el.innerHTML = '<div class="emptyState">No sessions logged yet — track your first study session above</div>'; return; }
+  if (!sorted.length) { el.innerHTML = `<div class="emptyState">${ICON.book}<p>No sessions logged yet — track your first study session above</p></div>`; return; }
   const sm = Object.fromEntries(D.skills.map(s=>[s.id,s.name]));
   el.innerHTML = '<div class="logFeed">' + sorted.map(l => {
     const dStr = l.date ? new Date(l.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
     return `<div class="logEntry">
+      <span class="logDot"></span>
       <div class="logMeta">
         <div class="logSkill">${esc(sm[l.skillId]||'Unknown skill')}</div>
         ${l.notes ? `<div class="logNotes">${esc(l.notes)}</div>` : ''}
-        ${l.resource ? `<a class="logResource" href="${esc(l.resource)}" target="_blank" rel="noopener">🔗 Resource</a>` : ''}
+        ${l.resource ? `<a class="logResource" href="${esc(l.resource)}" target="_blank" rel="noopener">${ICON.link}Resource</a>` : ''}
       </div>
       <div class="logRight">
         <div class="logDuration">${fmtMins(+l.duration||0)}</div>
         <div class="logDate">${esc(dStr)}</div>
-        <button class="logDelete" onclick="deleteLog('${esc(l.id)}')" title="Delete">✕</button>
       </div>
+      <button class="logDelete" onclick="deleteLog('${esc(l.id)}')" title="Delete" aria-label="Delete session">${ICON.close}</button>
     </div>`;
   }).join('') + '</div>';
 }
@@ -536,16 +652,18 @@ function deleteLog(id) { D.logs = D.logs.filter(l=>l.id!==id); persist(); render
 function renderResources() {
   const el = document.getElementById('resourceList');
   const sorted = [...D.resources].sort((a,b)=>(b.rating||0)-(a.rating||0));
-  if (!sorted.length) { el.innerHTML = '<div class="emptyState">No resources added — track books, courses &amp; mentors here</div>'; return; }
-  el.innerHTML = '<div class="resourceList">' + sorted.map(r => `
+  if (!sorted.length) { el.innerHTML = `<div class="emptyState">${ICON.course}<p>No resources added — track books, courses &amp; mentors here</p></div>`; return; }
+  el.innerHTML = '<div class="resourceGrid">' + sorted.map(r => `
     <div class="resourceRow">
-      <span class="resBadge ${esc(r.type)}">${esc(r.type)}</span>
+      <div class="resTop">
+        <span class="resBadge ${esc(r.type)}">${RES_ICON[r.type]||ICON.article}${esc(r.type)}</span>
+        <button class="resDelete" onclick="deleteRes('${esc(r.id)}')" title="Delete" aria-label="Delete resource">${ICON.close}</button>
+      </div>
       <div class="resInfo">
         ${r.url ? `<a class="resTitle" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>` : `<span class="resTitle">${esc(r.title)}</span>`}
         ${r.cost ? `<div class="resCost">€${esc(r.cost)}</div>` : ''}
       </div>
-      <div class="resStars">${[1,2,3,4,5].map(n=>`<button class="resStar${n<=(r.rating||0)?' on':''}" onclick="rateRes('${esc(r.id)}',${n})">★</button>`).join('')}</div>
-      <button class="resDelete" onclick="deleteRes('${esc(r.id)}')" title="Delete">✕</button>
+      <div class="resStars">${[1,2,3,4,5].map(n=>`<button class="resStar${n<=(r.rating||0)?' on':''}" onclick="rateRes('${esc(r.id)}',${n})" aria-label="Rate ${n} stars">${n<=(r.rating||0)?ICON.starFill:ICON.starLine}</button>`).join('')}</div>
     </div>`).join('') + '</div>';
 }
 
@@ -573,8 +691,8 @@ function renderLineChart() {
       <stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/>
     </linearGradient></defs>
     <path d="${area}" fill="url(#lg)"/>
-    <path d="${line}" fill="none" stroke="var(--brand)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-    ${coords.map(([x,y],i)=>pts[i].m>0?`<circle cx="${x}" cy="${y}" r="2.5" fill="var(--brand)"/>`:'').join('')}
+    <path d="${line}" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 6px var(--brand-line))"/>
+    ${coords.map(([x,y],i)=>pts[i].m>0?`<circle cx="${x}" cy="${y}" r="3" fill="var(--brand)" style="filter:drop-shadow(0 0 4px var(--brand-line))"/>`:'').join('')}
   </svg>`;
 }
 
@@ -583,13 +701,16 @@ function renderSkillBars() {
   if (!D.skills.length) { el.innerHTML = ''; return; }
   const items = D.skills.map(s=>({ name:s.name, m:skillMinutes(s.id) })).sort((a,b)=>b.m-a.m).slice(0,5);
   const max = Math.max(...items.map(i=>i.m), 1);
-  el.innerHTML = items.map(i=>`
+  el.innerHTML = items.map((i,idx)=>`
     <div class="skillBar">
-      <div class="skillBarTop">
-        <span class="skillBarName">${esc(i.name)}</span>
-        <span class="skillBarHrs">${i.m?fmtMins(i.m):'—'}</span>
+      <span class="skillBarRank">${idx+1}</span>
+      <div class="skillBarBody">
+        <div class="skillBarTop">
+          <span class="skillBarName">${esc(i.name)}</span>
+          <span class="skillBarHrs">${i.m?fmtMins(i.m):'—'}</span>
+        </div>
+        <div class="skillBarTrack"><div class="skillBarFill" style="width:${(i.m/max*100).toFixed(1)}%"></div></div>
       </div>
-      <div class="skillBarTrack"><div class="skillBarFill" style="width:${(i.m/max*100).toFixed(1)}%"></div></div>
     </div>`).join('');
 }
 
