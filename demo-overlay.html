@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wayne Mode · Morning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+:root {
+  --bg:         #080913;
+  --fg:         #EEF0FF;
+  --muted:      rgba(220,225,255,0.50);
+  --muted-s:    rgba(220,225,255,0.76);
+  --border:     rgba(150,160,255,0.11);
+  --border-s:   rgba(150,160,255,0.22);
+  --surface:    rgba(150,160,255,0.045);
+  --brand:      #8B7BFF;
+  --brand-ink:  #0A0922;
+  --brand-soft: rgba(139,123,255,0.15);
+  --brand-line: rgba(139,123,255,0.32);
+  --brand-glow: rgba(124,107,255,0.55);
+  --pos:        #4FE3D0;
+  --pos-soft:   rgba(79,227,208,0.13);
+  --pos-line:   rgba(79,227,208,0.28);
+  --neg:        #FF6FA5;
+  --neg-soft:   rgba(255,111,165,0.13);
+  --neg-line:   rgba(255,111,165,0.28);
+  --warn:       #FFC65C;
+  --warn-soft:  rgba(255,198,92,0.11);
+  --warn-line:  rgba(255,198,92,0.28);
+  --track:      rgba(160,170,255,0.09);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* ─── Canvas ───────────────────────────────────── */
+#starfield {
+  position: fixed; inset: 0; z-index: 0;
+  opacity: 0;
+  animation: a-fade 2.5s 300ms forwards;
+}
+
+/* ─── Nebula glow ──────────────────────────────── */
+.nebula {
+  position: fixed; z-index: 0; pointer-events: none;
+  top: -40vh; left: 50%;
+  width: 180vw; height: 130vh;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 28%,
+    rgba(124,107,255,0.11) 0%,
+    rgba(80,60,200,0.05) 40%,
+    transparent 68%);
+  animation: a-breathe 8s ease-in-out infinite;
+}
+.nebula-b {
+  top: 25vh; left: 10%;
+  width: 70vw; height: 70vh;
+  background: radial-gradient(ellipse,
+    rgba(79,227,208,0.045) 0%, transparent 65%);
+  animation: a-breathe 11s ease-in-out infinite 3s;
+}
+
+/* ─── Top bar ──────────────────────────────────── */
+.topbar {
+  position: fixed; z-index: 2;
+  top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  animation: a-down 600ms cubic-bezier(0.16,1,0.3,1) 500ms forwards;
+}
+
+/* ─── Screen ───────────────────────────────────── */
+.screen {
+  position: relative; z-index: 1;
+  min-height: 100dvh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 24px 72px;
+  overflow-y: auto;
+}
+
+/* ─── Greeting ─────────────────────────────────── */
+.greeting { text-align: center; }
+
+.g-hello {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(2.2rem, 7vw, 7rem);
+  letter-spacing: 0.06em;
+  color: var(--fg);
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0; transform: translateY(60px);
+  animation: a-rise 1000ms cubic-bezier(0.16,1,0.3,1) 600ms forwards;
+}
+.g-name {
+  color: var(--brand);
+  text-shadow: 0 0 70px var(--brand-glow), 0 0 140px rgba(124,107,255,0.1);
+}
+
+.g-morning {
+  margin-top: 22px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--muted-s);
+  opacity: 0;
+  animation: a-fade 700ms 1100ms forwards;
+}
+.g-date {
+  margin-top: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px; font-weight: 300; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  animation: a-fade 700ms 1230ms forwards;
+}
+.g-streak {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 18px;
+  padding: 5px 16px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-line);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px; font-weight: 600;
+  color: var(--brand);
+  opacity: 0;
+  animation: a-pop 400ms cubic-bezier(0.16,1,0.3,1) 1380ms forwards;
+}
+
+/* ─── Divider ──────────────────────────────────── */
+.divider {
+  width: min(500px, 90vw); height: 1px; border: none;
+  background: linear-gradient(90deg, transparent, var(--border-s), transparent);
+  margin: 26px auto;
+  opacity: 0;
+  animation: a-fade 800ms 1600ms forwards;
+}
+
+/* ─── Data tiles ────────────────────────────────── */
+.data-row {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  opacity: 0; transform: translateY(22px);
+  animation: a-rise-sm 700ms cubic-bezier(0.16,1,0.3,1) 1720ms forwards;
+}
+.tile {
+  min-width: 108px; padding: 12px 16px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+}
+.tile-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.tile-value {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px; font-weight: 400; letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.tile-bar  { height: 2px; border-radius: 1px; background: var(--track); margin-top: 8px; overflow: hidden; }
+.tile-fill { height: 100%; width: 0%; transition: width 1400ms cubic-bezier(0.16,1,0.3,1); }
+
+.c-pos  { color: var(--pos);  }
+.c-warn { color: var(--warn); }
+.c-neg  { color: var(--neg);  }
+.f-pos  { background: var(--pos);  }
+.f-warn { background: var(--warn); }
+.f-neg  { background: var(--neg);  }
+
+/* ─── Focus ────────────────────────────────────── */
+.focus-line {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+  font-weight: 400; letter-spacing: 0.03em;
+  color: var(--muted);
+  opacity: 0;
+  animation: a-fade 600ms 2300ms forwards;
+}
+.focus-arrow { color: var(--brand); }
+.focus-task  { font-weight: 500; color: var(--fg); }
+
+/* ─── Chips ─────────────────────────────────────── */
+.chips {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  margin-top: 12px;
+  opacity: 0;
+  animation: a-fade 500ms 2450ms forwards;
+}
+.chip {
+  padding: 4px 12px; border-radius: 999px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.05em;
+  border: 1px solid;
+}
+.chip-h { color: var(--neg);  background: var(--neg-soft);  border-color: var(--neg-line);  }
+.chip-m { color: var(--warn); background: var(--warn-soft); border-color: var(--warn-line); }
+.chip-l { color: var(--pos);  background: var(--pos-soft);  border-color: var(--pos-line);  }
+
+/* ─── Yesterday ─────────────────────────────────── */
+.yest {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+  opacity: 0;
+  animation: a-fade 500ms 2580ms forwards;
+}
+.yest-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px; font-weight: 400; letter-spacing: 0.04em; color: var(--muted);
+}
+.yest-badge {
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--pos-soft); border: 1px solid var(--pos-line);
+  font-size: 9px; font-weight: 600; color: var(--pos); letter-spacing: 0.06em;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ─── CTA ───────────────────────────────────────── */
+.cta {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  margin-top: 36px;
+  opacity: 0;
+  animation: a-fade 700ms 2750ms forwards;
+}
+.btn-enter {
+  padding: 14px 52px;
+  background: var(--brand); color: var(--brand-ink);
+  border: none; border-radius: 11px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: filter 220ms, box-shadow 220ms, transform 220ms;
+}
+.btn-enter:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 48px var(--brand-glow);
+  transform: translateY(-2px);
+}
+.btn-skip {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 400;
+  color: var(--muted);
+  transition: color 200ms;
+}
+.btn-skip:hover { color: var(--muted-s); }
+
+/* ─── Exit ──────────────────────────────────────── */
+body.out { animation: a-fade-out 500ms cubic-bezier(0.4,0,1,1) forwards; }
+
+/* ─── Keyframes ─────────────────────────────────── */
+@keyframes a-fade     { from{opacity:0}                            to{opacity:1} }
+@keyframes a-fade-out { from{opacity:1}                            to{opacity:0} }
+@keyframes a-down     { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes a-rise     { from{opacity:0;transform:translateY(60px)} to{opacity:1;transform:translateY(0)} }
+@keyframes a-rise-sm  { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+@keyframes a-pop {
+  0%  {opacity:0;transform:scale(0.86);}
+  65% {opacity:1;transform:scale(1.05);}
+  100%{opacity:1;transform:scale(1);}
+}
+@keyframes a-breathe {
+  0%,100%{opacity:0.8;} 50%{opacity:1;}
+}
+
+/* ─── Mobile ─────────────────────────────────────── */
+@media (max-width:480px) {
+  .topbar { padding: 16px 18px; }
+  .tile   { min-width: 82px; padding: 10px 12px; }
+  .tile-value { font-size: 14px; }
+  .btn-enter  { padding: 13px 40px; font-size: 14px; }
+  .divider    { margin: 20px auto; }
+  .cta        { margin-top: 28px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation: none !important; transition: none !important;
+    opacity: 1 !important; transform: none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula"></div>
+<div class="nebula nebula-b"></div>
+
+<div class="topbar">
+  <span id="hud-time"></span>
+  <span id="hud-date"></span>
+</div>
+
+<div class="screen">
+
+  <div class="greeting">
+    <div class="g-hello">Hello, <span class="g-name">Luca.</span></div>
+    <p class="g-morning">Good morning.</p>
+    <p class="g-date" id="g-date"></p>
+    <div class="g-streak">🔥 &nbsp;14 day streak</div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="data-row">
+    <div class="tile">
+      <div class="tile-label">Recovery</div>
+      <div class="tile-value c-warn">74%</div>
+      <div class="tile-bar"><div class="tile-fill f-warn" data-pct="74"></div></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Sleep</div>
+      <div class="tile-value c-pos">7h 12m</div>
+      <div class="tile-bar"><div class="tile-fill f-pos" data-pct="90"></div></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Hydration</div>
+      <div class="tile-value c-neg">3 / 8</div>
+      <div class="tile-bar"><div class="tile-fill f-neg" data-pct="38"></div></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Supplements</div>
+      <div class="tile-value c-neg">1 / 3</div>
+      <div class="tile-bar"><div class="tile-fill f-neg" data-pct="33"></div></div>
+    </div>
+  </div>
+
+  <hr class="divider" style="margin:20px auto;" />
+
+  <div class="focus-line">
+    <span>Today's focus</span>
+    <span class="focus-arrow">→</span>
+    <span class="focus-task">Log today's weight</span>
+  </div>
+
+  <div class="chips">
+    <span class="chip chip-h">2 critical</span>
+    <span class="chip chip-m">3 focus</span>
+    <span class="chip chip-l">1 optional</span>
+  </div>
+
+  <div class="yest">
+    <div class="yest-item"><span class="yest-badge">done</span>Workout logged</div>
+    <div class="yest-item"><span class="yest-badge">done</span>All supplements taken</div>
+  </div>
+
+  <div class="cta">
+    <button class="btn-enter" id="btn-enter">Enter</button>
+    <button class="btn-skip"  id="btn-skip">Skip for now</button>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   STARFIELD
+   Three parallax layers of drifting stars
+   + twinkling + 4-point sparkle on bright stars
+   + shooting stars every 6–14 s
+═══════════════════════════════════════════════ */
+(function () {
+  var canvas = document.getElementById('starfield');
+  var ctx = canvas.getContext('2d');
+  var W = 0, H = 0;
+  var stars = [], shooters = [];
+  var nextShoot = 6000 + Math.random() * 8000;
+  var lastShootT = 0;
+
+  /* Layer definitions: [fraction, minSize, maxSize, driftSpeed, minOp, maxOp] */
+  var LAYERS = [
+    [0.25, 1.6, 2.6, 0.07, 0.45, 0.95],   // near — large, bright, faster
+    [0.40, 0.8, 1.5, 0.03, 0.28, 0.72],   // mid
+    [0.35, 0.3, 0.8, 0.01, 0.12, 0.42],   // far — tiny, dim, slow
+  ];
+
+  function makeStar(layer, yOverride) {
+    var sz  = layer[1] + Math.random() * (layer[2] - layer[1]);
+    var op  = layer[4] + Math.random() * (layer[5] - layer[4]);
+    var purp = Math.random() < 0.14;           // ~14 % get purple tint
+    return {
+      x: Math.random() * W,
+      y: yOverride !== undefined ? yOverride : Math.random() * H,
+      sz: sz,
+      spd: layer[3] * (0.65 + Math.random() * 0.7),
+      op: op,
+      ph: Math.random() * Math.PI * 2,         // twinkle phase
+      ts: 0.0004 + Math.random() * 0.0009,     // twinkle speed
+      r:  purp ? 180 : 215,
+      g:  purp ? 165 : 222,
+      b:  255,
+      sparkle: sz > 1.8 && Math.random() < 0.45,
+    };
+  }
+
+  function init() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    stars = [];
+    var total = Math.max(120, Math.min(Math.floor(W * H / 3800), 380));
+    LAYERS.forEach(function (L) {
+      var n = Math.floor(total * L[0]);
+      for (var i = 0; i < n; i++) stars.push(makeStar(L));
+    });
+  }
+
+  function spawnShooter() {
+    var angle = 0.38 + Math.random() * 0.42;   // ~22–46° from horizontal
+    var spd   = 9 + Math.random() * 7;
+    shooters.push({
+      x: W * 0.1 + Math.random() * W * 0.55,
+      y: H * 0.02 + Math.random() * H * 0.38,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      len: 110 + Math.random() * 120,
+      life: 0,
+      max:  45 + Math.random() * 35,
+    });
+  }
+
+  function drawSparkle(x, y, size, op) {
+    var arm = size * 4.5;
+    var half = arm * 0.5;
+    ctx.lineWidth = 0.8;
+
+    var hg = ctx.createLinearGradient(x - arm, y, x + arm, y);
+    hg.addColorStop(0,   'rgba(220,228,255,0)');
+    hg.addColorStop(0.35,'rgba(220,228,255,' + (op * 0.25) + ')');
+    hg.addColorStop(0.5, 'rgba(220,228,255,' + (op * 0.55) + ')');
+    hg.addColorStop(0.65,'rgba(220,228,255,' + (op * 0.25) + ')');
+    hg.addColorStop(1,   'rgba(220,228,255,0)');
+    ctx.beginPath(); ctx.moveTo(x - arm, y); ctx.lineTo(x + arm, y);
+    ctx.strokeStyle = hg; ctx.stroke();
+
+    var vg = ctx.createLinearGradient(x, y - arm, x, y + arm);
+    vg.addColorStop(0,   'rgba(220,228,255,0)');
+    vg.addColorStop(0.35,'rgba(220,228,255,' + (op * 0.18) + ')');
+    vg.addColorStop(0.5, 'rgba(220,228,255,' + (op * 0.42) + ')');
+    vg.addColorStop(0.65,'rgba(220,228,255,' + (op * 0.18) + ')');
+    vg.addColorStop(1,   'rgba(220,228,255,0)');
+    ctx.beginPath(); ctx.moveTo(x, y - arm); ctx.lineTo(x, y + arm);
+    ctx.strokeStyle = vg; ctx.stroke();
+  }
+
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+
+    /* ── stars ── */
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      s.y -= s.spd;
+      if (s.y < -4) { s.y = H + 4; s.x = Math.random() * W; }
+
+      var twk = 0.55 + 0.45 * Math.sin(ts * s.ts + s.ph);
+      var op  = s.op * twk;
+
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.sz, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + op.toFixed(3) + ')';
+      ctx.fill();
+
+      if (s.sparkle && op > 0.4) drawSparkle(s.x, s.y, s.sz, op);
+    }
+
+    /* ── shooting stars ── */
+    if (ts - lastShootT > nextShoot) {
+      spawnShooter();
+      lastShootT = ts;
+      nextShoot  = 6000 + Math.random() * 8000;
+    }
+
+    for (var j = shooters.length - 1; j >= 0; j--) {
+      var sh = shooters[j];
+      sh.x += sh.vx; sh.y += sh.vy; sh.life++;
+
+      var p  = sh.life / sh.max;
+      var op = (p < 0.18 ? p / 0.18 : p > 0.65 ? Math.max(0, 1 - (p - 0.65) / 0.35) : 1) * 0.85;
+
+      /* normalised direction */
+      var mag = Math.sqrt(sh.vx * sh.vx + sh.vy * sh.vy);
+      var nx  = sh.vx / mag, ny = sh.vy / mag;
+      var tx  = sh.x - nx * sh.len, ty = sh.y - ny * sh.len;
+
+      var grad = ctx.createLinearGradient(tx, ty, sh.x, sh.y);
+      grad.addColorStop(0,   'rgba(210,218,255,0)');
+      grad.addColorStop(0.6, 'rgba(210,218,255,' + (op * 0.28).toFixed(3) + ')');
+      grad.addColorStop(1,   'rgba(255,255,255,'  + op.toFixed(3) + ')');
+
+      ctx.beginPath();
+      ctx.moveTo(tx, ty); ctx.lineTo(sh.x, sh.y);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth   = 1.4;
+      ctx.stroke();
+
+      /* head glow */
+      ctx.beginPath();
+      ctx.arc(sh.x, sh.y, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,' + op.toFixed(3) + ')';
+      ctx.fill();
+
+      if (sh.life >= sh.max || sh.x > W + 50 || sh.y > H + 50) shooters.splice(j, 1);
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  init();
+  window.addEventListener('resize', init);
+  requestAnimationFrame(draw);
+})();
+
+/* ── Clock ── */
+(function tick() {
+  var n = new Date(), p = function(v){ return String(v).padStart(2,'0'); };
+  document.getElementById('hud-time').textContent = p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());
+  setTimeout(tick, 1000);
+})();
+
+/* ── Date ── */
+(function(){
+  var d = new Date();
+  var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('g-date').textContent = days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate();
+})();
+
+/* ── Progress bars ── */
+setTimeout(function(){
+  document.querySelectorAll('.tile-fill[data-pct]').forEach(function(el){
+    el.style.width = el.getAttribute('data-pct') + '%';
+  });
+}, 2300);
+
+/* ── Dismiss ── */
+function dismiss(){ document.body.classList.add('out'); }
+document.getElementById('btn-enter').addEventListener('click', dismiss);
+document.getElementById('btn-skip').addEventListener('click', dismiss);
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') dismiss(); });
+</script>
+</body>
+</html>

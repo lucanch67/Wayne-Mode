@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wayne Mode · Style Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ─── Reset & Tokens ────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #080808;
+  --bg-1:      #0D0D0D;
+  --bg-2:      #111111;
+  --bg-3:      #161616;
+  --border:    rgba(255,255,255,0.06);
+  --border-hi: rgba(255,255,255,0.13);
+  --accent:    #00FF88;
+  --accent-2:  #00CC6A;
+  --accent-dim:rgba(0,255,136,0.10);
+  --accent-glow:rgba(0,255,136,0.22);
+  --red:       #FF4060;
+  --red-dim:   rgba(255,64,96,0.10);
+  --amber:     #FFB930;
+  --fg:        #F2F2F2;
+  --fg-2:      rgba(242,242,242,0.60);
+  --fg-3:      rgba(242,242,242,0.35);
+  --font:'Space Grotesk',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+}
+
+html{font-size:16px;color-scheme:dark}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--font);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ─── Background Grid ──────────────────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% -10%,rgba(0,255,136,0.04) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 40% at 90% 80%,rgba(0,200,100,0.03) 0%,transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ─── Noise Grain ──────────────────────────────────────────────────── */
+.noise{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px;
+}
+
+/* ─── Layout ───────────────────────────────────────────────────────── */
+.app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:12px;
+  padding:14px 24px;
+  background:rgba(8,8,8,0.88);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--fg)}
+.logo-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px var(--accent-glow);
+}
+.logo-icon svg{width:16px;height:16px;fill:none;stroke:#000;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.logo-name{font-weight:700;font-size:15px;letter-spacing:-.3px}
+.topbar-nav{display:flex;gap:2px;margin-left:auto}
+.topbar-nav a{
+  padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;
+  color:var(--fg-2);text-decoration:none;transition:all 150ms;cursor:pointer;
+}
+.topbar-nav a:hover,.topbar-nav a.active{color:var(--fg);background:var(--bg-3)}
+.topbar-actions{display:flex;align-items:center;gap:10px;margin-left:16px}
+.live-badge{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 11px;border-radius:999px;
+  background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);
+  font-size:11.5px;font-weight:600;color:var(--accent);letter-spacing:.3px;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 6px var(--accent);
+  animation:pulse-dot 1.8s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(.8)}
+}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,#1a1a1a,#2a2a2a);
+  border:1px solid var(--border-hi);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--fg-2);cursor:pointer;
+}
+
+/* ─── Main Content ─────────────────────────────────────────────────── */
+main{
+  flex:1;padding:28px 24px;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  grid-auto-rows:auto;
+  gap:16px;
+  max-width:1440px;
+  width:100%;
+  margin:0 auto;
+}
+
+/* ─── Cards ────────────────────────────────────────────────────────── */
+.card{
+  background:var(--bg-1);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color 220ms,box-shadow 220ms;
+  cursor:pointer;
+}
+.card:hover{border-color:var(--border-hi);box-shadow:0 0 0 1px var(--border-hi) inset,0 20px 48px -16px rgba(0,0,0,0.9)}
+.card-inner-glow{
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
+}
+.card-label{font-size:11.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--fg-3);margin-bottom:10px}
+.card-value{font-size:2.4rem;font-weight:700;letter-spacing:-1.5px;line-height:1;color:var(--fg);font-variant-numeric:tabular-nums}
+.card-value.mono{font-family:var(--mono);font-size:2rem}
+.card-sub{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12.5px}
+.badge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:3px 8px;border-radius:6px;
+  font-size:11.5px;font-weight:700;letter-spacing:.2px;
+  font-family:var(--mono);
+}
+.badge.pos{background:rgba(0,255,136,0.1);color:var(--accent)}
+.badge.neg{background:var(--red-dim);color:var(--red)}
+.badge.warn{background:rgba(255,185,48,0.1);color:var(--amber)}
+.card-tag{font-size:11.5px;color:var(--fg-3)}
+
+/* ─── Hero Card ────────────────────────────────────────────────────── */
+.hero-card{grid-column:span 7;grid-row:span 2;padding:32px}
+.hero-card .hero-label{
+  font-size:11.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:6px;
+}
+.hero-card .hero-main{font-size:3.8rem;font-weight:700;letter-spacing:-2.5px;line-height:1.1;margin-bottom:6px}
+.hero-card .hero-sub{font-size:14px;color:var(--fg-2);max-width:340px;line-height:1.6;margin-bottom:28px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:10px;font-size:13.5px;font-weight:600;
+  border:none;cursor:pointer;transition:all 180ms;text-decoration:none;
+  font-family:var(--font);
+}
+.btn-primary{
+  background:var(--accent);color:#000;
+  box-shadow:0 0 20px var(--accent-glow);
+}
+.btn-primary:hover{background:#1AFFA0;box-shadow:0 0 32px rgba(0,255,136,0.35);transform:translateY(-1px)}
+.btn-ghost{
+  background:transparent;color:var(--fg);
+  border:1px solid var(--border-hi);
+}
+.btn-ghost:hover{background:var(--bg-3);border-color:rgba(255,255,255,0.2)}
+
+/* ─── Chart Area ────────────────────────────────────────────────────── */
+.chart-wrap{
+  margin-top:24px;position:relative;height:180px;
+}
+.chart-tabs{display:flex;gap:4px;margin-bottom:12px}
+.chart-tab{
+  padding:4px 12px;border-radius:6px;font-size:11.5px;font-weight:600;
+  background:transparent;border:none;color:var(--fg-3);cursor:pointer;transition:all 150ms;
+  font-family:var(--font);
+}
+.chart-tab.active{background:var(--bg-3);color:var(--fg)}
+.chart-canvas-wrap{
+  position:relative;height:160px;
+  border-bottom:1px solid var(--border);
+}
+canvas#chart{width:100%;height:160px}
+.chart-value-label{
+  position:absolute;top:4px;right:0;
+  font-family:var(--mono);font-size:13px;color:var(--fg-2);
+}
+
+/* ─── Stat Cards ────────────────────────────────────────────────────── */
+.stat-steps{grid-column:span 3}
+.stat-cal{grid-column:span 2}
+.stat-hrv{grid-column:span 2}
+.stat-strain{grid-column:span 3}
+.stat-sleep{grid-column:span 4}
+.stat-weight{grid-column:span 3}
+.stat-bpm{grid-column:span 2}
+.stat-spo2{grid-column:span 3}
+
+/* ─── Progress Ring ─────────────────────────────────────────────────── */
+.ring-wrap{display:flex;gap:20px;align-items:center;margin-top:14px}
+.ring-svg{flex-shrink:0;width:72px;height:72px}
+.ring-stats{display:flex;flex-direction:column;gap:4px}
+.ring-val{font-size:1.7rem;font-weight:700;letter-spacing:-1px;line-height:1}
+.ring-of{font-size:11.5px;color:var(--fg-3)}
+
+/* ─── Sleep chart ───────────────────────────────────────────────────── */
+.sleep-bars{display:flex;align-items:flex-end;gap:5px;height:70px;margin-top:14px}
+.sleep-bar{
+  flex:1;border-radius:4px 4px 0 0;
+  background:var(--bg-3);
+  position:relative;transition:all 220ms;
+  cursor:pointer;min-height:8px;
+}
+.sleep-bar:hover{filter:brightness(1.4)}
+.sleep-bar.deep{background:linear-gradient(180deg,#4A90FF,#2060C0)}
+.sleep-bar.rem{background:linear-gradient(180deg,var(--accent),var(--accent-2))}
+.sleep-bar.light{background:linear-gradient(180deg,#7B5FFF,#5040C0)}
+.sleep-days{display:flex;gap:5px;margin-top:5px}
+.sleep-day{flex:1;text-align:center;font-size:10px;color:var(--fg-3)}
+
+/* ─── Activity mini chart ───────────────────────────────────────────── */
+.spark-wrap{display:flex;align-items:flex-end;gap:3px;height:48px;margin-top:14px}
+.spark-bar{
+  flex:1;border-radius:3px 3px 0 0;min-height:4px;
+  transition:all 220ms;cursor:pointer;
+}
+.spark-bar:hover{opacity:0.8}
+
+/* ─── Ticker ────────────────────────────────────────────────────────── */
+.ticker{
+  grid-column:1/-1;
+  background:var(--bg-1);border:1px solid var(--border);border-radius:14px;
+  padding:0;overflow:hidden;position:relative;
+}
+.ticker-inner{display:flex;gap:0;overflow:hidden}
+.ticker-track{
+  display:flex;gap:0;
+  animation:ticker-scroll 30s linear infinite;
+  white-space:nowrap;
+}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes ticker-scroll{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+.ticker-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 24px;border-right:1px solid var(--border);
+  flex-shrink:0;
+}
+.ticker-item-name{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--fg-3)}
+.ticker-item-label{font-size:11px;color:var(--fg-3);margin-left:2px}
+.ticker-item-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--fg)}
+.ticker-item-change{font-family:var(--mono);font-size:11.5px;font-weight:700}
+.ticker-item-change.pos{color:var(--accent)}
+.ticker-item-change.neg{color:var(--red)}
+
+/* ─── Overview table ────────────────────────────────────────────────── */
+.overview{grid-column:span 5;padding:24px}
+.overview-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 0;border-bottom:1px solid var(--border);
+  transition:all 150ms;cursor:pointer;
+}
+.overview-row:last-child{border-bottom:none}
+.overview-row:hover{padding-left:6px}
+.ov-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ov-name{font-size:13.5px;font-weight:600}
+.ov-sub{font-size:11.5px;color:var(--fg-3)}
+.ov-right{margin-left:auto;text-align:right}
+.ov-val{font-size:14px;font-weight:700;font-family:var(--mono)}
+.ov-chg{font-size:11.5px;font-family:var(--mono)}
+
+/* ─── Section header ─────────────────────────────────────────────────── */
+.section-hd{
+  grid-column:1/-1;display:flex;align-items:center;gap:10px;
+  padding-bottom:4px;margin-top:8px;
+}
+.section-hd h2{font-size:14px;font-weight:600;color:var(--fg-2)}
+.section-hd .divider{flex:1;height:1px;background:var(--border)}
+
+/* ─── Animations ─────────────────────────────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes countUp{
+  from{opacity:0;transform:translateY(8px) scale(.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes glow-pulse{
+  0%,100%{box-shadow:0 0 18px var(--accent-glow)}
+  50%{box-shadow:0 0 36px var(--accent-glow),0 0 60px rgba(0,255,136,0.1)}
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+
+.fade-up{opacity:0;animation:fadeUp 600ms var(--ease-out) forwards}
+.fade-up:nth-child(1){animation-delay:60ms}
+.fade-up:nth-child(2){animation-delay:120ms}
+.fade-up:nth-child(3){animation-delay:180ms}
+.fade-up:nth-child(4){animation-delay:240ms}
+.fade-up:nth-child(5){animation-delay:300ms}
+.fade-up:nth-child(6){animation-delay:360ms}
+.fade-up:nth-child(7){animation-delay:420ms}
+.fade-up:nth-child(8){animation-delay:480ms}
+.fade-up:nth-child(9){animation-delay:540ms}
+
+/* ─── Glow accent on hero ────────────────────────────────────────────── */
+.hero-card{
+  background:
+    radial-gradient(ellipse 55% 55% at 100% 0%,rgba(0,255,136,0.04) 0%,transparent 70%),
+    var(--bg-1);
+}
+.hero-card::after{
+  content:'';
+  position:absolute;top:-1px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  border-radius:16px 16px 0 0;
+  opacity:.6;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#2a2a2a}
+
+/* ─── Tooltip ────────────────────────────────────────────────────────── */
+[data-tip]{position:relative}
+[data-tip]:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#1a1a1a;border:1px solid var(--border-hi);color:var(--fg);
+  font-size:11px;padding:4px 9px;border-radius:6px;white-space:nowrap;z-index:100;
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="app">
+
+  <!-- ─── Top Bar ─────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <a class="logo" href="#">
+      <div class="logo-icon" style="animation:glow-pulse 3s ease-in-out infinite">
+        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <span class="logo-name">Wayne Mode</span>
+    </a>
+    <nav class="topbar-nav">
+      <a class="active">Dashboard</a>
+      <a>Fitness</a>
+      <a>Nutrition</a>
+      <a>Progress</a>
+      <a>Goals</a>
+    </nav>
+    <div class="topbar-actions">
+      <div class="live-badge"><span class="live-dot"></span> Live Sync</div>
+      <div class="avatar">L</div>
+    </div>
+  </header>
+
+  <!-- ─── Main Grid ────────────────────────────────────────────────── -->
+  <main>
+
+    <!-- Hero Card -->
+    <div class="card hero-card fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="hero-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Today's Performance
+      </div>
+      <div class="hero-main">
+        <span id="hero-steps">0</span>
+        <span style="font-size:1.6rem;color:var(--fg-2);font-weight:500"> steps</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <span class="badge pos">+18.4%</span>
+        <span style="font-size:13px;color:var(--fg-3)">vs. yesterday · 78% of goal</span>
+      </div>
+      <div class="hero-sub">You're on pace for a strong week. Strain is at 14.2 — ideal recovery window closes in 3 h.</div>
+      <div class="hero-actions">
+        <button class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Start Workout
+        </button>
+        <button class="btn btn-ghost">View Details</button>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div class="chart-tabs">
+            <button class="chart-tab active">1D</button>
+            <button class="chart-tab">1W</button>
+            <button class="chart-tab">1M</button>
+          </div>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--fg-3)">HR avg <span style="color:var(--fg)">72 bpm</span></span>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart" height="160"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="card stat-steps fade-up" data-tip="Daily step count">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Steps</div>
+      <div class="card-value" id="c-steps">0</div>
+      <div class="card-sub">
+        <span class="badge pos">+1,820</span>
+        <span class="card-tag">vs yesterday</span>
+      </div>
+      <div class="spark-wrap" id="steps-spark"></div>
+    </div>
+
+    <!-- Calories -->
+    <div class="card stat-cal fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Calories</div>
+      <div class="card-value" id="c-cal">0</div>
+      <div class="card-sub">
+        <span class="badge pos">+12%</span>
+        <span class="card-tag">burned</span>
+      </div>
+    </div>
+
+    <!-- HRV -->
+    <div class="card stat-hrv fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">HRV</div>
+      <div class="card-value mono" id="c-hrv">0</div>
+      <div class="card-sub">
+        <span class="badge warn">-4ms</span>
+        <span class="card-tag">recovery dip</span>
+      </div>
+    </div>
+
+    <!-- Strain -->
+    <div class="card stat-strain fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Strain Score</div>
+      <div class="card-value mono" style="color:var(--amber)" id="c-strain">0</div>
+      <div class="card-sub">
+        <span class="badge warn">High</span>
+        <span class="card-tag">14.2 / 21</span>
+      </div>
+      <div class="spark-wrap" id="strain-spark"></div>
+    </div>
+
+    <!-- Section -->
+    <div class="section-hd fade-up">
+      <h2>Vitals & Recovery</h2>
+      <div class="divider"></div>
+    </div>
+
+    <!-- Sleep -->
+    <div class="card stat-sleep fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Sleep</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div class="card-value" id="c-sleep">7h 42m</div>
+        <span class="badge pos">+0:28</span>
+      </div>
+      <div class="sleep-bars" id="sleep-bars"></div>
+      <div class="sleep-days" id="sleep-days"></div>
+      <div style="display:flex;gap:14px;margin-top:12px">
+        <div><span style="font-size:10px;color:var(--fg-3);letter-spacing:.5px;text-transform:uppercase">DEEP</span><div style="font-size:13px;font-weight:700;color:#4A90FF;margin-top:2px">1h 48m</div></div>
+        <div><span style="font-size:10px;color:var(--fg-3);letter-spacing:.5px;text-transform:uppercase">REM</span><div style="font-size:13px;font-weight:700;color:var(--accent);margin-top:2px">2h 14m</div></div>
+        <div><span style="font-size:10px;color:var(--fg-3);letter-spacing:.5px;text-transform:uppercase">LIGHT</span><div style="font-size:13px;font-weight:700;color:#7B5FFF;margin-top:2px">3h 40m</div></div>
+      </div>
+    </div>
+
+    <!-- Weight -->
+    <div class="card stat-weight fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Weight</div>
+      <div class="card-value mono" id="c-weight">0</div>
+      <div class="card-sub" style="margin-bottom:14px">
+        <span class="badge pos">-0.4 kg</span>
+        <span class="card-tag">this week</span>
+      </div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r="28" fill="none" stroke="var(--bg-3)" stroke-width="5"/>
+          <circle cx="36" cy="36" r="28" fill="none" stroke="var(--accent)" stroke-width="5"
+            stroke-linecap="round"
+            stroke-dasharray="175.93"
+            stroke-dashoffset="44"
+            transform="rotate(-90 36 36)"
+            style="transition:stroke-dashoffset 1s var(--ease-out);filter:drop-shadow(0 0 4px var(--accent-glow))"/>
+          <text x="36" y="40" text-anchor="middle" fill="var(--fg)" font-size="13" font-weight="700" font-family="Space Grotesk">75%</text>
+        </svg>
+        <div class="ring-stats">
+          <div class="ring-val">Goal</div>
+          <div style="font-size:12.5px;color:var(--accent);font-weight:700">78.0 kg</div>
+          <div class="ring-of" style="margin-top:4px">Current: <span style="color:var(--fg)">79.4 kg</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heart Rate -->
+    <div class="card stat-bpm fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Heart Rate</div>
+      <div style="display:flex;align-items:baseline;gap:6px">
+        <div class="card-value mono" id="c-bpm">0</div>
+        <span style="font-size:14px;color:var(--fg-3)">bpm</span>
+      </div>
+      <div class="card-sub">
+        <span class="badge pos">Resting</span>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <div style="flex:1;background:var(--red-dim);border-radius:8px;padding:8px 10px">
+          <div style="font-size:10px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">Max</div>
+          <div style="font-size:15px;font-weight:700;color:var(--red);font-family:var(--mono);margin-top:2px">178</div>
+        </div>
+        <div style="flex:1;background:var(--accent-dim);border-radius:8px;padding:8px 10px">
+          <div style="font-size:10px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">Avg</div>
+          <div style="font-size:15px;font-weight:700;color:var(--accent);font-family:var(--mono);margin-top:2px">68</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SpO2 -->
+    <div class="card stat-spo2 fade-up">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Blood Oxygen</div>
+      <div style="display:flex;align-items:baseline;gap:4px">
+        <div class="card-value mono" id="c-spo2">0</div>
+        <span style="font-size:1.4rem;color:var(--fg-3)">%</span>
+      </div>
+      <div class="card-sub">
+        <span class="badge pos">Optimal</span>
+        <span class="card-tag">SpO2</span>
+      </div>
+      <div style="margin-top:16px;background:var(--bg-2);border-radius:8px;overflow:hidden;height:6px">
+        <div id="spo2-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:8px;transition:width 1.4s var(--ease-out);box-shadow:0 0 8px var(--accent-glow)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:var(--fg-3)">
+        <span>90%</span><span>100%</span>
+      </div>
+    </div>
+
+    <!-- Ticker -->
+    <div class="ticker fade-up">
+      <div class="ticker-inner">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+    </div>
+
+    <!-- Section -->
+    <div class="section-hd fade-up">
+      <h2>Module Overview</h2>
+      <div class="divider"></div>
+    </div>
+
+    <!-- Overview Table -->
+    <div class="card overview fade-up" style="grid-column:span 5">
+      <div class="card-inner-glow"></div>
+      <div class="card-label" style="margin-bottom:6px">Linked Modules</div>
+      <div class="overview-row">
+        <div class="ov-icon" style="background:rgba(0,255,136,0.1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div><div class="ov-name">Gym Log</div><div class="ov-sub">Last: Chest & Shoulders</div></div>
+        <div class="ov-right"><div class="ov-val" style="color:var(--accent)">Active</div><div class="ov-chg" style="color:var(--fg-3)">2 d ago</div></div>
+      </div>
+      <div class="overview-row">
+        <div class="ov-icon" style="background:rgba(255,185,48,0.1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div><div class="ov-name">Nutrition</div><div class="ov-sub">1,840 / 2,400 kcal</div></div>
+        <div class="ov-right"><div class="ov-val" style="color:var(--amber)">76%</div><div class="ov-chg" style="color:var(--fg-3)">On track</div></div>
+      </div>
+      <div class="overview-row">
+        <div class="ov-icon" style="background:rgba(122,95,255,0.12)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7B5FFF" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div><div class="ov-name">Sleep Tracker</div><div class="ov-sub">WHOOP · 7h 42m</div></div>
+        <div class="ov-right"><div class="ov-val" style="color:#7B5FFF">Good</div><div class="ov-chg" style="color:var(--fg-3)">+0h 28m</div></div>
+      </div>
+      <div class="overview-row">
+        <div class="ov-icon" style="background:rgba(74,144,255,0.1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A90FF" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div><div class="ov-name">Progress</div><div class="ov-sub">12-week plan · Week 7</div></div>
+        <div class="ov-right"><div class="ov-val" style="color:#4A90FF">58%</div><div class="ov-chg" style="color:var(--fg-3)">On schedule</div></div>
+      </div>
+      <div class="overview-row">
+        <div class="ov-icon" style="background:var(--red-dim)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div><div class="ov-name">Supplements</div><div class="ov-sub">2 of 5 taken today</div></div>
+        <div class="ov-right"><div class="ov-val" style="color:var(--red)">Pending</div><div class="ov-chg" style="color:var(--fg-3)">3 remaining</div></div>
+      </div>
+    </div>
+
+    <!-- Macro ring card -->
+    <div class="card fade-up" style="grid-column:span 3">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Macros Today</div>
+      <div style="display:flex;justify-content:center;margin:16px 0">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <!-- bg rings -->
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--bg-3)" stroke-width="8"/>
+          <circle cx="60" cy="60" r="38" fill="none" stroke="var(--bg-3)" stroke-width="8"/>
+          <circle cx="60" cy="60" r="26" fill="none" stroke="var(--bg-3)" stroke-width="8"/>
+          <!-- protein -->
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="82"
+            transform="rotate(-90 60 60)"
+            style="filter:drop-shadow(0 0 5px var(--accent-glow));transition:stroke-dashoffset 1.2s var(--ease-out)"/>
+          <!-- carbs -->
+          <circle cx="60" cy="60" r="38" fill="none" stroke="#4A90FF" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="110"
+            transform="rotate(-90 60 60)"
+            style="filter:drop-shadow(0 0 5px rgba(74,144,255,0.4));transition:stroke-dashoffset 1.2s var(--ease-out) 0.1s"/>
+          <!-- fats -->
+          <circle cx="60" cy="60" r="26" fill="none" stroke="var(--amber)" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="163.36" stroke-dashoffset="70"
+            transform="rotate(-90 60 60)"
+            style="filter:drop-shadow(0 0 5px rgba(255,185,48,0.4));transition:stroke-dashoffset 1.2s var(--ease-out) 0.2s"/>
+          <text x="60" y="56" text-anchor="middle" fill="var(--fg)" font-size="12" font-weight="700" font-family="Space Grotesk">1,840</text>
+          <text x="60" y="70" text-anchor="middle" fill="var(--fg-3)" font-size="9.5" font-family="Space Grotesk">kcal</text>
+        </svg>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="text-align:center;background:var(--accent-dim);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">Prot</div>
+          <div style="font-size:16px;font-weight:700;color:var(--accent);margin-top:3px">142g</div>
+        </div>
+        <div style="text-align:center;background:rgba(74,144,255,0.1);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">Carbs</div>
+          <div style="font-size:16px;font-weight:700;color:#4A90FF;margin-top:3px">186g</div>
+        </div>
+        <div style="text-align:center;background:rgba(255,185,48,0.08);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">Fats</div>
+          <div style="font-size:16px;font-weight:700;color:var(--amber);margin-top:3px">57g</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recovery card -->
+    <div class="card fade-up" style="grid-column:span 4">
+      <div class="card-inner-glow"></div>
+      <div class="card-label">Recovery Score</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px">
+        <div class="card-value" style="color:var(--accent)" id="c-recovery">0</div>
+        <span style="font-size:14px;color:var(--fg-3);margin-bottom:6px">/ 100</span>
+        <span class="badge pos" style="margin-bottom:5px">Optimal</span>
+      </div>
+      <div style="background:var(--bg-2);border-radius:10px;overflow:hidden;height:8px;margin-bottom:16px">
+        <div id="recovery-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:10px;box-shadow:0 0 10px var(--accent-glow);transition:width 1.4s var(--ease-out)"></div>
+      </div>
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:var(--fg-2)">Sleep Quality</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:4px;background:var(--bg-3);border-radius:2px;overflow:hidden"><div style="width:82%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--accent)">82%</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:var(--fg-2)">HRV Baseline</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:4px;background:var(--bg-3);border-radius:2px;overflow:hidden"><div style="width:68%;height:100%;background:var(--amber);border-radius:2px"></div></div>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--amber)">68%</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:var(--fg-2)">Resting HR</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:4px;background:var(--bg-3);border-radius:2px;overflow:hidden"><div style="width:91%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--accent)">91%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ─── Counters ──────────────────────────────────────────────────────── */
+function animCount(id, target, duration=1200, decimals=0, prefix='', suffix=''){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min((now-start)/duration,1);
+    const ease = 1 - Math.pow(1-t,4);
+    const val = ease * target;
+    el.textContent = prefix + (decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString()) + suffix;
+    if(t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(()=>{
+    animCount('hero-steps', 9420, 1400);
+    animCount('c-steps', 9420, 1400);
+    animCount('c-cal', 2284, 1200);
+    animCount('c-hrv', 62, 1100);
+    animCount('c-strain', 14.2, 1200, 1);
+    animCount('c-weight', 79.4, 1100, 1);
+    animCount('c-bpm', 58, 1000);
+    animCount('c-spo2', 97, 1000);
+    animCount('c-recovery', 82, 1200);
+
+    setTimeout(()=>{
+      document.getElementById('spo2-bar').style.width = '70%';
+      document.getElementById('recovery-bar').style.width = '82%';
+    }, 200);
+  }, 300);
+});
+
+/* ─── Line Chart ─────────────────────────────────────────────────────── */
+(function(){
+  const canvas = document.getElementById('chart');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  function resize(){
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 160 * dpr;
+    canvas.style.width = rect.width + 'px';
+    draw();
+  }
+
+  // Heart rate data across the day
+  const raw = [62,59,63,61,64,68,72,88,120,148,162,155,140,128,118,108,96,84,76,70,68,65,63,61];
+  let progress = 0;
+
+  function draw(){
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.scale(dpr, dpr);
+    const w = W/dpr, h = H/dpr;
+
+    const pts = Math.max(2, Math.round(progress * raw.length));
+    const data = raw.slice(0, pts);
+    const min = Math.min(...data) - 10;
+    const max = Math.max(...data) + 10;
+    const pad = {l:4,r:4,t:8,b:20};
+    const xScale = (w - pad.l - pad.r) / (raw.length - 1);
+    const yScale = (h - pad.t - pad.b) / (max - min);
+    const X = i => pad.l + i * xScale;
+    const Y = v => h - pad.b - (v - min) * yScale;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for(let i=0;i<4;i++){
+      const y = pad.t + i * (h - pad.t - pad.b) / 3;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    }
+
+    if(data.length < 2){ ctx.scale(1/dpr,1/dpr); return; }
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, pad.t, 0, h);
+    grad.addColorStop(0, 'rgba(0,255,136,0.22)');
+    grad.addColorStop(1, 'rgba(0,255,136,0)');
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(data[0]));
+    for(let i=1;i<data.length;i++){
+      const xc = (X(i-1)+X(i))/2, yc = (Y(data[i-1])+Y(data[i]))/2;
+      ctx.quadraticCurveTo(X(i-1), Y(data[i-1]), xc, yc);
+    }
+    ctx.lineTo(X(data.length-1), Y(data[data.length-1]));
+    ctx.lineTo(X(data.length-1), h - pad.b);
+    ctx.lineTo(X(0), h - pad.b);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(data[0]));
+    for(let i=1;i<data.length;i++){
+      const xc = (X(i-1)+X(i))/2, yc = (Y(data[i-1])+Y(data[i]))/2;
+      ctx.quadraticCurveTo(X(i-1), Y(data[i-1]), xc, yc);
+    }
+    ctx.strokeStyle = '#00FF88';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(0,255,136,0.5)';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Dot at end
+    const lx = X(data.length-1), ly = Y(data[data.length-1]);
+    ctx.beginPath();
+    ctx.arc(lx, ly, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#00FF88';
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = 'rgba(0,255,136,0.8)';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // x-axis labels
+    const labels = ['12AM','3AM','6AM','9AM','12PM','3PM','6PM','9PM','Now'];
+    ctx.fillStyle = 'rgba(242,242,242,0.3)';
+    ctx.font = `10px 'Space Grotesk'`;
+    ctx.textAlign = 'center';
+    labels.forEach((l,i) => {
+      const xi = Math.round(i * (raw.length-1) / (labels.length-1));
+      ctx.fillText(l, X(xi), h - 4);
+    });
+
+    ctx.scale(1/dpr, 1/dpr);
+  }
+
+  // Animate chart draw-in
+  const start = performance.now();
+  const dur = 1600;
+  function animChart(now){
+    progress = Math.min((now-start)/dur, 1);
+    const ease = 1 - Math.pow(1-progress, 3);
+    progress = ease;
+    draw();
+    if(progress < 1) requestAnimationFrame(animChart);
+  }
+  setTimeout(()=>requestAnimationFrame(animChart), 400);
+
+  window.addEventListener('resize', resize);
+  resize();
+})();
+
+/* ─── Sleep Bars ─────────────────────────────────────────────────────── */
+(function(){
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const heights = [65,80,55,72,88,90,82];
+  const types = ['rem','deep','light','rem','rem','deep','rem'];
+  const bars = document.getElementById('sleep-bars');
+  const dayEl = document.getElementById('sleep-days');
+  if(!bars) return;
+  days.forEach((d,i)=>{
+    const b = document.createElement('div');
+    b.className = 'sleep-bar ' + types[i];
+    b.style.height = '0px';
+    b.style.transition = `height 800ms ${i*80}ms cubic-bezier(0.16,1,0.3,1)`;
+    bars.appendChild(b);
+    const dd = document.createElement('div');
+    dd.className = 'sleep-day';
+    dd.textContent = d;
+    dayEl.appendChild(dd);
+    setTimeout(()=>{ b.style.height = heights[i] + '%'; }, 500 + i*80);
+  });
+})();
+
+/* ─── Spark Bars ──────────────────────────────────────────────────────── */
+function makeSpark(id, data, color){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const max = Math.max(...data);
+  data.forEach((v,i)=>{
+    const b = document.createElement('div');
+    b.className = 'spark-bar';
+    const pct = v/max;
+    b.style.background = i === data.length-1
+      ? color
+      : `rgba(${color===vars.accent?'0,255,136':'255,185,48'},0.3)`;
+    b.style.height = '0%';
+    b.style.transition = `height 600ms ${i*60}ms cubic-bezier(0.16,1,0.3,1)`;
+    el.appendChild(b);
+    setTimeout(()=>{ b.style.height = Math.max(10, pct*100) + '%'; }, 500 + i*60);
+  });
+}
+const vars = {accent:'#00FF88'};
+makeSpark('steps-spark', [7200,8100,6800,9100,7600,8900,9420], '#00FF88');
+makeSpark('strain-spark', [10.2,12.4,8.8,13.1,11.6,15.2,14.2], '#FFB930');
+
+/* ─── Ticker ──────────────────────────────────────────────────────────── */
+(function(){
+  const items = [
+    {name:'Steps',val:'9,420',chg:'+18.4%',pos:true},
+    {name:'Calories',val:'2,284 kcal',chg:'+12%',pos:true},
+    {name:'HRV',val:'62 ms',chg:'-4ms',pos:false},
+    {name:'Sleep',val:'7h 42m',chg:'+0:28',pos:true},
+    {name:'Strain',val:'14.2',chg:'High',pos:false},
+    {name:'Recovery',val:'82%',chg:'Optimal',pos:true},
+    {name:'SpO2',val:'97%',chg:'Normal',pos:true},
+    {name:'Resting HR',val:'58 bpm',chg:'-3',pos:true},
+    {name:'Weight',val:'79.4 kg',chg:'-0.4 kg',pos:true},
+    {name:'Protein',val:'142g',chg:'74% goal',pos:true},
+    {name:'Hydration',val:'2.1 L',chg:'-0.4 L',pos:false},
+    {name:'Active Min',val:'64 min',chg:'+12',pos:true},
+  ];
+  const track = document.getElementById('ticker-track');
+  if(!track) return;
+  // Double for seamless loop
+  [...items,...items].forEach(it=>{
+    const d = document.createElement('div');
+    d.className = 'ticker-item';
+    d.innerHTML = `
+      <span class="ticker-item-name">${it.name}</span>
+      <span class="ticker-item-val">${it.val}</span>
+      <span class="ticker-item-change ${it.pos?'pos':'neg'}">${it.chg}</span>
+    `;
+    track.appendChild(d);
+  });
+})();
+
+/* ─── Chart tab switching ────────────────────────────────────────────── */
+document.querySelectorAll('.chart-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

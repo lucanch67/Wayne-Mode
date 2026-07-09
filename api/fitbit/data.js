@@ -99,7 +99,7 @@ module.exports = async (req, res) => {
   res.statusCode = 200;
   res.end(JSON.stringify({
     connected: true, source: 'fitbit', ts: Date.now(),
-    readiness: null,
+    recovery: null,
     hrv,
     rhr,
     sleepPerf,

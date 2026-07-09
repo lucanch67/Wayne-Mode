@@ -1,0 +1,2741 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Luca" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<style id="pwa-mobile">
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+img{max-width:100%;height:auto}
+@media (max-width:480px){input,select,textarea{font-size:16px !important}}
+</style>
+<meta name="theme-color" content="#080808">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"aurora");}catch(e){document.documentElement.setAttribute("data-theme","aurora");}</script>
+<title>Progressive Overload Coach</title>
+
+<!-- =============================================================
+     EDIT THIS BLOCK TO MAKE THE APP YOURS.
+     Other people who fork this repo only need to change the values
+     below — gyms, days, units, and starter exercises. Everything
+     else (logs, edits, additions you make in the app) is saved to
+     the browser's local storage on each device.
+     ============================================================= -->
+<script>
+const CONFIG = {
+  appTitle: "Progressive Overload Coach",
+
+  // Weight unit shown everywhere. "kg" or "lb".
+  units: "kg",
+
+  // Gyms you train at. Add as many as you want.
+  // `id` must be a short unique slug (no spaces). `name` is what people see.
+  gyms: [
+    { id: "home",  name: "Home Gym" },
+    { id: "comm",  name: "Commercial Gym" }
+  ],
+
+  // Training split. Most people use Push/Pull/Legs but you can rename
+  // these to "Upper", "Lower", "Full Body", "Day A", anything.
+  days: [
+    { id: "push", name: "Push" },
+    { id: "pull", name: "Pull" },
+    { id: "legs", name: "Legs" }
+  ],
+
+  // Split rotation — the order your training days cycle through. Use day
+  // ids from `days` above, plus "rest" for off-days. The pill at the top
+  // of the app reads this + splitAnchor to compute "what day is today".
+  splitRotation: ["push", "pull", "legs", "rest"],
+
+  // Anchor: pair a real calendar date with which split day fell on it.
+  // The rotation advances from this point. Set `date` to a recent day
+  // when you knew what split you were on, and `splitId` to that day.
+  // Edit this if your split drifts.
+  splitAnchor: {
+    date: "2026-05-12",
+    splitId: "rest"
+  },
+
+  // Progression rule: hit this many reps on the top set → coach tells you
+  // to add weight next session. Lower this to be more aggressive (e.g. 6),
+  // raise it for more volume bias (e.g. 10).
+  upgradeAtReps: 8,
+
+  // Composition estimate (optional, for the weight chart).
+  // Estimates how much of recent weight change is muscle vs fat by
+  // cross-referencing the strength trend. Set yearsTraining to scale
+  // expected muscle gain rate.
+  composition: {
+    enabled: true,
+    yearsTraining: 1,        // 1 = beginner, 2 = intermediate, 3+ = advanced
+    windowDays: 30           // window to compute weight + strength change
+  },
+
+  // Starter exercise list. Each one needs:
+  //   name        — what shows in the dropdown
+  //   gym         — one of the gym ids above, or "both"
+  //   day         — one of the day ids above
+  //   repMin      — bottom of your target rep range
+  //   repMax      — top of your target rep range
+  //   step        — how much weight you add when progressing (kg/lb)
+  //   startWeight — starting weight (ignored when bw: true)
+  //   bw          — true for bodyweight movements (logs reps only)
+  //
+  // First-run defaults. Once a user logs anything, they edit through
+  // the in-app + / gear buttons; this block stays as the seed.
+  defaultExercises: [
+    { name: "Bench press",     gym: "comm", day: "push", repMin: 5, repMax: 8,  step: 2.5, startWeight: 60 },
+    { name: "Overhead press",  gym: "comm", day: "push", repMin: 5, repMax: 8,  step: 2.5, startWeight: 35 },
+    { name: "Tricep pushdown", gym: "comm", day: "push", repMin: 8, repMax: 12, step: 2.5, startWeight: 25 },
+    { name: "Pull-ups",        gym: "both", day: "pull", repMin: 5, repMax: 10, step: 1,   startWeight: 0, bw: true },
+    { name: "Barbell row",     gym: "comm", day: "pull", repMin: 6, repMax: 10, step: 2.5, startWeight: 50 },
+    { name: "Bicep curl",      gym: "comm", day: "pull", repMin: 8, repMax: 12, step: 1.25,startWeight: 15 },
+    { name: "Back squat",      gym: "comm", day: "legs", repMin: 5, repMax: 8,  step: 5,   startWeight: 80 },
+    { name: "Romanian deadlift", gym: "comm", day: "legs", repMin: 6, repMax: 10, step: 5, startWeight: 60 },
+    { name: "Leg press",       gym: "comm", day: "legs", repMin: 8, repMax: 12, step: 5,   startWeight: 100 }
+  ]
+};
+</script>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #080808;
+  --bg-card: #111111;
+  --text-1: #F3F2F8;
+  --text-2: rgba(243,242,248,0.74);
+  --text-3: rgba(243,242,248,0.50);
+  --text-4: rgba(243,242,248,0.30);
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.17);
+  --accent: #00FF88;
+  --good: #46E0A8;
+  --warn: #FBBF24;
+  --bad: #FB7185;
+  --brand: #00FF88; --brand-2: #00CC6A; --brand-ink: #000000;
+  --brand-soft: rgba(0,255,136,0.09); --brand-line: rgba(0,255,136,0.22); --brand-glow: rgba(0,255,136,0.30);
+  --good-rgb: 70,224,168;
+  --fill-1: rgba(255,255,255,0.028);
+  --fill-2: rgba(255,255,255,0.05);
+  --fill-3: rgba(255,255,255,0.07);
+  --fill-4: rgba(255,255,255,0.10);
+  --body-glow: rgba(0,255,136,0.05);
+  --tabbar-grad: linear-gradient(180deg, rgba(10,10,16,0) 0%, rgba(10,10,16,0.82) 40%, rgba(10,10,16,0.95) 100%);
+  --tabbar-pill: rgba(26,26,36,0.82);
+  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SF Mono, Menlo, Consolas, monospace;
+}
+[data-theme="aurora"] {
+  color-scheme: dark;
+  --bg: #080913; --bg-card: #12131F;
+  --text-1: #EEF0FF; --text-2: rgba(220,225,255,0.76); --text-3: rgba(220,225,255,0.52); --text-4: rgba(220,225,255,0.30);
+  --border: rgba(150,160,255,0.11); --border-strong: rgba(150,160,255,0.22);
+  --accent: #8B7BFF; --good: #4FE3D0; --warn: #FFC65C; --bad: #FF6FA5;
+  --brand: #8B7BFF; --brand-2: #B9ABFF; --brand-ink: #0A0922;
+  --brand-soft: rgba(139,123,255,0.15); --brand-line: rgba(139,123,255,0.32); --brand-glow: rgba(124,107,255,0.6);
+  --good-rgb: 79,227,208;
+  --fill-1: rgba(150,160,255,0.05); --fill-2: rgba(150,160,255,0.08); --fill-3: rgba(150,160,255,0.11); --fill-4: rgba(150,160,255,0.15);
+  --body-glow: rgba(124,107,255,0.18);
+  --tabbar-grad: linear-gradient(180deg, rgba(8,9,19,0) 0%, rgba(8,9,19,0.82) 40%, rgba(8,9,19,0.96) 100%);
+  --tabbar-pill: rgba(18,19,32,0.85);
+}
+[data-theme="daylight"] {
+  color-scheme: light;
+  --bg: #F3F2FA; --bg-card: #FFFFFF;
+  --text-1: #171622; --text-2: rgba(23,22,34,0.72); --text-3: rgba(23,22,34,0.52); --text-4: rgba(23,22,34,0.34);
+  --border: rgba(23,22,60,0.10); --border-strong: rgba(23,22,60,0.18);
+  --accent: #6A45FF; --good: #0E9E64; --warn: #B4690E; --bad: #E11D63;
+  --brand: #6A45FF; --brand-2: #8E6BFF; --brand-ink: #FFFFFF;
+  --brand-soft: rgba(106,69,255,0.08); --brand-line: rgba(106,69,255,0.24); --brand-glow: rgba(106,69,255,0.28);
+  --good-rgb: 14,158,100;
+  --fill-1: rgba(23,22,60,0.028); --fill-2: rgba(23,22,60,0.05); --fill-3: rgba(23,22,60,0.07); --fill-4: rgba(23,22,60,0.10);
+  --body-glow: rgba(106,69,255,0.07);
+  --tabbar-grad: linear-gradient(180deg, rgba(243,242,250,0) 0%, rgba(243,242,250,0.85) 40%, rgba(243,242,250,0.97) 100%);
+  --tabbar-pill: rgba(255,255,255,0.92);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--body-glow), var(--bg)) 0%, var(--bg) 60%);
+  color: var(--text-1);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+.po-shell {
+  width: 100%; max-width: min(720px, 100vw);
+  margin: 0 auto;
+  padding: 24px 16px calc(40px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+/* Defeat the default `min-width: auto` on flex/grid items — without
+   this, long text or wide buttons can force their parent past the
+   viewport even with max-width set. */
+.po-shell *, .tabbar * { min-width: 0; }
+/* No image, video, or canvas can ever push the page past the viewport */
+img, video, canvas, svg { max-width: 100%; }
+
+/* ---------- Bottom tab bar (shared with dashboard) ---------- */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--tabbar-grad);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  pointer-events: none;
+}
+.tabbar-inner {
+  pointer-events: auto;
+  display: flex;
+  width: 100%;
+  max-width: 460px;
+  gap: 6px;
+  padding: 6px;
+  background: var(--tabbar-pill);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.55);
+}
+.tab {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab:hover { color: var(--text-1); }
+.tab[aria-current="page"] {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+}
+.tab-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab-icon svg { width: 100%; height: 100%; display: block; }
+.po-day-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: var(--fill-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer; margin-bottom: 10px;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-day-pill:hover {
+  background: var(--fill-3);
+  border-color: var(--border-strong);
+  color: var(--text-1);
+}
+.po-day-date { color: var(--text-2); }
+.po-day-sep { color: var(--text-4); }
+.po-day-split { color: var(--good); font-weight: 800; }
+.po-day-split.is-rest { color: #7DD3FC; }
+
+.po-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.po-title {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.015em;
+  margin: 0;
+}
+.po-icon-btn {
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--fill-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-icon-btn:hover { background: var(--fill-4); color: var(--text-1); }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+}
+
+/* ----- Filters (Gym + Day segmented controls) ----- */
+.po-filters { margin-bottom: 18px; }
+.po-seg-row {
+  display: flex; gap: 10px; margin-bottom: 8px; align-items: center;
+}
+.po-seg-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3);
+  min-width: 36px;
+}
+.po-seg-control {
+  display: flex; flex: 1;
+  background: var(--fill-2);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 4px; gap: 3px;
+}
+.po-seg-btn {
+  flex: 1; padding: 10px 8px; border: none; background: transparent;
+  color: var(--text-3); border-radius: 8px;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-seg-btn:hover { color: var(--text-2); background: var(--fill-2); }
+.po-seg-btn.active {
+  background: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.35);
+}
+
+/* ----- Sub-section title ----- */
+.po-sub-section { margin-top: 22px; }
+.po-sub-section:first-child { margin-top: 0; }
+.po-sub-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 10px;
+}
+.po-sub-title::before {
+  content: ''; width: 24px; height: 1px; background: var(--border-strong);
+}
+
+/* ----- Exercise picker ----- */
+.po-exercise-bar { display: flex; gap: 8px; align-items: center; }
+.po-ex-select {
+  flex: 1 1 0; min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.28);
+  color: var(--text-1); border-radius: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2387847B' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  text-overflow: ellipsis; overflow: hidden;
+}
+.po-ex-select:focus {
+  outline: none; border-color: rgba(255,255,255,0.40);
+  box-shadow: 0 0 0 3px var(--fill-3);
+}
+.po-ex-select:disabled { opacity: 0.5; }
+.po-btn-icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--fill-2);
+  color: var(--text-2); border-radius: 12px;
+  font-size: 16px; cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-btn-icon:hover { background: var(--fill-4); color: var(--text-1); }
+.po-btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+.po-no-ex {
+  background: var(--fill-1);
+  border: 1px dashed var(--border);
+  border-radius: 12px; padding: 16px; text-align: center;
+  font-size: 13px; color: var(--text-3); margin-top: 10px;
+}
+
+/* ----- Bodyweight banner ----- */
+.po-bw-banner {
+  background: var(--fill-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.10em;
+  text-transform: uppercase; text-align: center;
+  padding: 8px; border-radius: 8px; margin-bottom: 12px; display: none;
+}
+.po-bw-banner.show { display: block; }
+
+/* ----- Last set summary ----- */
+.po-last-set {
+  display: none; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 12px; font-size: 12px;
+}
+.po-last-set.show { display: flex; }
+.po-last-label {
+  color: var(--text-3); font-weight: 700; letter-spacing: 0.10em;
+  text-transform: uppercase; font-size: 10px;
+}
+.po-last-value {
+  color: var(--text-1); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.po-last-meta {
+  color: var(--text-3); font-size: 11px; margin-left: auto;
+  font-family: var(--font-mono);
+}
+
+/* ----- Weight + Reps inputs ----- */
+.po-log-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+}
+.po-log-grid.po-bw-mode { grid-template-columns: 1fr; }
+.po-field { display: flex; flex-direction: column; gap: 8px; }
+.po-field > label {
+  font-size: 10.5px; color: var(--text-3); font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.po-field input[type="number"], .po-field input[type="text"] {
+  padding: 14px 12px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.28);
+  color: var(--text-1);
+  border-radius: 12px; font-family: inherit;
+  font-size: 22px; font-weight: 700; text-align: center;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.po-field input[type="number"]::-webkit-outer-spin-button,
+.po-field input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+.po-field input:focus {
+  outline: none; border-color: rgba(255,255,255,0.40);
+  box-shadow: 0 0 0 3px var(--fill-3);
+}
+.po-weight-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: stretch;
+}
+.po-w-btn {
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  background: var(--fill-2);
+  color: var(--text-1);
+  border-radius: 12px; font-family: inherit;
+  font-size: 20px; font-weight: 700; cursor: pointer;
+  min-width: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-w-btn:hover { background: var(--fill-4); }
+.po-w-btn:active { transform: scale(0.94); }
+.po-reps-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+.po-reps-pill {
+  padding: 12px 0; border: 1px solid var(--border);
+  background: rgba(0,0,0,0.28); color: var(--text-2);
+  border-radius: 8px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.po-reps-pill:hover { background: var(--fill-3); color: var(--text-1); }
+.po-reps-input { width: 100%; margin-top: 8px; padding: 11px 12px; background: var(--fill-2, rgba(255,255,255,0.04)); border: 1px solid var(--line, rgba(255,255,255,0.13)); border-radius: 10px; color: var(--text-1, #fff); font-family: inherit; font-size: 15px; text-align: center; outline: none; font-variant-numeric: tabular-nums; }
+.po-reps-input::placeholder { color: var(--text-3, rgba(255,255,255,0.4)); font-size: 13px; }
+.po-reps-input:focus { border-color: var(--brand); }
+.po-reps-pill.active {
+  background: var(--brand);
+  color: var(--brand-ink); border-color: transparent;
+  font-weight: 800;
+}
+
+/* ----- Primary button ----- */
+.po-btn-primary {
+  width: 100%; padding: 14px;
+  border: 1px solid var(--brand-line);
+  background: var(--brand);
+  color: var(--brand-ink); border-radius: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 14px rgba(0,0,0,0.40);
+  -webkit-tap-highlight-color: transparent;
+}
+.po-btn-primary:hover { transform: translateY(-1px); }
+.po-btn-primary:active { transform: translateY(0) scale(0.98); }
+.po-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.po-btn-secondary {
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  background: var(--fill-2);
+  color: var(--text-1); border-radius: 12px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-btn-secondary:hover { background: var(--fill-4); }
+
+/* ----- Prescription card ----- */
+.po-rx-card {
+  padding: 18px 20px; border-radius: 14px;
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  position: relative;
+}
+.po-rx-card.po-rx-up   { background: linear-gradient(180deg, rgba(var(--good-rgb),0.08), var(--fill-1)); border-color: rgba(var(--good-rgb),0.18); }
+.po-rx-card.po-rx-down { background: linear-gradient(180deg, rgba(255,138,138,0.08), var(--fill-1)); border-color: rgba(255,138,138,0.18); }
+.po-rx-label {
+  font-size: 10.5px; color: var(--text-3); font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 6px;
+}
+.po-rx-headline {
+  font-size: 26px; font-weight: 700; letter-spacing: -0.01em;
+  line-height: 1.2; margin-bottom: 10px;
+}
+.po-accent { color: var(--text-1); }
+.po-rx-tag {
+  display: inline-block; padding: 4px 10px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--fill-3); color: var(--text-2);
+  margin-bottom: 10px;
+}
+.po-rx-tag.up   { background: rgba(var(--good-rgb),0.14); color: var(--good); }
+.po-rx-tag.down { background: rgba(255,138,138,0.14); color: var(--bad); }
+.po-rx-tag.hold { background: rgba(251,191,36,0.14); color: var(--warn); }
+.po-rx-reason {
+  margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-2);
+}
+.po-rx-empty {
+  font-size: 13px; color: var(--text-3); padding: 16px 0; text-align: center;
+}
+
+/* ----- Stats ----- */
+.po-stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.po-stat-box {
+  padding: 14px 12px;
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 12px; text-align: center;
+}
+.po-stat-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 6px;
+}
+.po-stat-val {
+  font-size: 22px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.po-unit { font-size: 11px; color: var(--text-3); font-weight: 500; margin-left: 2px; }
+
+/* ----- Sparkline ----- */
+.po-spark-wrap { position: relative; }
+.po-spark-svg { width: 100%; height: 60px; display: block; }
+.po-spark-line { fill: none; stroke: var(--brand); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.po-spark-fill { fill: url(#sparkGrad); }
+.po-spark-empty {
+  text-align: center; font-size: 11px; color: var(--text-3);
+  padding: 18px 0;
+}
+
+/* ----- History ----- */
+.po-empty {
+  padding: 14px 0; text-align: center; font-size: 12px; color: var(--text-3);
+  font-style: italic;
+}
+.po-hist-row {
+  display: grid; grid-template-columns: 60px 1fr auto; gap: 12px;
+  padding: 10px 4px; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.po-hist-row:last-child { border-bottom: none; }
+.po-hist-date { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+.po-hist-set { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.po-hist-del {
+  background: transparent; border: none; color: var(--text-4);
+  font-size: 16px; cursor: pointer; padding: 4px 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-hist-del:hover { color: var(--bad); }
+
+/* ----- Modals ----- */
+.po-modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+  z-index: 100; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.po-modal-bg.show { display: flex; }
+.po-modal {
+  width: 100%; max-width: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 22px; max-height: 88vh; overflow-y: auto;
+}
+.po-modal h3 {
+  margin: 0 0 16px; font-size: 17px; font-weight: 700;
+}
+.po-modal .po-field { margin-bottom: 12px; }
+.po-modal-seg {
+  display: flex; gap: 4px;
+  background: var(--fill-2);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 3px;
+}
+.po-modal-seg button {
+  flex: 1; padding: 9px; border: none; background: transparent;
+  color: var(--text-3); border-radius: 7px;
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-modal-seg button.active {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.po-bw-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; font-size: 13px; color: var(--text-2);
+  cursor: pointer;
+}
+.po-modal-actions {
+  display: flex; gap: 8px; margin-top: 18px;
+}
+.po-modal-actions button { flex: 1; }
+.po-delete-link {
+  display: block; text-align: center; margin-top: 12px;
+  font-size: 12px; color: var(--bad); cursor: pointer;
+  text-decoration: underline; padding: 6px;
+}
+
+/* ----- Settings panel rows ----- */
+.po-set-section { margin-bottom: 22px; }
+.po-set-section h4 {
+  margin: 0 0 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.po-set-list { display: flex; flex-direction: column; gap: 6px; }
+.po-set-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.po-set-row input {
+  flex: 1; min-width: 0;
+  background: transparent; border: none; outline: none;
+  color: var(--text-1); font-family: inherit; font-size: 13px;
+  padding: 4px 0;
+}
+.po-set-row .po-mini-btn {
+  background: transparent; border: none; color: var(--text-4);
+  font-size: 14px; cursor: pointer; padding: 4px 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-set-row .po-mini-btn:hover { color: var(--bad); }
+.po-add-row-btn {
+  width: 100%; margin-top: 6px;
+  padding: 10px; background: var(--fill-1);
+  border: 1px dashed var(--border);
+  color: var(--text-2);
+  border-radius: 8px; cursor: pointer;
+  font-family: inherit; font-size: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-add-row-btn:hover { background: var(--fill-2); color: var(--text-1); }
+
+/* Rotation editor list */
+.rot-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.rot-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto auto;
+  gap: 6px; align-items: center;
+  padding: 8px 10px;
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.rot-row.is-today {
+  background: linear-gradient(180deg, rgba(var(--good-rgb),0.10), var(--fill-1));
+  border-color: rgba(var(--good-rgb),0.30);
+}
+.rot-row-num {
+  font-size: 11px; color: var(--text-3);
+  font-family: var(--font-mono); font-weight: 700;
+  width: 18px; text-align: center;
+}
+.rot-row input {
+  background: transparent; border: none; outline: none;
+  color: var(--text-1); font-family: inherit; font-size: 13px;
+  padding: 4px 0; min-width: 0;
+}
+.rot-row .rot-mini {
+  background: transparent; border: none;
+  color: var(--text-3); font-size: 14px;
+  cursor: pointer; padding: 4px 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.rot-row .rot-mini:hover { color: var(--text-1); }
+.rot-row .rot-mini-del:hover { color: var(--bad); }
+.rot-row .rot-today-tag {
+  font-size: 8px; font-weight: 800; letter-spacing: 0.10em;
+  color: var(--good); padding: 2px 6px; border-radius: 999px;
+  background: rgba(var(--good-rgb),0.16);
+}
+.rot-row .rot-today-btn {
+  background: var(--fill-2);
+  border: 1px solid var(--border);
+  color: var(--text-3); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.06em; padding: 4px 8px; border-radius: 999px;
+  cursor: pointer; text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+}
+.rot-row .rot-today-btn:hover { color: var(--good); border-color: rgba(var(--good-rgb),0.30); }
+
+@media (max-width: 480px) {
+  /* === Mobile / iPhone polish === */
+  .po-shell { padding: 14px 10px calc(32px + env(safe-area-inset-bottom)); }
+
+  /* Header — smaller title so the gear button never gets clipped */
+  .po-title { font-size: 18px; letter-spacing: -0.01em; }
+  .po-header { margin-bottom: 14px; gap: 10px; }
+
+  /* Cards — tighter padding so content has room */
+  .card { padding: 16px 14px; margin-bottom: 12px; }
+
+  /* Gym / Day segmented controls — let labels truncate instead of pushing wider */
+  .po-seg-row { gap: 8px; }
+  .po-seg-control { padding: 3px; gap: 2px; }
+  .po-seg-btn {
+    padding: 9px 6px; font-size: 12px;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Exercise picker */
+  .po-exercise-bar { gap: 6px; }
+  .po-ex-select { padding: 11px 10px; padding-right: 30px; font-size: 13px; }
+  .po-btn-icon { width: 38px; height: 38px; min-width: 38px; }
+
+  /* Stack weight + reps vertically so every rep button fits the screen */
+  .po-log-grid { grid-template-columns: 1fr; gap: 14px; }
+  .po-reps-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .po-reps-pill { padding: 14px 0; font-size: 14px; min-width: 0; }
+  .po-w-btn { min-width: 44px; padding: 0 10px; font-size: 18px; }
+
+  /* Stats — 3 narrow boxes can squeeze on a 360px iPhone; let them shrink */
+  .po-stats-row { gap: 6px; }
+  .po-stat-box { padding: 12px 8px; min-width: 0; }
+  .po-stat-val { font-size: 18px; }
+  .po-stat-label { font-size: 9.5px; letter-spacing: 0.08em; }
+
+  /* Headline numbers */
+  .po-rx-headline { font-size: 22px; }
+
+  /* Modals — never wider than the viewport minus a comfortable gutter */
+  .po-modal-bg { padding: 16px; }
+  .po-modal { padding: 18px; max-height: 86vh; max-width: calc(100vw - 32px); }
+
+  /* Today's / Past workouts — tighter rows, allow text to wrap */
+  .po-tw { padding: 14px; }
+  .po-tw-row { gap: 8px; }
+  .po-tw-row-name { min-width: 0; word-break: break-word; }
+
+  /* Progress photos grid — match the available width */
+  .wt-photo-grid { gap: 8px; }
+
+  /* Bottom tab bar — slightly smaller pills so both labels always fit */
+  .tab { padding: 11px 10px; font-size: 13px; }
+  .tabbar { padding-left: 12px; padding-right: 12px; }
+}
+
+/* Anything narrower than ~360px (iPhone SE / mini) gets a final pass */
+@media (max-width: 360px) {
+  .po-shell { padding-left: 8px; padding-right: 8px; }
+  .po-title { font-size: 17px; }
+  .po-reps-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Today's Workout + Past Workouts */
+.po-tw {
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+.po-tw-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px;
+}
+.po-tw-eyebrow {
+  font-size: 10px; letter-spacing: 0.16em; font-weight: 700;
+  text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 4px;
+}
+.po-tw-summary {
+  display: flex; align-items: baseline; gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.po-tw-summary-num {
+  font-size: 28px; font-weight: 700; color: var(--text-1);
+  letter-spacing: -0.02em;
+}
+.po-tw-summary-label {
+  font-size: 12px; color: var(--text-3); font-weight: 500;
+}
+.po-tw-summary-sep { color: var(--text-4); margin: 0 4px; }
+.po-tw-summary-vol { font-size: 13px; color: var(--text-2); font-weight: 500; }
+.po-tw-done-btn {
+  background: var(--brand);
+  color: var(--brand-ink); border: none; border-radius: 999px;
+  padding: 9px 16px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.po-tw-done-btn:hover { transform: translateY(-1px); }
+.po-tw-done-btn:active { transform: scale(0.98); }
+.po-tw-done-btn.is-done {
+  background: rgba(var(--good-rgb),0.16);
+  color: var(--good);
+}
+.po-tw-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.po-tw-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.po-tw-row-name { font-weight: 600; color: var(--text-1); }
+.po-tw-row-meta {
+  font-size: 11px; color: var(--text-3);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.po-tw-empty {
+  text-align: center; padding: 14px 0;
+  font-size: 12px; color: var(--text-3); font-style: italic;
+}
+.po-tw-empty.hidden { display: none; }
+
+.po-tw-past-toggle {
+  width: 100%; margin-top: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-2); border-radius: 10px;
+  padding: 11px 14px; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.04em;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-tw-past-toggle:hover { background: var(--fill-2); color: var(--text-1); }
+.po-tw-past-count {
+  display: inline-block; margin-left: 6px;
+  background: var(--fill-3); color: var(--text-2);
+  padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.po-tw-past-arrow {
+  transition: transform 0.2s; font-size: 14px;
+}
+.po-tw-past-toggle[aria-expanded="true"] .po-tw-past-arrow {
+  transform: rotate(180deg);
+}
+.po-tw-past-body {
+  margin-top: 6px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.po-tw-past-day {
+  background: var(--fill-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.po-tw-past-day-h {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.po-tw-past-day-date {
+  font-size: 11px; color: var(--text-3);
+  font-family: var(--font-mono); font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.po-tw-past-day-summary {
+  font-size: 12px; color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.po-tw-past-day-done {
+  display: inline-block; padding: 2px 7px; border-radius: 999px;
+  background: rgba(var(--good-rgb),0.14); color: var(--good);
+  font-size: 9px; font-weight: 800; letter-spacing: 0.08em;
+}
+.po-tw-past-empty {
+  text-align: center; padding: 16px;
+  color: var(--text-3); font-size: 12px; font-style: italic;
+}
+
+
+.hidden { display: none !important; }
+
+/* Lift ticker */
+.lft-ticker { display:flex; align-items:stretch; background:var(--fill-1); border:1px solid var(--border); border-radius:999px; overflow:hidden; margin-bottom:14px; }
+.lft-ticker:hover .lft-track { animation-play-state:paused; }
+.lft-badge { display:inline-flex; align-items:center; gap:7px; flex-shrink:0; padding:0 14px; font-family:var(--font-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--good); border-right:1px solid var(--border); background:rgba(var(--good-rgb),.04); }
+.lft-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--good); box-shadow:0 0 8px rgba(var(--good-rgb),.5); animation:lft-pulse 1.6s ease-in-out infinite; }
+@keyframes lft-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+.lft-viewport { flex:1; overflow:hidden; position:relative; min-width:0; mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent); -webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent); }
+.lft-track { display:inline-flex; align-items:center; gap:1.5rem; padding:10px 1rem; white-space:nowrap; animation:lft-scroll 28s linear infinite; will-change:transform; }
+@keyframes lft-scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.lft-item { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-variant-numeric:tabular-nums; }
+.lft-arrow-up { color:var(--good); font-weight:700; }
+.lft-arrow-down { color:var(--warn); font-weight:700; }
+.lft-name { font-family:var(--font-display); font-style:italic; color:var(--text-1); }
+.lft-sep { color:var(--text-4); }
+.lft-body { color:var(--text-2); }
+.lft-body strong { color:var(--text-1); font-weight:700; }
+@media(prefers-reduced-motion:reduce){.lft-track{animation:none}}
+
+/* --- Patron display type --- */
+.po-title, .wt-num, .po-rx-headline, .po-tw-summary-num, .po-stat-val,
+.wt-overlay-title, .po-modal h3, .wt-viewer-weight, .wt-comp-headline {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.po-title { font-weight: 600; }
+/* --- Theme switcher --- */
+.po-header-right { display: flex; align-items: center; gap: 10px; }
+.themeSeg { display: inline-flex; align-items: center; background: var(--fill-1); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; }
+.themeBtn { appearance: none; background: transparent; border: 0; color: var(--text-3); font-family: var(--font); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 5px 10px 5px 7px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.18s, color 0.18s; -webkit-tap-highlight-color: transparent; }
+.themeBtn:hover { color: var(--text-2); }
+.themeSwatch { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 0 1px var(--border-strong) inset; flex-shrink: 0; }
+.themeBtnActive, .themeBtnActive:hover { background: var(--brand-soft); color: var(--text-1); }
+.themeBtnActive .themeSwatch { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--brand); }
+@media (max-width: 560px) {
+  .themeBtn .themeBtnLabel { display: none; }
+  .themeBtn { padding: 6px; }
+}
+/* ── Activities panel ── */
+#actsPanel { display:none; padding:20px 16px calc(100px + env(safe-area-inset-bottom)); max-width:640px; margin:0 auto; }
+.actsScoreCard { display:flex; align-items:center; gap:18px; padding:20px; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; margin-bottom:14px; }
+.actsRingWrap { position:relative; width:96px; height:96px; flex-shrink:0; }
+.actsRingWrap svg { width:100%; height:100%; transform:rotate(-90deg); }
+.actsRingTrack { fill:none; stroke:var(--fill-3); stroke-width:8; }
+.actsRingFill { fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.6s cubic-bezier(0.22,1,0.36,1),stroke 0.4s; }
+.actsRingNum { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:28px; font-weight:600; color:var(--text-1); letter-spacing:-0.03em; }
+.actsScoreInfo { flex:1; min-width:0; }
+.actsScoreLabel { font-family:var(--font-mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); }
+.actsScoreMsg { font-size:13px; color:var(--text-2); line-height:1.5; margin-top:6px; }
+.actsCard { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:18px 16px; margin-bottom:12px; }
+.actsCardTitle { font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--text-3); display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.actsCardTitle::after { content:''; flex:1; height:1px; background:var(--border); }
+.actsForm { display:flex; flex-direction:column; gap:10px; }
+.actsSelect,.actsInput { appearance:none; width:100%; padding:11px 14px; background:var(--fill-2); border:1px solid var(--border); border-radius:10px; color:var(--text-1); font-family:var(--font); font-size:14px; transition:border-color 0.15s; }
+.actsSelect:focus,.actsInput:focus { outline:none; border-color:var(--brand-line); }
+.actsSelect option { background:#111; }
+.actsAddBtn { width:100%; padding:13px; border:none; border-radius:10px; background:var(--brand); color:var(--brand-ink); font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; transition:opacity 0.2s,transform 0.1s; }
+.actsAddBtn:hover { opacity:0.9; } .actsAddBtn:active { transform:scale(0.98); }
+.actsLogEmpty { font-size:13px; color:var(--text-3); padding:6px 0; }
+.actsLogList { display:flex; flex-direction:column; gap:8px; }
+.actsLogRow { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--fill-1); border:1px solid var(--border); border-radius:10px; }
+.actsLogIcon { font-size:22px; flex-shrink:0; }
+.actsLogMain { flex:1; min-width:0; }
+.actsLogName { font-weight:600; font-size:14px; color:var(--text-1); }
+.actsLogMeta { font-family:var(--font-mono); font-size:11px; color:var(--text-3); margin-top:2px; }
+.actsLogPts { font-family:var(--font-display); font-size:22px; font-weight:600; color:var(--brand); letter-spacing:-0.02em; flex-shrink:0; }
+.actsLogDel { background:transparent; border:none; color:var(--text-4); font-size:20px; cursor:pointer; padding:4px 6px; opacity:0.5; transition:opacity 0.2s,color 0.2s; }
+.actsLogDel:hover { opacity:1; color:var(--bad); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="po-shell">
+  <button class="po-day-pill" type="button" id="dayPill" title="Tap to switch the day filter to today's split">
+    <span class="po-day-date" id="dayPillDate">—</span>
+    <span class="po-day-sep">·</span>
+    <span class="po-day-split" id="dayPillSplit">—</span>
+  </button>
+
+
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin-bottom:14px;padding:6px 13px 6px 9px;background:var(--brand-soft);border:1px solid var(--brand-line);border-radius:999px;color:var(--brand);font-size:12px;font-weight:600;letter-spacing:.01em;text-decoration:none">← Luca</a>
+
+  <!-- Lift ticker: real PR progress from gym logs -->
+  <div class="lft-ticker" id="lftTicker" style="display:none">
+    <div class="lft-badge"><span class="lft-badge-dot"></span>Lifts</div>
+    <div class="lft-viewport"><div class="lft-track" id="lftTrack"></div></div>
+  </div>
+  <div class="po-header">
+    <h1 class="po-title" id="appTitle">Progressive Overload Coach</h1>
+    <div class="po-header-right">
+      <div class="themeSeg" role="radiogroup" aria-label="Theme"><button type="button" class="themeBtn" data-theme="nocturne"><span class="themeSwatch" style="background:#00FF88"></span><span class="themeBtnLabel">Nocturne</span></button><button type="button" class="themeBtn" data-theme="aurora"><span class="themeSwatch" style="background:linear-gradient(135deg,#8B7BFF,#4FE3D0)"></span><span class="themeBtnLabel">Aurora</span></button><button type="button" class="themeBtn" data-theme="daylight"><span class="themeSwatch" style="background:#6A45FF"></span><span class="themeBtnLabel">Daylight</span></button></div>
+    <button class="po-icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- Filters -->
+    <div class="po-filters">
+      <div class="po-seg-row">
+        <span class="po-seg-label">Gym</span>
+        <div class="po-seg-control" id="gymSeg"></div>
+      </div>
+      <div class="po-seg-row">
+        <span class="po-seg-label">Day</span>
+        <div class="po-seg-control" id="daySeg"></div>
+      </div>
+    </div>
+
+    <!-- Exercise -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">Exercise</div>
+      <div class="po-exercise-bar">
+        <select class="po-ex-select" id="exSelect"></select>
+        <button class="po-btn-icon" id="addExBtn" title="Add exercise" aria-label="Add">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="po-btn-icon" id="editExBtn" title="Edit / delete" aria-label="Edit">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </button>
+      </div>
+      <div class="po-no-ex" id="noExMsg" style="display:none">No exercises here yet. Tap <strong>+</strong> to add one.</div>
+    </div>
+
+    <!-- Log a set -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">Log today's top set</div>
+      <div class="po-bw-banner" id="bwBanner">Bodyweight — log reps only</div>
+      <div class="po-last-set" id="lastSet">
+        <span class="po-last-label">Last time</span>
+        <span class="po-last-value" id="lastSetValue"></span>
+        <span class="po-last-meta" id="lastSetMeta"></span>
+      </div>
+      <div class="po-log-grid" id="logGrid">
+        <div class="po-field" id="weightField">
+          <label id="weightLabel">Weight (kg)</label>
+          <div class="po-weight-row">
+            <button class="po-w-btn" id="weightDownBtn" type="button">−</button>
+            <input type="number" id="weightInput" step="0.5" inputmode="decimal" placeholder="0">
+            <button class="po-w-btn" id="weightUpBtn" type="button">+</button>
+          </div>
+        </div>
+        <div class="po-field">
+          <label>Reps</label>
+          <div class="po-reps-row" id="repsRow" data-value="8">
+            <button type="button" class="po-reps-pill" data-v="4">4</button>
+            <button type="button" class="po-reps-pill" data-v="5">5</button>
+            <button type="button" class="po-reps-pill" data-v="6">6</button>
+            <button type="button" class="po-reps-pill" data-v="7">7</button>
+            <button type="button" class="po-reps-pill active" data-v="8">8</button>
+            <button type="button" class="po-reps-pill" data-v="9">9</button>
+            <button type="button" class="po-reps-pill" data-v="10">10</button>
+            <button type="button" class="po-reps-pill" data-v="11">11</button>
+            <button type="button" class="po-reps-pill" data-v="12">12</button>
+          </div>
+          <input type="number" id="repsInput" min="1" max="100" inputmode="numeric" class="po-reps-input" placeholder="or type a rep count" aria-label="Type a custom rep count">
+        </div>
+      </div>
+      <button class="po-btn-primary" id="logBtn">Log set</button>
+    </div>
+
+    <!-- Prescription -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">Next session</div>
+      <div id="rxWrap"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">Stats</div>
+      <div class="po-stats-row">
+        <div class="po-stat-box">
+          <div class="po-stat-label" id="oneRmLabel">Est. 1RM</div>
+          <div class="po-stat-val" id="oneRm">—<span class="po-unit" id="oneRmUnit">kg</span></div>
+        </div>
+        <div class="po-stat-box">
+          <div class="po-stat-label">Best set</div>
+          <div class="po-stat-val" id="bestSet">—</div>
+        </div>
+        <div class="po-stat-box">
+          <div class="po-stat-label">Sessions</div>
+          <div class="po-stat-val" id="sessionCount">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trend -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">Trend (last 10 sessions)</div>
+      <div class="po-spark-wrap">
+        <svg class="po-spark-svg" id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="po-spark-empty" id="sparkEmpty">Need 2+ sessions for trend</div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">History</div>
+      <div id="historyCard">
+        <div class="po-empty">No logs yet.</div>
+      </div>
+    </div>
+
+    <!-- Today's Workout — every set logged today, grouped by exercise.
+         "Mark done" stamps the day so the past-workouts list shows it
+         as a completed session. The volume here also feeds the
+         composition estimate at the top of the page. -->
+    <div class="po-sub-section">
+      <div class="po-sub-title">Today's workout</div>
+      <div class="po-tw" id="poTw">
+        <div class="po-tw-head">
+          <div>
+            <div class="po-tw-eyebrow" id="poTwDateLabel">TODAY</div>
+            <div class="po-tw-summary">
+              <span class="po-tw-summary-num" id="poTwSetCount">0</span>
+              <span class="po-tw-summary-label">sets</span>
+              <span class="po-tw-summary-sep">·</span>
+              <span class="po-tw-summary-vol" id="poTwTotalVol">0 kg lifted</span>
+            </div>
+          </div>
+          <button class="po-tw-done-btn" id="poTwDoneBtn" type="button">Mark workout done</button>
+        </div>
+        <ul class="po-tw-list" id="poTwList"></ul>
+        <div class="po-tw-empty" id="poTwEmpty">No sets logged today — log one above and it'll appear here.</div>
+      </div>
+
+      <button type="button" class="po-tw-past-toggle" id="poTwPastToggle" aria-expanded="false">
+        <span>Past workouts <span class="po-tw-past-count" id="poTwPastCount">0</span></span>
+        <span class="po-tw-past-arrow" id="poTwPastArrow">▾</span>
+      </button>
+      <div class="po-tw-past-body" id="poTwPastBody" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Exercise Modal -->
+<div class="po-modal-bg" id="exModalBg">
+  <div class="po-modal">
+    <h3 id="exModalTitle">Add exercise</h3>
+    <div class="po-field">
+      <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Name</label>
+      <input type="text" id="exName" placeholder="e.g. Incline DB press">
+    </div>
+    <div class="po-field">
+      <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Gym</label>
+      <div class="po-modal-seg" id="exGymSeg"></div>
+    </div>
+    <div class="po-field">
+      <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Day</label>
+      <div class="po-modal-seg" id="exDaySeg"></div>
+    </div>
+    <label class="po-bw-toggle">
+      <input type="checkbox" id="exBw">
+      Bodyweight (track reps only, no weight)
+    </label>
+    <div class="po-field" id="exStartWeightField">
+      <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Starting weight</label>
+      <input type="number" id="exStartWeight" step="0.5" placeholder="20" value="20">
+    </div>
+    <div class="po-log-grid" id="exNumFields">
+      <div class="po-field">
+        <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Reps min</label>
+        <input type="number" id="exRepMin" value="6">
+      </div>
+      <div class="po-field">
+        <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Reps max</label>
+        <input type="number" id="exRepMax" value="8">
+      </div>
+    </div>
+    <div class="po-field" id="exStepField">
+      <label style="font-size:11px;color:var(--text-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Increment</label>
+      <input type="number" id="exStep" step="0.5" value="2.5">
+    </div>
+    <div class="po-modal-actions">
+      <button class="po-btn-secondary" id="exModalCancel">Cancel</button>
+      <button class="po-btn-primary" id="exModalSave">Save</button>
+    </div>
+    <span class="po-delete-link" id="exDelete" style="display:none">Delete this exercise</span>
+  </div>
+</div>
+
+<!-- Rotation editor modal -->
+<div class="po-modal-bg" id="rotModalBg">
+  <div class="po-modal">
+    <h3>Edit split rotation</h3>
+    <p style="font-size:12px;color:var(--text-3);margin:-6px 0 14px;line-height:1.45;">
+      Days cycle in this order, repeating forever. Today is whichever entry is highlighted.
+      Use <strong>Today is →</strong> to jump the cycle to a different starting day.
+    </p>
+    <div class="rot-list" id="rotList"></div>
+    <button class="po-add-row-btn" id="rotAddBtn">+ Add day</button>
+    <div class="po-modal-actions">
+      <button class="po-btn-secondary" id="rotCancel">Cancel</button>
+      <button class="po-btn-primary" id="rotSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="po-modal-bg" id="setModalBg">
+  <div class="po-modal" style="max-width: 480px;">
+    <h3>Settings</h3>
+
+    <div class="po-set-section">
+      <h4>Units</h4>
+      <div class="po-modal-seg" id="setUnitsSeg">
+        <button data-u="kg">kg</button>
+        <button data-u="lb">lb</button>
+      </div>
+    </div>
+
+    <div class="po-set-section">
+      <h4>Gyms</h4>
+      <div class="po-set-list" id="setGyms"></div>
+      <button class="po-add-row-btn" id="setAddGym">+ Add gym</button>
+    </div>
+
+    <div class="po-set-section">
+      <h4>Days</h4>
+      <div class="po-set-list" id="setDays"></div>
+      <button class="po-add-row-btn" id="setAddDay">+ Add day</button>
+    </div>
+
+    <div class="po-set-section">
+      <h4>Data</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="po-btn-secondary" id="setExport">Export JSON</button>
+        <button class="po-btn-secondary" id="setImport">Import JSON</button>
+        <button class="po-btn-secondary" id="setReset" style="color:var(--bad);border-color:rgba(255,138,138,0.3)">Reset all</button>
+      </div>
+      <input type="file" id="setImportFile" accept=".json" style="display:none">
+    </div>
+
+    <div class="po-set-section">
+      <h4>Cloud sync (optional)</h4>
+      <p style="font-size:12px;color:var(--text-secondary,rgba(255,255,255,.55));margin:0 0 10px;line-height:1.5">Sync across devices with <strong>your own</strong> free <a href="https://supabase.com" target="_blank" rel="noopener" style="color:var(--brand)">Supabase</a> project. Leave blank to keep everything on this device. Setup steps in README.md.</p>
+      <input id="setSupaUrl" type="text" placeholder="https://YOUR-PROJECT.supabase.co" autocomplete="off" spellcheck="false" style="width:100%;padding:9px 11px;margin-bottom:8px;background:var(--input-bg,rgba(255,255,255,.04));border:1px solid var(--border,rgba(255,255,255,.13));border-radius:8px;color:var(--text-primary,#fff);font-family:inherit;font-size:13px;outline:none">
+      <input id="setSupaKey" type="password" placeholder="sb_publishable_…" autocomplete="off" spellcheck="false" style="width:100%;padding:9px 11px;margin-bottom:8px;background:var(--input-bg,rgba(255,255,255,.04));border:1px solid var(--border,rgba(255,255,255,.13));border-radius:8px;color:var(--text-primary,#fff);font-family:inherit;font-size:13px;outline:none">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="po-btn-secondary" id="setSupaSave">Save &amp; sync</button>
+        <button class="po-btn-secondary" id="setSupaClear">Disconnect</button>
+        <button class="po-btn-secondary" id="setSupaPull" style="display:none">⬇ Pull from cloud</button>
+      </div>
+      <div id="setSupaStatus" style="font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.4));margin-top:8px"></div>
+    </div>
+
+    <div class="po-modal-actions">
+      <button class="po-btn-primary" id="setModalClose">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ACTIVITIES PANEL ── -->
+<section id="actsPanel">
+  <!-- Score ring -->
+  <div class="actsScoreCard">
+    <div class="actsRingWrap">
+      <svg viewBox="0 0 96 96">
+        <circle class="actsRingTrack" cx="48" cy="48" r="40"></circle>
+        <circle class="actsRingFill" id="actsRingFill" cx="48" cy="48" r="40"></circle>
+      </svg>
+      <div class="actsRingNum" id="actsRingNum">0</div>
+    </div>
+    <div class="actsScoreInfo">
+      <div class="actsScoreLabel">Activity score · /100</div>
+      <div id="actsScoreMsg" class="actsScoreMsg">Log an activity to start your day</div>
+    </div>
+  </div>
+
+  <!-- Log form -->
+  <div class="actsCard">
+    <div class="actsCardTitle">Log Activity</div>
+    <div class="actsForm">
+      <select class="actsSelect" id="actsActivity">
+        <option value="cycling">🚴 Cycling</option>
+        <option value="swimming">🏊 Swimming</option>
+        <option value="walking">🚶 Walking (outdoor)</option>
+        <option value="basketball">🏀 Basketball</option>
+      </select>
+      <select class="actsSelect" id="actsIntensity">
+        <option value="light">💧 Light</option>
+        <option value="moderate" selected>⚡ Moderate</option>
+        <option value="hard">🔥 Hard</option>
+      </select>
+      <input class="actsInput" id="actsMinutes" type="number" min="1" max="300" placeholder="Duration (minutes)" />
+      <button class="actsAddBtn" id="actsAddBtn" type="button">Log Activity</button>
+    </div>
+  </div>
+
+  <!-- Today's log -->
+  <div class="actsCard">
+    <div class="actsCardTitle">Today</div>
+    <div id="actsList"></div>
+  </div>
+</section>
+
+<script>
+(function() {
+  // ============================================================
+  // STATE — all logs + edits live in browser localStorage. Each
+  // device has its own copy. Export JSON from settings if you
+  // want to back up or move to another device.
+  // ============================================================
+  const LS_KEY = 'po_coach_v1';
+
+  function buildDefaultExercises() {
+    return CONFIG.defaultExercises.map((e, i) => Object.assign({
+      id: 'seed_' + i + '_' + Date.now()
+    }, e));
+  }
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) return normalize(JSON.parse(raw));
+    } catch (e) {}
+    return normalize({});
+  }
+  function normalize(s) {
+    s = s || {};
+    s.units = s.units || CONFIG.units || 'kg';
+    s.gyms  = (Array.isArray(s.gyms)  && s.gyms.length)  ? s.gyms  : CONFIG.gyms.slice();
+    s.days  = (Array.isArray(s.days)  && s.days.length)  ? s.days  : CONFIG.days.slice();
+    s.exercises = Array.isArray(s.exercises) ? s.exercises : buildDefaultExercises();
+    s.logs = (s.logs && typeof s.logs === 'object') ? s.logs : {};
+    s.filterGym = s.filterGym || s.gyms[0].id;
+    s.filterDay = s.filterDay || s.days[0].id;
+    // Split rotation lives in state so the user can edit it via the pill modal.
+    // Stored as a plain array of names (e.g. ["Push", "Pull", "Legs", "Rest"]).
+    if (!Array.isArray(s.splitRotation) || !s.splitRotation.length) {
+      s.splitRotation = (CONFIG.splitRotation || ['Push', 'Pull', 'Legs', 'Rest']).map(x =>
+        // CONFIG used ids — map id → display name where possible
+        (CONFIG.days || []).find(d => d.id === x) ? (CONFIG.days.find(d => d.id === x).name) :
+        (x === 'rest' ? 'Rest' : x.charAt(0).toUpperCase() + x.slice(1))
+      );
+    }
+    if (!s.splitAnchor || !s.splitAnchor.date || s.splitAnchor.index == null) {
+      // Map old anchor-by-id to new anchor-by-index, or default to today=index 0.
+      const oldId = (CONFIG.splitAnchor && CONFIG.splitAnchor.splitId) || null;
+      let idx = 0;
+      if (oldId) {
+        const oldName = (CONFIG.days || []).find(d => d.id === oldId);
+        const targetName = oldName ? oldName.name : (oldId === 'rest' ? 'Rest' : oldId);
+        const found = s.splitRotation.findIndex(n => n.toLowerCase() === targetName.toLowerCase());
+        if (found >= 0) idx = found;
+      }
+      s.splitAnchor = {
+        date: (CONFIG.splitAnchor && CONFIG.splitAnchor.date) || new Date().toISOString().slice(0, 10),
+        index: idx
+      };
+    }
+    return s;
+  }
+  function saveState() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  let state = loadState();
+  document.getElementById('appTitle').textContent = CONFIG.appTitle || 'Progressive Overload Coach';
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  const $ = (id) => document.getElementById(id);
+  function unit() { return state.units; }
+  function uid() { return 'ex_' + Date.now() + '_' + Math.floor(Math.random() * 9999); }
+  function gymName(id) { const g = state.gyms.find(x => x.id === id); return g ? g.name : id; }
+  function dayName(id) { const d = state.days.find(x => x.id === id); return d ? d.name : id; }
+  function estimate1RM(w, r) { if (r < 2) return w; return w * (1 + r / 30); }
+  function roundToStep(v, s) { return Math.round(v / s) * s; }
+  function getFiltered() {
+    return state.exercises.filter(e =>
+      (e.gym === state.filterGym || e.gym === 'both') && e.day === state.filterDay);
+  }
+  function getCurrentEx() {
+    const f = getFiltered();
+    if (!f.length) return null;
+    let ex = f.find(e => e.id === state.currentEx);
+    if (!ex) { ex = f[0]; state.currentEx = ex.id; saveState(); }
+    return ex;
+  }
+  function getLogs() { return (state.logs[state.currentEx] || []).slice(); }
+
+  // Prescription engine — "what should I do next session?"
+  // Upgrade trigger: hits CONFIG.upgradeAtReps (default 8) OR the
+  // exercise's repMax, whichever fires first. So a 5-8 lifter hits
+  // upgrade at 8; a 6-12 lifter ALSO hits it at 8 instead of grinding
+  // out 12 reps before adding weight.
+  function getRx(ex, logs) {
+    if (!logs.length) return null;
+    const last = logs[logs.length - 1];
+    const { weight, reps } = last;
+    const { repMin, repMax, step, bw } = ex;
+    const upgradeAt = Math.min(CONFIG.upgradeAtReps || 8, repMax);
+    let stuck = 0;
+    for (let i = logs.length - 1; i >= 0; i--) {
+      if (logs[i].weight === weight) stuck++; else break;
+    }
+    if (bw) {
+      if (reps >= upgradeAt) return { type: 'up', weight: 0, reps: reps + 1, tag: 'Push for more', reason: reps + ' reps — strong. Push for ' + (reps + 1) + ' next time.', bw: true };
+      if (reps >= repMin) return { type: 'hold', weight: 0, reps: reps + 1, tag: 'Add a rep', reason: reps + ' reps. Push for ' + (reps + 1) + ' next session.', bw: true };
+      return { type: 'hold', weight: 0, reps: repMin, tag: 'Repeat', reason: reps + ' reps fell short. Repeat until you hit ' + repMin + '+.', bw: true };
+    }
+    if (stuck >= 3 && reps < repMin) {
+      const dl = roundToStep(weight * 0.9, step);
+      return { type: 'down', weight: dl, reps: repMax, tag: 'Deload', reason: 'Stuck at ' + weight + unit() + ' for ' + stuck + ' sessions. Drop 10%, reset, build back cleaner.' };
+    }
+    if (reps >= upgradeAt) return { type: 'up', weight: weight + step, reps: repMin, tag: 'Add weight', reason: 'You hit ' + reps + ' reps — time to add ' + step + unit() + '. Expect ' + repMin + '-' + (repMin + 1) + ' next session.' };
+    if (reps >= repMin && reps < upgradeAt) return { type: 'hold', weight: weight, reps: reps + 1, tag: 'Add a rep', reason: reps + ' reps in target. Stay at ' + weight + unit() + ', push for ' + (reps + 1) + '.' };
+    return { type: 'hold', weight: weight, reps: repMin, tag: 'Repeat', reason: reps + ' reps short of ' + repMin + '-' + upgradeAt + '. Repeat ' + weight + unit() + ' until you hit ' + repMin + '+ clean.' };
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function renderFilters() {
+    $('gymSeg').innerHTML = state.gyms.map(g =>
+      '<button class="po-seg-btn ' + (g.id === state.filterGym ? 'active' : '') + '" data-gym="' + g.id + '">' + escape(g.name) + '</button>'
+    ).join('');
+    $('daySeg').innerHTML = state.days.map(d =>
+      '<button class="po-seg-btn ' + (d.id === state.filterDay ? 'active' : '') + '" data-day="' + d.id + '">' + escape(d.name) + '</button>'
+    ).join('');
+    $('gymSeg').querySelectorAll('.po-seg-btn').forEach(b => {
+      b.addEventListener('click', () => { state.filterGym = b.dataset.gym; state.currentEx = null; saveState(); renderAll(); });
+    });
+    $('daySeg').querySelectorAll('.po-seg-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        state.filterDay = b.dataset.day;
+        state.currentEx = null;
+        // User has now manually picked a day — stop auto-overriding to today's split.
+        state._userPickedDay = true;
+        saveState(); renderAll();
+      });
+    });
+  }
+  function renderSelect() {
+    const sel = $('exSelect');
+    const f = getFiltered();
+    const noMsg = $('noExMsg');
+    const editBtn = $('editExBtn');
+    const logBtn = $('logBtn');
+    if (!f.length) {
+      sel.innerHTML = '<option>—</option>';
+      sel.disabled = true; editBtn.disabled = true; logBtn.disabled = true;
+      noMsg.style.display = 'block'; state.currentEx = null;
+      return;
+    }
+    sel.disabled = false; editBtn.disabled = false; logBtn.disabled = false;
+    noMsg.style.display = 'none';
+    if (!f.find(e => e.id === state.currentEx)) state.currentEx = f[0].id;
+    sel.innerHTML = f.map(e => {
+      const wLbl = e.bw ? ' · BW' : (e.startWeight ? ' · ' + e.startWeight + unit() : '');
+      const sh = e.gym === 'both' ? ' ★' : '';
+      return '<option value="' + e.id + '"' + (e.id === state.currentEx ? ' selected' : '') + '>' + escape(e.name) + wLbl + sh + '</option>';
+    }).join('');
+  }
+  function renderForm() {
+    const ex = getCurrentEx();
+    const banner = $('bwBanner');
+    const wField = $('weightField');
+    const oneRmLbl = $('oneRmLabel');
+    const grid = $('logGrid');
+    $('weightLabel').textContent = 'Weight (' + unit() + ')';
+    if (ex && ex.bw) {
+      banner.classList.add('show');
+      wField.style.display = 'none';
+      grid.classList.add('po-bw-mode');
+      oneRmLbl.textContent = 'Best reps';
+    } else {
+      banner.classList.remove('show');
+      wField.style.display = '';
+      grid.classList.remove('po-bw-mode');
+      oneRmLbl.textContent = 'Est. 1RM';
+    }
+  }
+  function renderLastSet() {
+    const wrap = $('lastSet');
+    const v = $('lastSetValue');
+    const m = $('lastSetMeta');
+    const ex = getCurrentEx();
+    const logs = ex ? getLogs() : [];
+    if (!ex || !logs.length) { wrap.classList.remove('show'); return; }
+    const last = logs[logs.length - 1];
+    const setStr = ex.bw ? (last.reps + ' reps') : (last.weight + unit() + ' × ' + last.reps);
+    const d = new Date(last.date);
+    const da = Math.floor((Date.now() - d.getTime()) / 86400000);
+    const ago = da === 0 ? 'today' : da === 1 ? 'yesterday' : da + ' days ago';
+    v.textContent = setStr;
+    m.textContent = ago;
+    wrap.classList.add('show');
+  }
+  function renderRx() {
+    const wrap = $('rxWrap');
+    const ex = getCurrentEx();
+    if (!ex) { wrap.innerHTML = '<div class="po-rx-empty">Pick a gym and day above.</div>'; return; }
+    const logs = getLogs();
+    const rx = getRx(ex, logs);
+    if (!rx) {
+      const sw = ex.startWeight, sr = ex.repMin;
+      const head = ex.bw
+        ? '<span class="po-accent">' + sr + '</span> reps'
+        : '<span class="po-accent">' + (sw || 0) + unit() + '</span> × ' + sr + ' reps';
+      const reason = ex.bw
+        ? 'Aim for ' + ex.repMin + '-' + ex.repMax + ' clean reps. Once you hit ' + ex.repMax + '+, push for more.'
+        : 'Hit ' + ex.repMin + '-' + ex.repMax + ' reps. Once logged, the coach will start prescribing.';
+      wrap.innerHTML = '<div class="po-rx-card"><div class="po-rx-label">' + escape(ex.name) + ' · starting point</div><div class="po-rx-headline">' + head + '</div><span class="po-rx-tag hold">Start here</span><p class="po-rx-reason">' + reason + '</p></div>';
+      return;
+    }
+    const head = rx.bw
+      ? '<span class="po-accent">' + rx.reps + '</span> reps'
+      : '<span class="po-accent">' + rx.weight + unit() + '</span> × ' + rx.reps + ' reps';
+    wrap.innerHTML = '<div class="po-rx-card po-rx-' + rx.type + '"><div class="po-rx-label">' + escape(ex.name) + '</div><div class="po-rx-headline">' + head + '</div><span class="po-rx-tag ' + rx.type + '">' + rx.tag + '</span><p class="po-rx-reason">' + rx.reason + '</p></div>';
+  }
+  function renderStats() {
+    const ex = getCurrentEx();
+    const logs = ex ? getLogs() : [];
+    if (!logs.length) {
+      $('oneRm').innerHTML = '—<span class="po-unit">' + unit() + '</span>';
+      $('bestSet').textContent = '—';
+      $('sessionCount').textContent = '—';
+      return;
+    }
+    if (ex.bw) {
+      const br = Math.max.apply(null, logs.map(l => l.reps));
+      $('oneRm').innerHTML = br + '<span class="po-unit">reps</span>';
+    } else {
+      const orm = Math.max.apply(null, logs.map(l => estimate1RM(l.weight, l.reps)));
+      $('oneRm').innerHTML = Math.round(orm) + '<span class="po-unit">' + unit() + '</span>';
+    }
+    let best = logs[0];
+    logs.forEach(l => {
+      const cur = ex.bw ? l.reps : estimate1RM(l.weight, l.reps);
+      const bestVal = ex.bw ? best.reps : estimate1RM(best.weight, best.reps);
+      if (cur > bestVal) best = l;
+    });
+    $('bestSet').textContent = ex.bw ? (best.reps + 'r') : (best.weight + '×' + best.reps);
+    $('sessionCount').textContent = logs.length;
+  }
+  function renderSparkline() {
+    const svg = $('sparkline');
+    const empty = $('sparkEmpty');
+    const ex = getCurrentEx();
+    const logs = ex ? getLogs().slice(-10) : [];
+    if (logs.length < 2) {
+      svg.style.display = 'none'; empty.style.display = 'block';
+      return;
+    }
+    svg.style.display = 'block'; empty.style.display = 'none';
+    const vals = logs.map(l => ex.bw ? l.reps : estimate1RM(l.weight, l.reps));
+    const min = Math.min.apply(null, vals);
+    const max = Math.max.apply(null, vals);
+    const range = max - min || 1;
+    const W = 300, H = 60, pad = 4;
+    const pts = vals.map((v, i) => {
+      const x = pad + (W - pad * 2) * (i / (vals.length - 1));
+      const y = H - pad - (H - pad * 2) * ((v - min) / range);
+      return [x, y];
+    });
+    const linePath = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    const fillPath = linePath + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + H + ' L' + pts[0][0].toFixed(1) + ' ' + H + ' Z';
+    // Keep <defs> in place; replace any prior paths
+    const defsHTML = '<defs><linearGradient id="sparkGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.18)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs>';
+    svg.innerHTML = defsHTML
+      + '<path class="po-spark-fill" d="' + fillPath + '"/>'
+      + '<path class="po-spark-line" d="' + linePath + '"/>';
+  }
+  function renderHistory() {
+    const wrap = $('historyCard');
+    const ex = getCurrentEx();
+    const logs = ex ? getLogs().slice().reverse() : [];
+    if (!logs.length) {
+      wrap.innerHTML = '<div class="po-empty">No logs yet.</div>';
+      return;
+    }
+    wrap.innerHTML = logs.slice(0, 12).map((l, i) => {
+      const d = new Date(l.date);
+      const dStr = (d.getMonth() + 1) + '/' + d.getDate();
+      const setStr = ex.bw ? (l.reps + ' reps') : (l.weight + unit() + ' × ' + l.reps);
+      const realIdx = logs.length - 1 - i; // since we reversed
+      return '<div class="po-hist-row">'
+        + '<div class="po-hist-date">' + dStr + '</div>'
+        + '<div class="po-hist-set">' + setStr + '</div>'
+        + '<button class="po-hist-del" data-idx="' + realIdx + '" aria-label="Delete">×</button>'
+        + '</div>';
+    }).join('');
+    wrap.querySelectorAll('.po-hist-del').forEach(b => {
+      b.addEventListener('click', () => {
+        if (!confirm('Delete this log?')) return;
+        const realIdx = parseInt(b.dataset.idx, 10);
+        const arr = state.logs[state.currentEx] || [];
+        // realIdx is index in REVERSED list; map back to original
+        const origIdx = arr.length - 1 - realIdx;
+        arr.splice(origIdx, 1);
+        if (!arr.length) delete state.logs[state.currentEx];
+        else state.logs[state.currentEx] = arr;
+        saveState(); renderAll();
+      });
+    });
+  }
+  // Compute today's split from state.splitRotation + state.splitAnchor.
+  // Returns the rotation entry name (e.g. "Push" or "Rest") AND the index.
+  function todaySplit() {
+    try {
+      const rot = state.splitRotation;
+      if (!rot || !rot.length) return { name: '—', index: 0 };
+      const a = new Date(state.splitAnchor.date);
+      const t = new Date();
+      a.setHours(0,0,0,0); t.setHours(0,0,0,0);
+      const diffDays = Math.round((t - a) / 86400000);
+      const idx = ((state.splitAnchor.index + diffDays) % rot.length + rot.length) % rot.length;
+      return { name: rot[idx], index: idx };
+    } catch (e) {
+      return { name: (state.splitRotation && state.splitRotation[0]) || '—', index: 0 };
+    }
+  }
+  function todayDateLabel() {
+    const d = new Date();
+    const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const mons = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    return dows[d.getDay()] + ', ' + mons[d.getMonth()] + ' ' + d.getDate();
+  }
+  function isRestName(name) { return /^rest\b/i.test(name || ''); }
+  function splitLabel(name) {
+    if (!name) return '—';
+    return (isRestName(name) ? 'REST DAY' : (name + ' DAY')).toUpperCase();
+  }
+  function renderDayPill() {
+    const split = todaySplit();
+    $('dayPillDate').textContent = todayDateLabel();
+    const splitEl = $('dayPillSplit');
+    splitEl.textContent = splitLabel(split.name);
+    splitEl.classList.toggle('is-rest', isRestName(split.name));
+  }
+
+  // Build the rep buttons based on the current exercise's repMin/repMax.
+  // Always spans repMin → repMax + 2 (a small buffer for over-performing
+  // sets that trigger the upgrade signal), capped at 16 buttons total so
+  // wide ranges don't break the mobile layout.
+  function renderRepsRow() {
+    const row = document.getElementById('repsRow');
+    if (!row) return;
+    const ex = getCurrentEx();
+    let repMin, repMax;
+    if (ex) {
+      repMin = Math.max(1, parseInt(ex.repMin, 10) || 1);
+      repMax = Math.max(repMin, parseInt(ex.repMax, 10) || repMin);
+    } else {
+      repMin = 4; repMax = 12;
+    }
+    const upper = Math.max(repMax + 2, repMin + 5);
+    const end = Math.min(upper, repMin + 15);
+
+    // Preserve the previously-selected rep if it still fits in the new
+    // range; otherwise default to the target (repMax).
+    const prev = parseInt(row.dataset.value, 10);
+    const active = (prev >= repMin && prev <= end) ? prev : repMax;
+
+    let html = '';
+    for (let i = repMin; i <= end; i++) {
+      html += '<button type="button" class="po-reps-pill' +
+        (i === active ? ' active' : '') +
+        '" data-v="' + i + '">' + i + '</button>';
+    }
+    row.innerHTML = html;
+    row.dataset.value = String(active);
+    const ri = document.getElementById('repsInput'); if (ri) ri.value = ''; // pills now reflect the value
+  }
+
+  function renderAll() {
+    renderDayPill();
+    renderFilters(); renderSelect(); renderForm(); renderLastSet();
+    renderRepsRow();
+    renderRx(); renderStats(); renderSparkline(); renderHistory();
+    renderTodaysWorkout();
+    renderPastWorkouts();
+    // Pre-fill weight input with last logged weight (or starting weight)
+    const ex = getCurrentEx();
+    if (ex && !ex.bw) {
+      const logs = getLogs();
+      const w = logs.length ? logs[logs.length - 1].weight : (ex.startWeight || 0);
+      $('weightInput').value = w;
+    }
+  }
+
+  // ============================================================
+  // TODAY'S WORKOUT + PAST WORKOUTS
+  //
+  // Reads state.logs, groups by date, surfaces:
+  //  - Today: every set logged today, per exercise, with set count + total
+  //    volume (kg lifted = sum of weight × reps across all working sets).
+  //  - Past: every previous workout day, sorted newest-first, with the
+  //    same summary numbers + a DONE badge if the user marked that day.
+  //
+  // The total volume here is what the composition-estimate uses (combined
+  // with the 1RM trend) — more weekly volume + strength gain = more of
+  // recent body-weight delta gets attributed to muscle.
+  // ============================================================
+  const WORKOUT_DONE_KEY = 'po_coach_workout_done';
+  function loadDoneDays() {
+    try { const raw = localStorage.getItem(WORKOUT_DONE_KEY); return raw ? JSON.parse(raw) : {}; }
+    catch (e) { return {}; }
+  }
+  function saveDoneDays(d) {
+    try { localStorage.setItem(WORKOUT_DONE_KEY, JSON.stringify(d)); } catch (e) {}
+  }
+  let doneDays = loadDoneDays();
+
+  function wtDateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function logsByDay() {
+    const byDay = {};
+    state.exercises.forEach(ex => {
+      (state.logs[ex.id] || []).forEach(l => {
+        const dk = wtDateKey(new Date(l.date));
+        if (!byDay[dk]) byDay[dk] = [];
+        byDay[dk].push({ ex, log: l });
+      });
+    });
+    return byDay;
+  }
+
+  function fmtPastDate(dk) {
+    const [y, m, d] = dk.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const mons = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    return dows[dt.getDay()] + ' ' + mons[dt.getMonth()] + ' ' + dt.getDate();
+  }
+
+  function summarizeDay(daySets) {
+    // daySets: [{ex, log}]. Group by exercise, return {sets: N, vol: kg, perEx: [...]}.
+    const byEx = {};
+    daySets.forEach(({ex, log}) => {
+      if (!byEx[ex.id]) byEx[ex.id] = { ex, sets: [], vol: 0 };
+      byEx[ex.id].sets.push(log);
+      byEx[ex.id].vol += (log.weight || 0) * (log.reps || 0);
+    });
+    const perEx = Object.values(byEx);
+    const totalSets = perEx.reduce((s, e) => s + e.sets.length, 0);
+    const totalVol = perEx.reduce((s, e) => s + e.vol, 0);
+    return { perEx, totalSets, totalVol };
+  }
+
+  function renderTodaysWorkout() {
+    const todayKey = wtDateKey(new Date());
+    const all = logsByDay();
+    const todaySets = all[todayKey] || [];
+    const sum = summarizeDay(todaySets);
+    const u = state.units;
+
+    const eyebrow = $('poTwDateLabel');
+    const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const mons = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const d = new Date();
+    eyebrow.textContent = 'TODAY · ' + dows[d.getDay()] + ', ' + mons[d.getMonth()] + ' ' + d.getDate();
+
+    $('poTwSetCount').textContent = sum.totalSets;
+    $('poTwTotalVol').textContent = Math.round(sum.totalVol).toLocaleString() + ' ' + u + ' lifted';
+
+    const list = $('poTwList');
+    const empty = $('poTwEmpty');
+    if (sum.totalSets === 0) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+      list.innerHTML = sum.perEx.map(e => {
+        const top = e.ex.bw
+          ? 'top ' + Math.max.apply(null, e.sets.map(s => s.reps)) + ' reps'
+          : 'top ' + Math.max.apply(null, e.sets.map(s => s.weight)) + u;
+        const meta = e.ex.bw
+          ? (e.sets.length + ' set' + (e.sets.length === 1 ? '' : 's') + ' · ' + top)
+          : (e.sets.length + ' set' + (e.sets.length === 1 ? '' : 's') + ' · ' + top + ' · ' + Math.round(e.vol) + u + ' total');
+        return '<li class="po-tw-row">'
+          + '<span class="po-tw-row-name">' + escape(e.ex.name) + '</span>'
+          + '<span class="po-tw-row-meta">' + meta + '</span>'
+          + '</li>';
+      }).join('');
+    }
+
+    // Done button state
+    const btn = $('poTwDoneBtn');
+    const isDone = !!doneDays[todayKey];
+    btn.textContent = isDone ? '✓ Done' : 'Mark workout done';
+    btn.classList.toggle('is-done', isDone);
+    btn.disabled = sum.totalSets === 0 && !isDone;
+    btn.style.opacity = btn.disabled ? '0.4' : '';
+  }
+
+  function renderPastWorkouts() {
+    const todayKey = wtDateKey(new Date());
+    const all = logsByDay();
+    const past = Object.entries(all)
+      .filter(([dk]) => dk !== todayKey)
+      .sort((a, b) => b[0].localeCompare(a[0]));
+    $('poTwPastCount').textContent = past.length;
+    const body = $('poTwPastBody');
+    if (!past.length) {
+      body.innerHTML = '<div class="po-tw-past-empty">No past workouts yet.</div>';
+      return;
+    }
+    const u = state.units;
+    body.innerHTML = past.slice(0, 30).map(([dk, sets]) => {
+      const sum = summarizeDay(sets);
+      const isDone = !!doneDays[dk];
+      const exNames = sum.perEx.map(e => e.ex.name).slice(0, 3).join(', ')
+        + (sum.perEx.length > 3 ? '…' : '');
+      return '<div class="po-tw-past-day">'
+        + '<div class="po-tw-past-day-h">'
+        +   '<span class="po-tw-past-day-date">' + fmtPastDate(dk) + '</span>'
+        +   '<span class="po-tw-past-day-summary">'
+        +     sum.totalSets + ' sets · ' + Math.round(sum.totalVol).toLocaleString() + ' ' + u
+        +     (isDone ? ' <span class="po-tw-past-day-done">DONE</span>' : '')
+        +   '</span>'
+        + '</div>'
+        + '<div class="po-tw-past-day-summary" style="margin-top:6px; font-size:11px; color:var(--text-3);">'
+        +   escape(exNames)
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  $('poTwDoneBtn').addEventListener('click', () => {
+    const todayKey = wtDateKey(new Date());
+    if (doneDays[todayKey]) {
+      delete doneDays[todayKey];
+    } else {
+      doneDays[todayKey] = new Date().toISOString();
+    }
+    saveDoneDays(doneDays);
+    renderTodaysWorkout();
+    renderPastWorkouts();
+  });
+  $('poTwPastToggle').addEventListener('click', () => {
+    const body = $('poTwPastBody');
+    const toggle = $('poTwPastToggle');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'flex';
+    body.style.flexDirection = 'column';
+    toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+  });
+
+  // ============================================================
+  // EVENT WIRING
+  // ============================================================
+  // Tap the day pill → opens the rotation editor so you can rename /
+  // reorder / add / delete entries (e.g. switch Push/Pull/Legs/Rest to
+  // Legs/Arms/Back/Chest). Long-press isn't a thing on web reliably so
+  // this is the only action — the day filter still auto-snaps on load.
+  $('dayPill').addEventListener('click', () => openRotationModal());
+
+  // First-load nicety: if today's split matches one of the day filters
+  // by name (case-insensitive) and the user hasn't manually picked one,
+  // pre-select that day.
+  (function autoSelectTodaySplit() {
+    const s = todaySplit();
+    if (!s.name || isRestName(s.name) || state._userPickedDay) return;
+    const match = state.days.find(d => d.name.toLowerCase() === s.name.toLowerCase());
+    if (match) state.filterDay = match.id;
+  })();
+
+  $('exSelect').addEventListener('change', e => {
+    state.currentEx = e.target.value; saveState(); renderAll();
+  });
+  $('weightDownBtn').addEventListener('click', () => {
+    const ex = getCurrentEx(); if (!ex || ex.bw) return;
+    const w = parseFloat($('weightInput').value) || 0;
+    $('weightInput').value = Math.max(0, w - (ex.step || 2.5));
+  });
+  $('weightUpBtn').addEventListener('click', () => {
+    const ex = getCurrentEx(); if (!ex || ex.bw) return;
+    const w = parseFloat($('weightInput').value) || 0;
+    $('weightInput').value = w + (ex.step || 2.5);
+  });
+  // Delegated click handler — reps row is regenerated per exercise via
+  // renderRepsRow(), so we listen on the container rather than the
+  // individual buttons.
+  $('repsRow').addEventListener('click', (e) => {
+    const p = e.target.closest('.po-reps-pill');
+    if (!p) return;
+    $('repsRow').querySelectorAll('.po-reps-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    $('repsRow').dataset.value = p.dataset.v;
+    if ($('repsInput')) $('repsInput').value = ''; // pill chosen → clear manual entry (data-value holds it)
+  });
+  if ($('repsInput')) $('repsInput').addEventListener('input', () => {
+    const v = parseInt($('repsInput').value, 10);
+    if (!(v > 0)) return;
+    $('repsRow').dataset.value = String(v);
+    $('repsRow').querySelectorAll('.po-reps-pill').forEach(x => x.classList.toggle('active', parseInt(x.dataset.v, 10) === v));
+  });
+  $('logBtn').addEventListener('click', () => {
+    const ex = getCurrentEx();
+    if (!ex) return;
+    const reps = parseInt($('repsRow').dataset.value, 10) || 0;
+    if (reps <= 0) { alert('Pick a rep count.'); return; }
+    const w = ex.bw ? 0 : (parseFloat($('weightInput').value) || 0);
+    if (!ex.bw && w <= 0) { alert('Enter a weight.'); return; }
+    const arr = state.logs[ex.id] || [];
+    arr.push({ weight: w, reps: reps, date: new Date().toISOString() });
+    state.logs[ex.id] = arr;
+    saveState(); renderAll();
+    // Strength changed → composition estimate may shift
+    renderLiftTicker();
+    // Tiny pulse on the button so the user feels the save
+    const btn = $('logBtn');
+    btn.style.transition = 'transform 0.15s';
+    btn.style.transform = 'scale(0.96)';
+    setTimeout(() => { btn.style.transform = ''; }, 160);
+  });
+
+  // ============================================================
+  // EXERCISE MODAL (add / edit)
+  // ============================================================
+  let editingExId = null;
+  let modalGym = null, modalDay = null;
+  function renderModalSegs() {
+    $('exGymSeg').innerHTML = state.gyms.map(g =>
+      '<button data-gym="' + g.id + '" class="' + (modalGym === g.id ? 'active' : '') + '">' + escape(g.name) + '</button>'
+    ).join('') + '<button data-gym="both" class="' + (modalGym === 'both' ? 'active' : '') + '">Both</button>';
+    $('exDaySeg').innerHTML = state.days.map(d =>
+      '<button data-day="' + d.id + '" class="' + (modalDay === d.id ? 'active' : '') + '">' + escape(d.name) + '</button>'
+    ).join('');
+    $('exGymSeg').querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        modalGym = b.dataset.gym;
+        $('exGymSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+      });
+    });
+    $('exDaySeg').querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        modalDay = b.dataset.day;
+        $('exDaySeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+      });
+    });
+  }
+  function openExModal(mode, ex) {
+    editingExId = mode === 'edit' ? ex.id : null;
+    $('exModalTitle').textContent = mode === 'edit' ? 'Edit exercise' : 'Add exercise';
+    $('exDelete').style.display = mode === 'edit' ? 'block' : 'none';
+    if (mode === 'edit') {
+      $('exName').value = ex.name;
+      modalGym = ex.gym;
+      modalDay = ex.day;
+      $('exBw').checked = !!ex.bw;
+      $('exStartWeight').value = ex.startWeight || 0;
+      $('exRepMin').value = ex.repMin;
+      $('exRepMax').value = ex.repMax;
+      $('exStep').value = ex.step;
+    } else {
+      $('exName').value = '';
+      modalGym = state.filterGym;
+      modalDay = state.filterDay;
+      $('exBw').checked = false;
+      $('exStartWeight').value = 20;
+      $('exRepMin').value = 6;
+      $('exRepMax').value = 8;
+      $('exStep').value = 2.5;
+    }
+    renderModalSegs();
+    toggleBwFields();
+    $('exModalBg').classList.add('show');
+    setTimeout(() => $('exName').focus(), 60);
+  }
+  function toggleBwFields() {
+    const isBw = $('exBw').checked;
+    $('exStartWeightField').style.display = isBw ? 'none' : '';
+    $('exStepField').style.display = isBw ? 'none' : '';
+  }
+  $('exBw').addEventListener('change', toggleBwFields);
+  $('addExBtn').addEventListener('click', () => openExModal('add'));
+  $('editExBtn').addEventListener('click', () => {
+    const ex = getCurrentEx();
+    if (ex) openExModal('edit', ex);
+  });
+  $('exModalCancel').addEventListener('click', () => $('exModalBg').classList.remove('show'));
+  $('exModalSave').addEventListener('click', () => {
+    const name = $('exName').value.trim();
+    if (!name) { alert('Name is required.'); return; }
+    if (!modalGym) { alert('Pick a gym.'); return; }
+    if (!modalDay) { alert('Pick a day.'); return; }
+    const isBw = $('exBw').checked;
+    const repMin = parseInt($('exRepMin').value, 10) || 6;
+    const repMax = parseInt($('exRepMax').value, 10) || 8;
+    const data = {
+      name, gym: modalGym, day: modalDay,
+      bw: isBw,
+      startWeight: isBw ? 0 : (parseFloat($('exStartWeight').value) || 0),
+      repMin, repMax,
+      step: isBw ? 1 : (parseFloat($('exStep').value) || 2.5)
+    };
+    if (editingExId) {
+      const ex = state.exercises.find(e => e.id === editingExId);
+      if (ex) Object.assign(ex, data);
+    } else {
+      const ex = Object.assign({ id: uid() }, data);
+      state.exercises.push(ex);
+      state.currentEx = ex.id;
+      state.filterGym = (modalGym === 'both') ? state.filterGym : modalGym;
+      state.filterDay = modalDay;
+    }
+    saveState();
+    $('exModalBg').classList.remove('show');
+    renderAll();
+  });
+  $('exDelete').addEventListener('click', () => {
+    if (!editingExId) return;
+    if (!confirm('Delete this exercise and all its logs?')) return;
+    state.exercises = state.exercises.filter(e => e.id !== editingExId);
+    delete state.logs[editingExId];
+    if (state.currentEx === editingExId) state.currentEx = null;
+    editingExId = null;
+    saveState();
+    $('exModalBg').classList.remove('show');
+    renderAll();
+  });
+
+  // ============================================================
+  // ROTATION EDITOR (tap the day pill)
+  // Edit the split cycle in place: rename, reorder, add, delete.
+  // "Today is →" jumps the cycle anchor to any entry, so you can change
+  // both the order AND which day in that order is "today".
+  // ============================================================
+  let rotDraft = null;          // working copy while modal is open
+  let rotDraftTodayIdx = 0;     // which entry IS today in the draft
+
+  function openRotationModal() {
+    rotDraft = (state.splitRotation || []).slice();
+    if (!rotDraft.length) rotDraft = ['Push', 'Pull', 'Legs', 'Rest'];
+    rotDraftTodayIdx = todaySplit().index;
+    if (rotDraftTodayIdx >= rotDraft.length) rotDraftTodayIdx = 0;
+    renderRotList();
+    $('rotModalBg').classList.add('show');
+  }
+
+  function renderRotList() {
+    const list = $('rotList');
+    list.innerHTML = rotDraft.map((name, i) => {
+      const isToday = (i === rotDraftTodayIdx);
+      return '<div class="rot-row ' + (isToday ? 'is-today' : '') + '" data-i="' + i + '">'
+        + '<span class="rot-row-num">' + (i + 1) + '</span>'
+        + '<input type="text" value="' + escape(name) + '" placeholder="e.g. Arms" maxlength="30">'
+        + (isToday
+            ? '<span class="rot-today-tag">TODAY</span>'
+            : '<button type="button" class="rot-today-btn" data-action="today">Today is →</button>')
+        + '<button type="button" class="rot-mini" data-action="up"   aria-label="Move up">↑</button>'
+        + '<button type="button" class="rot-mini" data-action="down" aria-label="Move down">↓</button>'
+        + '<button type="button" class="rot-mini rot-mini-del" data-action="del" aria-label="Delete">×</button>'
+        + '</div>';
+    }).join('');
+    list.querySelectorAll('.rot-row').forEach(row => {
+      const i = parseInt(row.dataset.i, 10);
+      row.querySelector('input').addEventListener('input', e => { rotDraft[i] = e.target.value; });
+      const upBtn = row.querySelector('[data-action="up"]');
+      const dnBtn = row.querySelector('[data-action="down"]');
+      const delBtn = row.querySelector('[data-action="del"]');
+      const todayBtn = row.querySelector('[data-action="today"]');
+      if (upBtn) upBtn.addEventListener('click', () => {
+        if (i === 0) return;
+        [rotDraft[i-1], rotDraft[i]] = [rotDraft[i], rotDraft[i-1]];
+        if (rotDraftTodayIdx === i)   rotDraftTodayIdx = i - 1;
+        else if (rotDraftTodayIdx === i - 1) rotDraftTodayIdx = i;
+        renderRotList();
+      });
+      if (dnBtn) dnBtn.addEventListener('click', () => {
+        if (i >= rotDraft.length - 1) return;
+        [rotDraft[i+1], rotDraft[i]] = [rotDraft[i], rotDraft[i+1]];
+        if (rotDraftTodayIdx === i)   rotDraftTodayIdx = i + 1;
+        else if (rotDraftTodayIdx === i + 1) rotDraftTodayIdx = i;
+        renderRotList();
+      });
+      if (delBtn) delBtn.addEventListener('click', () => {
+        if (rotDraft.length <= 1) { alert('Need at least one day in the cycle.'); return; }
+        rotDraft.splice(i, 1);
+        if (rotDraftTodayIdx >= rotDraft.length) rotDraftTodayIdx = rotDraft.length - 1;
+        else if (i < rotDraftTodayIdx) rotDraftTodayIdx--;
+        renderRotList();
+      });
+      if (todayBtn) todayBtn.addEventListener('click', () => {
+        rotDraftTodayIdx = i;
+        renderRotList();
+      });
+    });
+  }
+
+  $('rotAddBtn').addEventListener('click', () => {
+    rotDraft.push('New day');
+    renderRotList();
+    // Focus the newly added input
+    setTimeout(() => {
+      const inputs = $('rotList').querySelectorAll('input');
+      const last = inputs[inputs.length - 1];
+      if (last) { last.focus(); last.select(); }
+    }, 30);
+  });
+  $('rotCancel').addEventListener('click', () => {
+    $('rotModalBg').classList.remove('show');
+    rotDraft = null;
+  });
+  $('rotSave').addEventListener('click', () => {
+    // Trim + drop empty entries
+    const cleaned = rotDraft.map(s => (s || '').trim()).filter(Boolean);
+    if (!cleaned.length) { alert('Need at least one day in the cycle.'); return; }
+    let newTodayIdx = rotDraftTodayIdx;
+    if (newTodayIdx >= cleaned.length) newTodayIdx = 0;
+    state.splitRotation = cleaned;
+    state.splitAnchor = {
+      date: new Date().toISOString().slice(0, 10),
+      index: newTodayIdx
+    };
+    saveState();
+    $('rotModalBg').classList.remove('show');
+    rotDraft = null;
+    renderAll();
+  });
+
+  // ============================================================
+  // SETTINGS MODAL (gyms, days, units, data)
+  // ============================================================
+  function renderSettings() {
+    $('setUnitsSeg').querySelectorAll('button').forEach(b => {
+      b.classList.toggle('active', b.dataset.u === state.units);
+    });
+    $('setGyms').innerHTML = state.gyms.map((g, i) =>
+      '<div class="po-set-row" data-i="' + i + '">'
+      + '<input type="text" value="' + escape(g.name) + '" data-field="name" placeholder="Gym name">'
+      + '<button class="po-mini-btn" data-action="del" aria-label="Delete">×</button>'
+      + '</div>'
+    ).join('');
+    $('setDays').innerHTML = state.days.map((d, i) =>
+      '<div class="po-set-row" data-i="' + i + '">'
+      + '<input type="text" value="' + escape(d.name) + '" data-field="name" placeholder="Day name">'
+      + '<button class="po-mini-btn" data-action="del" aria-label="Delete">×</button>'
+      + '</div>'
+    ).join('');
+    $('setGyms').querySelectorAll('.po-set-row').forEach(row => {
+      const i = parseInt(row.dataset.i, 10);
+      row.querySelector('input').addEventListener('input', e => {
+        state.gyms[i].name = e.target.value;
+        saveState();
+      });
+      row.querySelector('[data-action="del"]').addEventListener('click', () => {
+        if (state.gyms.length <= 1) { alert('You need at least one gym.'); return; }
+        if (!confirm('Remove "' + state.gyms[i].name + '"? Exercises tagged to this gym will become invisible until you reassign them.')) return;
+        state.gyms.splice(i, 1);
+        if (!state.gyms.find(g => g.id === state.filterGym)) state.filterGym = state.gyms[0].id;
+        saveState(); renderSettings(); renderAll();
+      });
+    });
+    $('setDays').querySelectorAll('.po-set-row').forEach(row => {
+      const i = parseInt(row.dataset.i, 10);
+      row.querySelector('input').addEventListener('input', e => {
+        state.days[i].name = e.target.value;
+        saveState();
+      });
+      row.querySelector('[data-action="del"]').addEventListener('click', () => {
+        if (state.days.length <= 1) { alert('You need at least one day.'); return; }
+        if (!confirm('Remove "' + state.days[i].name + '"?')) return;
+        state.days.splice(i, 1);
+        if (!state.days.find(d => d.id === state.filterDay)) state.filterDay = state.days[0].id;
+        saveState(); renderSettings(); renderAll();
+      });
+    });
+  }
+  $('settingsBtn').addEventListener('click', () => {
+    renderSettings();
+    const su = $('setSupaUrl'), sk = $('setSupaKey'), ss = $('setSupaStatus');
+    if (su) su.value = localStorage.getItem('po_supabase_url') || '';
+    if (sk) sk.value = localStorage.getItem('po_supabase_key') || '';
+    const isCloud = !!(localStorage.getItem('po_supabase_url') || (window.PatronDB && PatronDB.isCloud && PatronDB.isCloud()));
+    if (ss) ss.textContent = isCloud ? '✓ Synced to your Supabase project.' : 'Local-only — data stays on this device.';
+    const pullBtn = $('setSupaPull');
+    if (pullBtn) pullBtn.style.display = isCloud ? '' : 'none';
+    $('setModalBg').classList.add('show');
+  });
+  if ($('setSupaSave')) $('setSupaSave').addEventListener('click', () => {
+    const u = ($('setSupaUrl').value || '').trim(), k = ($('setSupaKey').value || '').trim();
+    if (u && k) { localStorage.setItem('po_supabase_url', u); localStorage.setItem('po_supabase_key', k); }
+    else { localStorage.removeItem('po_supabase_url'); localStorage.removeItem('po_supabase_key'); }
+    location.reload(); // re-read the keys and (re)connect sync
+  });
+  if ($('setSupaClear')) $('setSupaClear').addEventListener('click', () => {
+    localStorage.removeItem('po_supabase_url'); localStorage.removeItem('po_supabase_key');
+    location.reload();
+  });
+  if ($('setSupaPull')) $('setSupaPull').addEventListener('click', async () => {
+    const btn = $('setSupaPull');
+    const ss = $('setSupaStatus');
+    btn.textContent = 'Pulling…'; btn.disabled = true;
+    try {
+      // Pull from both sync systems — per-page (po-coach) takes priority for gym data
+      let gotData = false;
+      if (window.pcSupa) {
+        const { data } = await pcSupa.from('app_state').select('data').eq('key', 'po-coach').maybeSingle();
+        if (data && data.data && Object.keys(data.data).length > 0) {
+          pcApplyRemoteState(data.data);
+          gotData = true;
+        }
+      }
+      if (!gotData && window.PatronDB) {
+        const r = await PatronDB.pullAll();
+        if (r.ok) gotData = true;
+      }
+      if (gotData) {
+        if (ss) ss.textContent = '✓ Pulled latest data — reloading…';
+        setTimeout(() => location.reload(), 800);
+      } else {
+        if (ss) ss.textContent = 'Nothing to pull — already up to date.';
+        btn.textContent = '⬇ Pull from cloud'; btn.disabled = false;
+      }
+    } catch (e) {
+      if (ss) ss.textContent = 'Pull failed — check your connection.';
+      btn.textContent = '⬇ Pull from cloud'; btn.disabled = false;
+    }
+  });
+  $('setModalClose').addEventListener('click', () => {
+    $('setModalBg').classList.remove('show');
+    renderAll();
+  });
+  $('setUnitsSeg').querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      state.units = b.dataset.u; saveState();
+      $('setUnitsSeg').querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderLiftTicker();
+    });
+  });
+  $('setAddGym').addEventListener('click', () => {
+    const name = (prompt('New gym name:') || '').trim();
+    if (!name) return;
+    const id = 'g_' + Date.now();
+    state.gyms.push({ id, name });
+    saveState(); renderSettings(); renderAll();
+  });
+  $('setAddDay').addEventListener('click', () => {
+    const name = (prompt('New day name:') || '').trim();
+    if (!name) return;
+    const id = 'd_' + Date.now();
+    state.days.push({ id, name });
+    saveState(); renderSettings(); renderAll();
+  });
+
+  // Export / Import / Reset
+  $('setExport').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'po-coach-data-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click(); URL.revokeObjectURL(url);
+  });
+  $('setImport').addEventListener('click', () => $('setImportFile').click());
+  $('setImportFile').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (!confirm('Replace ALL current data with the imported file? This cannot be undone.')) return;
+        state = normalize(parsed);
+        saveState(); renderSettings(); renderAll();
+      } catch (err) { alert('Import failed: ' + err.message); }
+    };
+    reader.readAsText(file);
+  });
+  $('setReset').addEventListener('click', () => {
+    if (!confirm('Delete EVERYTHING (logs, edits, gyms, days)? This cannot be undone.')) return;
+    localStorage.removeItem(LS_KEY);
+    state = loadState();
+    $('setModalBg').classList.remove('show');
+    renderAll();
+  });
+
+  function escape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ============================================================
+  // LIFT TICKER — real PR history from po_coach_v1
+  // ============================================================
+  function computeLiftPRs() {
+    try {
+      const raw = localStorage.getItem('po_coach_v1');
+      if (!raw) return [];
+      const gs = JSON.parse(raw);
+      if (!gs || !gs.exercises || !gs.logs) return [];
+      const results = [];
+      for (const ex of gs.exercises) {
+        const all = (gs.logs[ex.id] || []).filter(l => l && l.dateKey);
+        if (all.length < 2) continue;
+        all.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+        const lastKey = all[all.length - 1].dateKey;
+        const recent = all.filter(l => l.dateKey === lastKey);
+        const prior = all.filter(l => l.dateKey !== lastKey);
+        if (!prior.length) continue;
+        const scoreOf = l => (l.weight || 0) * 100 + (l.reps || 0);
+        const bestR = recent.reduce((b, l) => scoreOf(l) > scoreOf(b) ? l : b, recent[0]);
+        const bestP = prior.reduce((b, l) => scoreOf(l) > scoreOf(b) ? l : b, prior[0]);
+        const u = gs.units || state.units || 'kg';
+        if (!ex.bw) {
+          if (bestR.weight > bestP.weight) results.push({ name: ex.name, kind: 'pr_weight', curW: bestR.weight, prvW: bestP.weight, curR: bestR.reps, u });
+          else if (bestR.weight === bestP.weight && bestR.reps > bestP.reps) results.push({ name: ex.name, kind: 'pr_reps', curW: bestR.weight, curR: bestR.reps, prvR: bestP.reps, u });
+          else if (bestR.weight < bestP.weight) results.push({ name: ex.name, kind: 'reg_weight', curW: bestR.weight, prvW: bestP.weight, curR: bestR.reps, u });
+        } else {
+          if (bestR.reps > bestP.reps) results.push({ name: ex.name, kind: 'pr_reps', curR: bestR.reps, prvR: bestP.reps });
+          else if (bestR.reps < bestP.reps) results.push({ name: ex.name, kind: 'reg_reps', curR: bestR.reps, prvR: bestP.reps });
+        }
+      }
+      return results;
+    } catch(e) { return []; }
+  }
+
+  function renderLiftTicker() {
+    const ticker = document.getElementById('lftTicker');
+    const track = document.getElementById('lftTrack');
+    if (!ticker || !track) return;
+    const lifts = computeLiftPRs();
+    if (!lifts.length) { ticker.style.display = 'none'; return; }
+    ticker.style.display = 'flex';
+    function itemHtml(l) {
+      const up = l.kind === 'pr_weight' || l.kind === 'pr_reps';
+      const arrow = up ? '↑' : '↓';
+      const cls = up ? 'lft-arrow-up' : 'lft-arrow-down';
+      let body;
+      if (l.kind === 'pr_weight' || l.kind === 'reg_weight') {
+        body = (l.prvW||0).toFixed(1) + ' → <strong>' + (l.curW||0).toFixed(1) + '</strong> ' + (l.u||'kg');
+      } else {
+        body = (l.prvR||0) + ' → <strong>' + (l.curR||0) + '</strong> reps' + (l.curW != null ? ' @ ' + (l.curW).toFixed(1) + ' ' + (l.u||'kg') : '');
+      }
+      return '<span class="lft-item"><span class="' + cls + '">' + arrow + '</span><span class="lft-name">' + escape(l.name) + '</span><span class="lft-sep">·</span><span class="lft-body">' + body + '</span></span>';
+    }
+    const seq = lifts.map(itemHtml).join('');
+    track.innerHTML = seq + seq;
+  }
+
+  // ============================================================
+  // BOOT
+  // ============================================================
+  renderAll();
+  renderLiftTicker();
+
+  // ============================================================
+  // CLOUD SYNC via Supabase  (OPTIONAL — leave blank for local-only)
+  // ------------------------------------------------------------
+  // Stores your gym state as one JSONB row in the public.app_state
+  // table, keyed by APP_KEY. Supabase's realtime channel pushes
+  // changes to every device the instant they happen.
+  //
+  // SETUP (5 minutes, all in a browser):
+  //   1. Make a free account at https://supabase.com
+  //   2. Create a new project
+  //   3. In your project: Settings → API → copy your Project URL +
+  //      "Publishable" key (the one starting with `sb_publishable_`)
+  //   4. Paste them below, replacing the two placeholder strings
+  //   5. Open the SQL Editor and run the SQL block from README.md
+  //
+  // If you leave the placeholders unchanged the app still works,
+  // just only on this device (data stays in your browser).
+  // ============================================================
+  // Supabase keys come from localStorage (pasted in Settings) or, if blank, from
+  // PatronDB which loads them from /api/config (Vercel env vars). No keys in code.
+  const SUPABASE_URL = ((localStorage.getItem('po_supabase_url') || '').trim()) || ((window.PatronDB && PatronDB.cfgUrl && PatronDB.cfgUrl()) || '');
+  const SUPABASE_KEY = ((localStorage.getItem('po_supabase_key') || '').trim()) || ((window.PatronDB && PatronDB.cfgKey && PatronDB.cfgKey()) || '');
+  const APP_KEY = 'po-coach';
+  const PC_SYNCED_KEYS = ['po_coach_v1', 'po_coach_workout_done'];
+
+  let pcSupa = null;
+  let pcPushTimer = null;
+  let pcSuppressSync = false;
+  let pcPendingRemote = null;
+  // JSON of the last state we sent or received — used to ignore
+  // realtime echoes of our own pushes so we don't infinite-loop.
+  let pcLastSyncedJson = null;
+
+  const _pcOrigSet = localStorage.setItem.bind(localStorage);
+  const _pcOrigRemove = localStorage.removeItem.bind(localStorage);
+  // Wrap setItem/removeItem so a sync-side error can NEVER prevent the
+  // underlying write from happening. The original call always runs;
+  // any error in the sync scheduling is swallowed.
+  localStorage.setItem = function(k, v) {
+    _pcOrigSet(k, v);
+    try {
+      if (!pcSuppressSync && PC_SYNCED_KEYS.indexOf(k) !== -1) pcSchedulePush();
+    } catch (e) {}
+  };
+  localStorage.removeItem = function(k) {
+    _pcOrigRemove(k);
+    try {
+      if (!pcSuppressSync && PC_SYNCED_KEYS.indexOf(k) !== -1) pcSchedulePush();
+    } catch (e) {}
+  };
+
+  function pcCollectState() {
+    const out = {};
+    for (const k of PC_SYNCED_KEYS) {
+      const v = localStorage.getItem(k);
+      if (v == null) continue;
+      try { out[k] = JSON.parse(v); } catch {}
+    }
+    return out;
+  }
+
+  function pcIsUserEditing() {
+    const ae = document.activeElement;
+    if (!ae) return false;
+    const tag = ae.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (ae.getAttribute && ae.getAttribute('contenteditable') === 'true') return true;
+    return false;
+  }
+
+  function pcRerender() {
+    try { state = loadState(); } catch {}
+    try { renderAll(); } catch {}
+    try { renderLiftTicker(); } catch {}
+  }
+
+  // Merge po_coach_v1 logs from two JSON strings — keeps every unique set entry
+  // from both sides so the po-coach row never overwrites locally-logged workouts.
+  function pcMergeGymLogs(localStr, remoteObj) {
+    try {
+      const local = JSON.parse(localStr);
+      const remote = typeof remoteObj === 'string' ? JSON.parse(remoteObj) : remoteObj;
+      if (!local || !remote) return JSON.stringify(remote || local);
+      const merged = Object.assign({}, remote);
+      merged.logs = Object.assign({}, remote.logs || {});
+      const ll = local.logs || {};
+      for (const exId in ll) {
+        if (!merged.logs[exId]) { merged.logs[exId] = ll[exId]; continue; }
+        const remoteDates = new Set((merged.logs[exId] || []).map(e => e.date));
+        const extra = (ll[exId] || []).filter(e => !remoteDates.has(e.date));
+        if (extra.length) {
+          merged.logs[exId] = [...merged.logs[exId], ...extra]
+            .sort((a, b) => a.date < b.date ? -1 : 1);
+        }
+      }
+      return JSON.stringify(merged);
+    } catch (_) { return JSON.stringify(remoteObj); }
+  }
+
+  function pcApplyRemoteState(remote) {
+    if (!remote || typeof remote !== 'object') return false;
+    pcSuppressSync = true;
+    let changed = false;
+    try {
+      for (const k of PC_SYNCED_KEYS) {
+        if (k in remote) {
+          const local = localStorage.getItem(k);
+          let incoming;
+          // Merge workout logs instead of overwriting — prevents the po-coach row
+          // from erasing workouts that db.js just merged in from patron-device-snapshot.
+          if (k === 'po_coach_v1' && local) {
+            incoming = pcMergeGymLogs(local, remote[k]);
+          } else if (k === 'po_coach_workout_done' && local) {
+            try {
+              const merged = Object.assign({}, JSON.parse(local), remote[k]);
+              incoming = JSON.stringify(merged);
+            } catch (_) { incoming = JSON.stringify(remote[k]); }
+          } else {
+            incoming = JSON.stringify(remote[k]);
+          }
+          if (local !== incoming) { try { _pcOrigSet(k, incoming); changed = true; } catch {} }
+        } else if (localStorage.getItem(k) != null) {
+          try { _pcOrigRemove(k); changed = true; } catch {}
+        }
+      }
+    } finally {
+      pcSuppressSync = false;
+    }
+    if (changed) { try { pcRerender(); } catch (e) {} }
+    return changed;
+  }
+
+  function pcMaybeApplyRemote(remote) {
+    if (pcIsUserEditing()) { pcPendingRemote = remote; return; }
+    pcApplyRemoteState(remote);
+  }
+
+  function pcApplyPendingIfReady() {
+    if (pcPendingRemote && !pcIsUserEditing()) {
+      const r = pcPendingRemote;
+      pcPendingRemote = null;
+      pcApplyRemoteState(r);
+    }
+  }
+
+  async function pcPushNow() {
+    if (!pcSupa) return;
+    const state = pcCollectState();
+    const json = JSON.stringify(state);
+    if (json === pcLastSyncedJson) return;
+    try {
+      const { error } = await pcSupa
+        .from('app_state')
+        .upsert(
+          { key: APP_KEY, data: state, updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+      if (!error) pcLastSyncedJson = json;
+    } catch (_) {}
+  }
+
+  function pcSchedulePush() {
+    if (pcSuppressSync) return;
+    clearTimeout(pcPushTimer);
+    pcPushTimer = setTimeout(pcPushNow, 250);
+  }
+
+  // Backup push on unload via fetch keepalive so a fast refresh
+  // doesn't lose the latest change before the debounced push fires.
+  function pcFlushPushOnUnload() {
+    if (!pcSupa) return;
+    const state = pcCollectState();
+    const json = JSON.stringify(state);
+    if (json === pcLastSyncedJson) return;
+    try {
+      fetch(SUPABASE_URL + '/rest/v1/app_state?on_conflict=key', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({ key: APP_KEY, data: state, updated_at: new Date().toISOString() }),
+        keepalive: true,
+      }).catch(() => {});
+      pcLastSyncedJson = json;
+    } catch (_) {}
+  }
+
+  // Initial sync: connect Supabase, pull current state, subscribe to
+  // realtime updates so other devices' changes appear instantly.
+  (async function pcInitCloudSync() {
+    if (!window.supabase || !SUPABASE_URL || !SUPABASE_KEY) return;
+    // Skip if the placeholder values are still in place (local-only mode)
+    if (SUPABASE_URL.indexOf('PASTE-') === 0 || SUPABASE_KEY.indexOf('PASTE-') === 0) return;
+    // PatronDB (db.js) already handles whole-device sync including gym data via
+    // the patron-device-snapshot row. Running this per-page sync in parallel
+    // causes the po-coach row to overwrite workouts that db.js just merged in.
+    // Defer to PatronDB when it is active — it covers everything this does.
+    if (window.PatronDB && PatronDB.isCloud && PatronDB.isCloud()) return;
+    pcSupa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    try {
+      const { data, error } = await pcSupa
+        .from('app_state').select('data').eq('key', APP_KEY).maybeSingle();
+      if (!error && data && data.data && Object.keys(data.data).length > 0) {
+        pcLastSyncedJson = JSON.stringify(data.data);
+        pcMaybeApplyRemote(data.data);
+      } else if (Object.keys(pcCollectState()).length > 0) {
+        pcSchedulePush();
+      }
+    } catch (_) {}
+    pcSupa.channel('app_state_' + APP_KEY)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'app_state',
+        filter: 'key=eq.' + APP_KEY,
+      }, (payload) => {
+        if (!payload.new || !payload.new.data) return;
+        const incoming = JSON.stringify(payload.new.data);
+        if (incoming === pcLastSyncedJson) return; // echo of our own push
+        pcLastSyncedJson = incoming;
+        pcMaybeApplyRemote(payload.new.data);
+      })
+      .subscribe();
+  })();
+
+  document.addEventListener('focusout', () => {
+    setTimeout(pcApplyPendingIfReady, 0);
+  }, true);
+  window.addEventListener('pagehide', pcFlushPushOnUnload);
+  window.addEventListener('beforeunload', pcFlushPushOnUnload);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pcFlushPushOnUnload();
+  });
+})();
+</script>
+
+<!-- Activities JS -->
+<script>
+(function(){
+  'use strict';
+  const ACTS_KEY='acts_standalone_v1';
+  const ACT_CFG={cycling:{icon:'🚴',label:'Cycling',rate:1.5},swimming:{icon:'🏊',label:'Swimming',rate:1.6},walking:{icon:'🚶',label:'Walking',rate:1.0},basketball:{icon:'🏀',label:'Basketball',rate:1.8}};
+  const INTEN={light:{label:'Light',mult:0.6},moderate:{label:'Moderate',mult:1.0},hard:{label:'Hard',mult:1.4}};
+
+  function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function loadAll(){ try{ return JSON.parse(localStorage.getItem(ACTS_KEY))||[]; }catch(e){ return []; } }
+  function saveAll(l){ localStorage.setItem(ACTS_KEY,JSON.stringify(l)); }
+  function todaysEntries(){ return loadAll().filter(e=>e.dateKey===todayKey()); }
+  function sessionPts(act,inten,min){ const c=ACT_CFG[act],i=INTEN[inten]; return(c&&i&&min>0)?Math.round(min*c.rate*i.mult):0; }
+  function dailyScore(entries){ return Math.min(100,entries.reduce((s,e)=>s+e.pts,0)); }
+  function scoreColor(v){ return v>=80?'#00FF88':v>=50?'#FFB930':'#FF4060'; }
+
+  function renderActs(){
+    const entries=todaysEntries(), score=dailyScore(entries);
+    const fill=document.getElementById('actsRingFill');
+    if(fill){ const C=2*Math.PI*40; fill.style.strokeDasharray=C; fill.style.strokeDashoffset=C*(1-score/100); fill.style.stroke=scoreColor(score); }
+    const numEl=document.getElementById('actsRingNum'); if(numEl) numEl.textContent=score;
+    const msg=document.getElementById('actsScoreMsg');
+    if(msg){
+      if(score===0) msg.textContent='Log an activity to start your day';
+      else if(score>=100) msg.textContent='🏆 Perfect day — you maxed your score!';
+      else if(score>=80) msg.textContent='Outstanding! Almost at 100.';
+      else if(score>=50) msg.textContent='Good session — keep it going.';
+      else msg.textContent=score+'/100 — plenty of room left today.';
+    }
+    const list=document.getElementById('actsList'); if(!list) return;
+    if(!entries.length){ list.innerHTML='<div class="actsLogEmpty">No activities logged yet today.</div>'; return; }
+    const ul=document.createElement('div'); ul.className='actsLogList';
+    entries.slice().reverse().forEach(e=>{
+      const cfg=ACT_CFG[e.activity]||{icon:'🏃',label:e.activity};
+      const row=document.createElement('div'); row.className='actsLogRow';
+      row.innerHTML='<span class="actsLogIcon">'+cfg.icon+'</span>'
+        +'<div class="actsLogMain"><div class="actsLogName">'+cfg.label+'</div>'
+        +'<div class="actsLogMeta">'+(INTEN[e.intensity]||{label:e.intensity}).label+' · '+e.minutes+' min</div></div>'
+        +'<span class="actsLogPts">+'+e.pts+'</span>'
+        +'<button class="actsLogDel" data-id="'+e.id+'" type="button" aria-label="Delete">×</button>';
+      ul.appendChild(row);
+    });
+    list.innerHTML=''; list.appendChild(ul);
+  }
+
+  document.addEventListener('click',function(ev){
+    var del=ev.target.closest('.actsLogDel');
+    if(del){ var id=del.getAttribute('data-id'); saveAll(loadAll().filter(e=>e.id!==id)); renderActs(); return; }
+    if(ev.target.id==='actsAddBtn'){
+      var act=document.getElementById('actsActivity').value;
+      var inten=document.getElementById('actsIntensity').value;
+      var min=parseInt(document.getElementById('actsMinutes').value,10);
+      if(!act||!inten||!(min>0)){ alert('Enter duration in minutes.'); return; }
+      var pts=sessionPts(act,inten,min);
+      var all=loadAll(); all.push({id:'a'+Date.now(),dateKey:todayKey(),activity:act,intensity:inten,minutes:min,pts:pts});
+      saveAll(all); document.getElementById('actsMinutes').value=''; renderActs();
+    }
+  });
+
+  window.actsRender=renderActs;
+  renderActs();
+})();
+</script>
+
+<script>(function(){function cur(){try{return localStorage.getItem("patron_theme")||"aurora";}catch(e){return "aurora";}}function paint(){var c=cur();document.querySelectorAll(".themeBtn").forEach(function(b){b.classList.toggle("themeBtnActive",b.dataset.theme===c);});}document.addEventListener("click",function(e){var b=e.target.closest(".themeBtn");if(!b)return;var n=b.dataset.theme;document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("patron_theme",n);}catch(e){}paint();});paint();})();</script>
+<script>
+(function(){
+  var css=[
+    'body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;',
+    'background-image:linear-gradient(rgba(255,255,255,0.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.024) 1px,transparent 1px);',
+    'background-size:44px 44px;}',
+    '[data-theme="daylight"] body::before{background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);}',
+    '#suiteBar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:max(11px,env(safe-area-inset-top)) 16px 11px;',
+    'background:rgba(8,8,8,0.90);border-bottom:1px solid rgba(255,255,255,0.07);',
+    'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}',
+    '[data-theme="daylight"] #suiteBar{background:rgba(242,241,250,0.93);}',
+    '[data-theme="aurora"] #suiteBar{background:rgba(6,8,18,0.92);}',
+    '.stLogo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-1,#F3F2F8);flex-shrink:0;}',
+    '.stLogoIcon{width:26px;height:26px;border-radius:8px;flex-shrink:0;',
+    'background:linear-gradient(135deg,var(--brand,#00FF88),var(--brand-2,#00CC6A));',
+    'display:flex;align-items:center;justify-content:center;',
+    'box-shadow:0 0 12px var(--brand-glow,rgba(0,255,136,0.30));}',
+    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.3px;}',
+    '.stTabBar{display:flex;align-items:center;gap:2px;flex:1;justify-content:center;}',
+    '.stTab{appearance:none;border:0;background:transparent;color:rgba(243,242,248,0.42);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;transition:background 180ms,color 180ms;white-space:nowrap;}',
+    '.stTab.stTabOn{background:var(--brand-soft,rgba(0,255,136,0.09));color:var(--brand,#00FF88);}',
+    '.stBack{display:inline-flex;align-items:center;gap:5px;padding:6px 11px 6px 8px;border-radius:999px;flex-shrink:0;',
+    'background:var(--brand-soft,rgba(0,255,136,0.09));border:1px solid var(--brand-line,rgba(0,255,136,0.22));',
+    'color:var(--brand,#00FF88);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;',
+    'text-decoration:none;transition:background 180ms ease;white-space:nowrap;}',
+    '.stBack:hover{background:rgba(0,255,136,0.16);}'
+  ].join('');
+  var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+  var svg='<svg width="12" height="12" viewBox="0 0 24 24" fill="#000"><path d="M12 1.5L13.8 10.2 22.5 12 13.8 13.8 12 22.5 10.2 13.8 1.5 12 10.2 10.2Z"/></svg>';
+  var bar=document.createElement('div'); bar.id='suiteBar';
+  bar.innerHTML='<a class="stLogo" href="index.html"><div class="stLogoIcon">'+svg+'</div><span class="stLogoName">Wayne Mode</span></a>'
+    +'<div class="stTabBar">'
+    +'<button class="stTab stTabOn" data-tab="gym">Gym</button>'
+    +'<button class="stTab" data-tab="acts">Activities</button>'
+    +'</div>'
+    +'<a class="stBack" href="index.html">← Home</a>';
+  document.body.insertBefore(bar,document.body.firstChild);
+
+  var gymPanel=document.querySelector('.po-shell');
+  var actsPanel=document.getElementById('actsPanel');
+
+  bar.querySelectorAll('.stTab').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=btn.dataset.tab;
+      bar.querySelectorAll('.stTab').forEach(function(b){b.classList.remove('stTabOn');});
+      btn.classList.add('stTabOn');
+      if(gymPanel) gymPanel.style.display=t==='gym'?'':'none';
+      if(actsPanel) actsPanel.style.display=t==='acts'?'block':'none';
+      if(t==='acts'&&window.actsRender) window.actsRender();
+      try{localStorage.setItem('sports_tab',t);}catch(e){}
+    });
+  });
+
+  var lastTab='gym';
+  try{lastTab=localStorage.getItem('sports_tab')||'gym';}catch(e){}
+  if(lastTab==='acts'){var b=bar.querySelector('[data-tab="acts"]');if(b)b.click();}
+})();
+</script></body>
+</html>
