@@ -1454,7 +1454,7 @@ body::after {
   }
 
   // ---------- Row building ----------
-  function makeInlineEdit(textEl, goals, idx, key, reload) {
+  function makeInlineEdit(textEl, goals, idx, keyFn, reload) {
     textEl.addEventListener('click', () => {
       if (textEl.getAttribute('contenteditable') === 'true') return;
       const original = textEl.textContent;
@@ -1470,6 +1470,7 @@ body::after {
         const next = textEl.textContent.trim();
         textEl.removeAttribute('contenteditable');
         if (next && next !== original) {
+          const key = keyFn();
           const list = getGoals(key);
           if (list[idx]) { list[idx].text = next; setGoals(key, list); }
           reload();
@@ -1489,7 +1490,7 @@ body::after {
     });
   }
 
-  function wireDragReorder(row, listEl, key, reload) {
+  function wireDragReorder(row, listEl, keyFn, reload) {
     row.setAttribute('draggable', 'true');
     row.addEventListener('dragstart', (e) => {
       e.dataTransfer.effectAllowed = 'move';
@@ -1506,6 +1507,7 @@ body::after {
       const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
       const to   = parseInt(row.dataset.idx, 10);
       if (isNaN(from) || isNaN(to) || from === to) return;
+      const key = keyFn();
       const list = getGoals(key);
       const [moved] = list.splice(from, 1);
       list.splice(to, 0, moved);
@@ -1514,7 +1516,7 @@ body::after {
     });
   }
 
-  function buildGoalRow(goal, idx, key, readOnly, reload) {
+  function buildGoalRow(goal, idx, keyFn, readOnly, reload) {
     const li = document.createElement('li');
     li.className = 'gm-row';
     li.dataset.idx = String(idx);
@@ -1532,6 +1534,7 @@ body::after {
     cb.checked = !!goal.done;
     if (readOnly) { cb.disabled = true; cb.title = 'Activates at 6 AM tomorrow'; }
     cb.addEventListener('change', () => {
+      const key = keyFn();
       const list = getGoals(key);
       if (!list[idx]) return;
       list[idx].done = cb.checked;
@@ -1546,7 +1549,7 @@ body::after {
     text.className = 'gm-text';
     text.textContent = goal.text;
     li.appendChild(text);
-    makeInlineEdit(text, null, idx, key, reload);
+    makeInlineEdit(text, null, idx, keyFn, reload);
 
     const queueBtn = document.createElement('button');
     queueBtn.type = 'button';
@@ -1555,6 +1558,7 @@ body::after {
     queueBtn.title = 'Queue for productivity window';
     if (readOnly) queueBtn.disabled = true;
     queueBtn.addEventListener('click', () => {
+      const key = keyFn();
       const list = getGoals(key);
       if (!list[idx]) return;
       list[idx].queued = !list[idx].queued;
@@ -1570,6 +1574,7 @@ body::after {
     del.setAttribute('aria-label', 'Delete goal');
     del.textContent = '×';
     del.addEventListener('click', () => {
+      const key = keyFn();
       const list = getGoals(key);
       list.splice(idx, 1);
       setGoals(key, list);
@@ -1577,7 +1582,7 @@ body::after {
     });
     li.appendChild(del);
 
-    wireDragReorder(li, null, key, reload);
+    wireDragReorder(li, null, keyFn, reload);
     return li;
   }
 
@@ -1624,13 +1629,14 @@ body::after {
       'Plan tomorrow — ' + formatDate(getTomorrowDateString());
   }
 
-  function renderListInto(goals, listEl, emptyEl, key, readOnly) {
+  function renderListInto(goals, listEl, emptyEl, isToday, readOnly) {
     listEl.innerHTML = '';
     emptyEl.style.display = goals.length === 0 ? 'block' : 'none';
-    const reload = () => (key === todayKey() ? loadToday() : loadTomorrow());
+    const keyFn = isToday ? todayKey : tomorrowKey;
+    const reload = () => (isToday ? loadToday() : loadTomorrow());
 
     const visible = goals.length > 5 ? goals.slice(0, 5) : goals;
-    visible.forEach((g, i) => listEl.appendChild(buildGoalRow(g, i, key, readOnly, reload)));
+    visible.forEach((g, i) => listEl.appendChild(buildGoalRow(g, i, keyFn, readOnly, reload)));
 
     if (goals.length > 5) {
       let expanded = false;
@@ -1645,7 +1651,7 @@ body::after {
         expanded = !expanded;
         if (expanded) {
           goals.slice(5).forEach((g, i) => {
-            const row = buildGoalRow(g, i + 5, key, readOnly, reload);
+            const row = buildGoalRow(g, i + 5, keyFn, readOnly, reload);
             listEl.insertBefore(row, toggle);
           });
         } else {
@@ -1656,17 +1662,17 @@ body::after {
       listEl.appendChild(toggle);
     }
 
-    if (key === todayKey()) renderTodayHeader();
-    else                    renderTomorrowCount();
+    if (isToday) renderTodayHeader();
+    else         renderTomorrowCount();
   }
 
   function loadToday() {
     const goals = getGoals(todayKey());
-    renderListInto(goals, document.getElementById('goalList'), document.getElementById('emptyState'), todayKey(), false);
+    renderListInto(goals, document.getElementById('goalList'), document.getElementById('emptyState'), true, false);
   }
   function loadTomorrow() {
     const goals = getGoals(tomorrowKey());
-    renderListInto(goals, document.getElementById('tomorrowList'), document.getElementById('tomorrowEmpty'), tomorrowKey(), true);
+    renderListInto(goals, document.getElementById('tomorrowList'), document.getElementById('tomorrowEmpty'), false, true);
   }
 
   // ---------- Push remaining ----------
@@ -1980,7 +1986,21 @@ body::after {
   renderStreak();
   setupDayWindowPopover();
   updateDayRing();
-  setInterval(updateDayRing, 60 * 1000);
+  let lastActiveDate = getActiveDateString();
+  setInterval(() => {
+    updateDayRing();
+    // If this tab/PWA has been left open across the 6 AM day boundary, the
+    // date-keyed storage rolls over here instead of waiting for a reload.
+    const nowDate = getActiveDateString();
+    if (nowDate !== lastActiveDate) {
+      lastActiveDate = nowDate;
+      rollover();
+      processStreak();
+      loadToday();
+      loadTomorrow();
+      renderStreak();
+    }
+  }, 60 * 1000);
   startTicker();
   setupLifeGoals();
 
