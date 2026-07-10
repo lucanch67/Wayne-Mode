@@ -1639,35 +1639,7 @@ function statFor(file){
   } catch (e) {}
   return null;
 }
-function peakCardHtml() {
-  var circ = (2 * Math.PI * 26).toFixed(2);
-  return '<a class="card tileWide card-peak" href="peak.html">'
-    + '<span class="cardArrow" aria-hidden>↗</span>'
-    + '<div class="pk-top">'
-      + wmIcon('peak')
-      + '<span class="cardName">Peak</span>'
-      + '<div class="pk-src"><span class="pk-src-dot"></span>Fitbit · Google Health</div>'
-    + '</div>'
-    + '<div class="pk-body">'
-      + '<div class="pk-ring-wrap">'
-        + '<div class="pk-ring">'
-          + '<svg viewBox="0 0 64 64" style="transform:rotate(-90deg)" aria-hidden="true">'
-            + '<circle class="pk-ring-track" cx="32" cy="32" r="26"/>'
-            + '<circle class="pk-ring-fill" id="pkRingFill" cx="32" cy="32" r="26" style="stroke-dasharray:' + circ + ';stroke-dashoffset:' + circ + '"/>'
-          + '</svg>'
-          + '<div class="pk-ring-inner"><span id="pkScore" class="pk-score-empty">—</span></div>'
-        + '</div>'
-        + '<div class="pk-ring-labels">'
-          + '<div class="pk-state" id="pkState">Readiness</div>'
-          + '<div class="pk-ring-lbl">Daily Peak</div>'
-        + '</div>'
-      + '</div>'
-    + '</div>'
-    + '</a>';
-}
-
 function cardHtml(a){
-  if (a.file === 'peak.html') return peakCardHtml();
   const st = statFor(a.file);
   const tail = st
     ? '<div class="cardStat"><span class="cardStatValue">' + esc(st.value) + '</span><span class="cardStatLabel">' + esc(st.label) + '</span></div>'
@@ -1771,60 +1743,6 @@ function render(){
     + '<div class="suite-section"><div class="suite-label">App Suite</div>'
     + '<div class="bento">' + visibleApps.map(cardHtml).join('') + '</div></div>';
   renderModal();
-  initPeakCard();
-}
-
-function initPeakCard() {
-  var scoreEl = document.getElementById('pkScore');
-  var fillEl  = document.getElementById('pkRingFill');
-  var stateEl = document.getElementById('pkState');
-  var sparkEl = document.getElementById('pkSparkSvg');
-  if (!scoreEl) return;
-
-  var h   = lsGet('patron_health_v1');
-  var pl  = lsGet('peak_log_v1');
-  var score = null, stateTxt = null;
-
-  if (h && h.connected && h.recovery != null) score = Math.round(h.recovery);
-
-  var todayKey2 = localDateKey();
-  if (pl && pl.days && pl.days[todayKey2]) {
-    var d2 = pl.days[todayKey2];
-    if (score == null && d2.overallScore != null) score = Math.round(d2.overallScore);
-    if (d2.stateWord) stateTxt = d2.stateWord;
-  }
-
-  var theme0 = document.documentElement.getAttribute('data-theme') || 'vision';
-  var isVision = theme0 === 'vision';
-  var scoreColor = score != null
-    ? (isVision
-        ? (score >= 70 ? 'rgba(255,255,255,0.88)' : score >= 40 ? '#F59E0B' : '#EF4444')
-        : (score >= 70 ? 'var(--pos)' : score >= 40 ? 'var(--warn)' : 'var(--neg)'))
-    : null;
-  var hexColor = score != null
-    ? (isVision
-        ? (score >= 70 ? 'rgba(255,255,255,0.75)' : score >= 40 ? '#F59E0B' : '#EF4444')
-        : (score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444'))
-    : null;
-
-  if (score != null && scoreEl) {
-    scoreEl.textContent = score;
-    scoreEl.className = 'pk-score';
-    if (fillEl) {
-      var circ3 = 2 * Math.PI * 26;
-      fillEl.style.stroke = scoreColor;
-      fillEl.style.filter = 'drop-shadow(0 0 6px ' + scoreColor + ')';
-      fillEl.style.strokeDasharray = circ3;
-      fillEl.style.strokeDashoffset = circ3;
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){
-        fillEl.style.strokeDashoffset = circ3 * (1 - score / 100);
-      }); });
-    }
-    if (stateEl && stateTxt) stateEl.textContent = stateTxt;
-  } else {
-    if (fillEl) { fillEl.style.stroke = 'rgba(255,255,255,0.15)'; fillEl.style.strokeDasharray = '5 9'; fillEl.style.strokeDashoffset = '0'; }
-  }
-
 }
 
 /* ================================================================
