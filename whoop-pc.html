@@ -702,11 +702,8 @@ body::before {
 
     <div class="sideHead">
       <div class="pageTitle">Fitness<br><span class="pageTitleAccent">Band</span></div>
-      <div class="pageSub">Readiness · Sleep · HRV · Heart Rate</div>
+      <div class="pageSub">Sleep · HRV · Heart Rate</div>
     </div>
-
-    <!-- Recovery ring -->
-    <div class="ringSection" id="ringPanel"></div>
 
     <!-- Actions -->
     <div class="actionsSection" id="sideActions"></div>
@@ -747,10 +744,6 @@ const SAMPLE = {
 /* ═══════════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════════ */
-function recoveryTone(r){
-  if(r==null) return 'muted';
-  return r>=67?'good':r>=34?'watch':'low';
-}
 function statTone(v,baseline,inverse){
   if(v==null||baseline==null) return 'muted';
   const d=v-baseline;
@@ -803,27 +796,6 @@ function miniSparkSvg(values, tone){
     +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+colorVar+'" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2" fill="'+colorVar+'"/></svg>';
 }
-function heroSparkSvg(values){
-  if(!values||values.length<2) return '';
-  const W=600, H=96, pad=8;
-  const pts=buildSparkPath(values,W,H,pad);
-  if(!pts) return '';
-  const last=pts[pts.length-1].split(',');
-  const first=pts[0].split(',');
-  const area=[first[0]+','+H, ...pts, last[0]+','+H].join(' ');
-  return '<svg viewBox="0 0 '+W+' '+H+'" class="heroSvg" aria-hidden preserveAspectRatio="none">'
-    +'<defs>'
-    +'<linearGradient id="hFill" x1="0" y1="0" x2="0" y2="1">'
-    +'<stop offset="0%" stop-color="var(--brand)" stop-opacity=".25"/>'
-    +'<stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/>'
-    +'</linearGradient></defs>'
-    +'<polygon class="heroArea" points="'+area+'" fill="url(#hFill)"/>'
-    +'<polyline class="heroLine" points="'+pts.join(' ')+'"/>'
-    +pts.slice(0,-1).map((p,i)=>{const xy=p.split(',');return '<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="2" class="heroDotMid"/>';}).join('')
-    +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="4" class="heroDotLast"/>'
-    +'</svg>';
-}
-
 /* ═══════════════════════════════════════════════════
    TICKER
    ═══════════════════════════════════════════════════ */
@@ -873,27 +845,6 @@ function tickerHtml(d){
   return '<div class="ticker" role="status" aria-label="Live fitness metrics">'
     +'<div class="tickerEyebrow"><span class="tickerPulse" aria-hidden></span>Live</div>'
     +'<div class="tickerScroll"><div class="tickerTrack">'+cells+'</div></div>'
-    +'</div>';
-}
-
-/* ═══════════════════════════════════════════════════
-   HERO TREND CARD
-   ═══════════════════════════════════════════════════ */
-function heroCardHtml(d){
-  const tone=recoveryTone(d.recovery);
-  const tier=d.recovery!=null?(d.recovery>=67?'Ready':d.recovery>=34?'Building':'Low'):'—';
-  const trend=d.recoveryTrend;
-  const hasTrend=trend&&trend.length>=2;
-  const delta=hasTrend?trend[trend.length-1]-trend[0]:0;
-  const spark=hasTrend?heroSparkSvg(trend):'<p class="heroEmpty">Need a few more days of data for the trend.</p>';
-  return '<div class="card heroCard">'
-    +'<div class="heroLeft">'
-    +  '<div class="heroMetricLabel">Readiness · Today</div>'
-    +  '<div class="heroMetricValue" data-tone="'+tone+'">'+(d.recovery!=null?Math.round(d.recovery):'—')+'<span>'+(d.recovery!=null?'%':'')+'</span></div>'
-    +  '<div class="heroTierBadge" data-tone="'+tone+'"><svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden><circle cx="4" cy="4" r="4"/></svg>'+tier+'</div>'
-    +  (hasTrend?'<div class="heroDelta '+(delta>=0?'up':'down')+'">'+(delta>=0?'↑':'↓')+' '+Math.abs(Math.round(delta))+' pts · '+trend.length+'-day trend</div>':'')
-    +'</div>'
-    +'<div class="heroRight">'+spark+'</div>'
     +'</div>';
 }
 
@@ -982,12 +933,8 @@ function coachHtml(d){
     const dm=d.sleepDebt7d.reduce((a,x)=>a+(x.hours-d.sleepTargetHours),0)*60;
     if(dm<-90) tips.push({s:'Sleep debt '+formatDebt(Math.round(dm))+' across the week.',r:' Add 30 minutes tonight. Going to bed earlier is the cheapest performance intervention you have.'});
   }
-  if(d.recovery!=null&&d.recovery<34)
-    tips.unshift({s:'Readiness '+Math.round(d.recovery)+'%. Your ceiling is lower today.',r:' Cut caffeine ~30% and skip a second hard session. Brute-forcing a red day costs you tomorrow.'});
-  else if(d.recovery!=null&&d.recovery>=80)
-    tips.unshift({s:'Readiness '+Math.round(d.recovery)+'%. Green light to push.',r:' Stack the hardest training or cognitive session inside the peak window.'});
   if(!tips.length)
-    tips.push({s:'Building your baseline.',r:" Need 7+ days of valid readings before personalized coaching kicks in. You're at "+d.daysAvailable+' now.'});
+    tips.push({s:'Nothing stands out today.',r:' HRV, resting heart rate, and sleep are all tracking within your normal range.'});
   const lis=tips.slice(0,3).map(t=>
     '<li><span class="coachMark" aria-hidden>✦</span><div><strong>'+esc(t.s)+'</strong><span>'+esc(t.r)+'</span></div></li>'
   ).join('');
@@ -1057,31 +1004,6 @@ function renderThemePills(){
 /* ═══════════════════════════════════════════════════
    RENDER — SIDEBAR
    ═══════════════════════════════════════════════════ */
-function renderRingPanel(d){
-  const panel=document.getElementById('ringPanel');
-  if(!d){
-    panel.innerHTML='<p style="color:var(--muted);font-size:var(--text-xs);font-family:var(--font-mono);letter-spacing:.1em;text-align:center">— no data —</p>';
-    return;
-  }
-  const tone=recoveryTone(d.recovery);
-  const circ=2*Math.PI*88;
-  const fill=d.recovery!=null?circ*(1-d.recovery/100):circ;
-  const tier=d.recovery!=null?(d.recovery>=67?'Ready':d.recovery>=34?'Building':'Low'):'—';
-  panel.innerHTML=
-    '<div class="ringAura" data-tone="'+tone+'" aria-hidden></div>'
-    +'<div class="recoveryRing" data-tone="'+tone+'" role="img" aria-label="Readiness '+Math.round(d.recovery??0)+'%">'
-    +'<svg viewBox="0 0 200 200" class="ringSvg" aria-hidden>'
-    +'<circle cx="100" cy="100" r="88" class="ringTrack"/>'
-    +(d.recovery!=null?'<circle cx="100" cy="100" r="88" class="ringFill" style="stroke-dasharray:'+circ.toFixed(2)+';stroke-dashoffset:'+fill.toFixed(2)+'"/>':'')
-    +'</svg>'
-    +'<div class="ringInner">'
-    +'<div class="ringVal" data-tone="'+tone+'">'+(d.recovery!=null?Math.round(d.recovery):'—')+'</div>'
-    +(d.recovery!=null?'<div class="ringPct">%</div>':'')
-    +'<div class="ringLabel">Readiness</div>'
-    +'<div class="ringTier">'+tier+'</div>'
-    +'</div></div>';
-}
-
 function renderSideActions(d){
   const el=document.getElementById('sideActions');
   if(!d){el.innerHTML='';return;}
@@ -1099,14 +1021,12 @@ function render(){
   activeKind=d?'fitbit-live':null;
   if(d) publishFitbit(d);
 
-  renderRingPanel(d);
   renderSideActions(d);
 
   const main=document.getElementById('mainInner');
   if(d){
     main.innerHTML=
       tickerHtml(d)
-      +heroCardHtml(d)
       +statGridHtml(d)
       +'<div class="bottomRow">'
       +(d.sleepDebt7d.length?sleepDebtHtml(d):'<div></div>')
