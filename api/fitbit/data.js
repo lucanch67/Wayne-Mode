@@ -17,6 +17,31 @@ function pickLatest(points, timeFn) {
   return best;
 }
 
+// Rough estimate of Fitbit's proprietary Sleep Score (Duration/Quality/Restoration,
+// 50/25/25 pts — the published breakdown) from what this API exposes. It CANNOT match
+// exactly: Fitbit's real score also weighs overnight heart-rate pattern and restlessness
+// (micro-arousals short of full waking), neither of which this API returns — only stage
+// minutes and daily (not sleep-specific) resting HR are available. Treat as a rough estimate.
+function estimateSleepScore({ asleepMin, inBedMin, deepMin, remMin }) {
+  if (asleepMin == null || inBedMin == null || inBedMin <= 0) return null;
+  const hours = asleepMin / 60;
+  let durationScore;
+  if (hours >= 7 && hours <= 9) durationScore = 50;
+  else if (hours < 7) durationScore = 50 * Math.max(0, (hours - 4) / 3);
+  else durationScore = 50 * Math.max(0, 1 - (hours - 9) / 2);
+
+  const efficiency = asleepMin / inBedMin;
+  const qualityScore = 25 * Math.max(0, Math.min(1, efficiency));
+
+  let restorationScore = 12.5; // neutral if we don't have stage breakdown
+  if (deepMin != null && remMin != null && asleepMin > 0) {
+    const restorativePct = (deepMin + remMin) / asleepMin;
+    restorationScore = 25 * Math.max(0, Math.min(1, restorativePct / 0.40));
+  }
+
+  return Math.round(Math.max(0, Math.min(100, durationScore + qualityScore + restorationScore)));
+}
+
 async function ghGet(path, token) {
   try {
     const r = await fetch(L.API_BASE + path, {
@@ -69,7 +94,7 @@ module.exports = async (req, res) => {
 
   // ── Parse most recent sleep session ──────────────────────────────────────
   // startUtcOffset / endUtcOffset ("7200s") must be applied to get local clock time.
-  let sleepHours = null, sleepPerf = null, bedtime = null, wakeTime = null;
+  let sleepHours = null, sleepPerf = null, bedtime = null, wakeTime = null, sleepScoreEst = null;
   if (sleepRes && !sleepRes._err && Array.isArray(sleepRes.dataPoints) && sleepRes.dataPoints.length) {
     const latest = pickLatest(sleepRes.dataPoints, p => {
       const t = p.sleep?.interval?.startTime;
@@ -93,6 +118,11 @@ module.exports = async (req, res) => {
       if (asleep != null && inBed != null && inBed > 0) {
         sleepPerf = Math.round((asleep / inBed) * 100);
       }
+
+      const stages = Array.isArray(s.summary?.stagesSummary) ? s.summary.stagesSummary : [];
+      const deepMin = Number(stages.find(x => x.type === 'DEEP')?.minutes) || null;
+      const remMin  = Number(stages.find(x => x.type === 'REM')?.minutes) || null;
+      sleepScoreEst = estimateSleepScore({ asleepMin: asleep, inBedMin: inBed, deepMin, remMin });
     }
   }
 
@@ -125,6 +155,7 @@ module.exports = async (req, res) => {
     hrv,
     rhr,
     sleepPerf,
+    sleepScoreEst,
     sleepHours,
     sleepTargetHours: 8,
     bedtime,
