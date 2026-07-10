@@ -1,4 +1,4 @@
-// GET /api/fitbit/debug — returns raw Google Health API v4 HRV response for diagnosis.
+// GET /api/fitbit/debug — probes for the Google Health sleep-score data type.
 // TEMPORARY — remove after debugging.
 const L = require('./_lib');
 
@@ -30,16 +30,18 @@ module.exports = async (req, res) => {
   }
 
   const at = tok.access_token;
-  const [hrv, hrvDataSources, sleep] = await Promise.all([
-    ghGet('/users/me/dataTypes/heart-rate-variability/dataPoints?pageSize=3', at),
-    ghGet('/users/me/dataTypes/heart-rate-variability', at),
-    ghGet('/users/me/dataTypes/sleep/dataPoints?pageSize=3', at),
+  const candidates = [
+    'sleep-score', 'daily-sleep-score', 'daily-sleep', 'sleep-summary',
+    'daily-readiness', 'readiness', 'daily-sleep-summary', 'sleep-stages-summary',
+  ];
+  const [dataTypesList, ...probes] = await Promise.all([
+    ghGet('/users/me/dataTypes', at),
+    ...candidates.map(c => ghGet('/users/me/dataTypes/' + c + '/dataPoints?pageSize=1', at)),
   ]);
 
   res.end(JSON.stringify({
     scopes_in_token: tok.scope || '(not returned)',
-    hrv_datapoints: hrv,
-    hrv_datatype_meta: hrvDataSources,
-    sleep_datapoints: sleep,
+    all_data_types: dataTypesList,
+    sleep_score_candidates: Object.fromEntries(candidates.map((c, i) => [c, probes[i]])),
   }, null, 2));
 };

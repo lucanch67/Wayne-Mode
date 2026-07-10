@@ -89,10 +89,10 @@ module.exports = async (req, res) => {
     if (bpm >= 30 && bpm <= 120) rhr = bpm;
   }
 
-  // ── Parse HRV (most recent daily value) ──────────────────────────────────
+  // ── Parse HRV (most recent overnight reading) ────────────────────────────
   let hrv = null;
   if (hrvRes && !hrvRes._err && Array.isArray(hrvRes.dataPoints) && hrvRes.dataPoints.length) {
-    const ms = Number(hrvRes.dataPoints[0]?.dailyHeartRateVariability?.averageHeartRateVariabilityMilliseconds);
+    const ms = Number(hrvRes.dataPoints[0]?.heartRateVariability?.rootMeanSquareOfSuccessiveDifferencesMilliseconds);
     if (ms > 0 && ms < 300) hrv = Math.round(ms);
   }
 
