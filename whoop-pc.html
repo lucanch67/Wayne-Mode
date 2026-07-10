@@ -554,6 +554,31 @@ body::before {
 /* Mini sparkline at bottom of stat card */
 .miniSpark { width:100%; height:24px; margin-top:var(--space-2); overflow:visible; opacity:.6; }
 
+/* ── Trend grid (day-by-day history) ── */
+.trendGrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--space-4); }
+.trendCard { padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-1); }
+.trendCardHead { display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-2); }
+.trendCardLabel { font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
+.trendCardValue { font-family:var(--font-display); font-weight:700; font-size:var(--text-2xl); letter-spacing:-.03em; color:var(--fg); font-variant-numeric:tabular-nums; }
+.trendCardUnit { font-size:var(--text-sm); font-weight:500; color:var(--muted-strong); margin-left:3px; }
+.trendCardDelta { font-family:var(--font-mono); font-size:10.5px; font-weight:600; }
+.trendCardDelta.up { color:var(--pos); }
+.trendCardDelta.down { color:var(--neg); }
+.trendCardSub { font-family:var(--font-mono); font-size:9.5px; color:var(--muted); letter-spacing:.04em; }
+.trendCardSvg { width:100%; height:44px; margin-top:var(--space-2); overflow:visible; }
+.trendCardEmpty { font-family:var(--font-mono); font-size:10.5px; color:var(--muted); line-height:1.5; margin-top:var(--space-2); }
+.stepsRow { display:flex; align-items:center; gap:8px; margin-top:var(--space-3); }
+.stepsRow .fieldInput { padding:7px 10px; font-size:13px; }
+
+/* ── Week summary + badges ── */
+.miniStatRow { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-3); }
+.miniStat { display:flex; flex-direction:column; gap:2px; }
+.miniStatVal { font-family:var(--font-display); font-weight:700; font-size:var(--text-lg); letter-spacing:-.02em; color:var(--fg); font-variant-numeric:tabular-nums; }
+.miniStatLabel { font-family:var(--font-mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.badgeRow { display:flex; flex-wrap:wrap; gap:var(--space-2); }
+.badge { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:var(--r-pill); font-family:var(--font-mono); font-size:10.5px; font-weight:600; letter-spacing:.04em; background:var(--pos-soft); border:1px solid var(--pos-line); color:var(--pos); }
+.badgeEmpty { font-family:var(--font-mono); font-size:11px; color:var(--muted); }
+
 /* ── Bottom row ── */
 .bottomRow { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); }
 
@@ -663,6 +688,8 @@ body::before {
   #sidebar { position:static; border-right:none; border-bottom:1px solid var(--border); backdrop-filter:none; overflow:visible; }
   #main { overflow:visible; }
   .statGrid { grid-template-columns:repeat(2,1fr); }
+  .trendGrid { grid-template-columns:repeat(2,1fr); }
+  .miniStatRow { grid-template-columns:repeat(2,1fr); }
   .bottomRow { grid-template-columns:1fr; }
   .heroCard { grid-template-columns:1fr; }
 }
@@ -672,6 +699,8 @@ body::before {
   .sideHead { padding:var(--space-4) var(--space-4) var(--space-4); }
   .ringSection { padding:var(--space-4) var(--space-4) var(--space-4); }
   .statGrid { grid-template-columns:1fr 1fr; }
+  .trendGrid { grid-template-columns:1fr 1fr; }
+  .miniStatRow { grid-template-columns:1fr 1fr; }
   .actionsSection { padding:var(--space-4); }
   .themeSection { padding:var(--space-4); }
   .connectPanel { padding:var(--space-5); }
@@ -764,6 +793,38 @@ function formatDebt(minutes){
   return s+Math.floor(a/60)+'h '+String(a%60).padStart(2,'0')+'m';
 }
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ═══════════════════════════════════════════════════
+   HISTORY — one entry per day, built from real syncs (plus
+   manually-logged steps, since no connected API exposes them).
+   Plain localStorage: rides along in the whole-device Supabase
+   snapshot (db.js), so it's already synced across every device.
+   ═══════════════════════════════════════════════════ */
+const HISTORY_KEY='patron_fitness_history_v1';
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dateKeyOffset(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function weekdayShort(dateKey){ const [y,m,dd]=dateKey.split('-').map(Number); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(y,m-1,dd).getDay()]; }
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)||'{}'); }catch{ return {}; } }
+function saveHistory(h){ try{ localStorage.setItem(HISTORY_KEY,JSON.stringify(h)); }catch{} }
+function recordHistory(d){
+  const h=loadHistory(), k=todayKey(), day=h[k]||{};
+  if(d.hrv!=null) day.hrv=d.hrv;
+  if(d.rhr!=null) day.rhr=d.rhr;
+  if(d.sleepHours!=null) day.sleepHours=d.sleepHours;
+  if(d.sleepPerf!=null) day.sleepPerf=d.sleepPerf;
+  h[k]=day; saveHistory(h);
+}
+function logSteps(n){
+  if(!isFinite(n)||n<0) return;
+  const h=loadHistory(), k=todayKey();
+  h[k]=Object.assign({},h[k],{steps:Math.round(n)});
+  saveHistory(h); render();
+}
+function historyRange(n){
+  const h=loadHistory(), out=[];
+  for(let i=n-1;i>=0;i--){ const k=dateKeyOffset(i); out.push(Object.assign({date:k},h[k])); }
+  return out;
+}
 
 /* ═══════════════════════════════════════════════════
    SPARKLINES
@@ -887,6 +948,118 @@ function statGridHtml(d){
         rhrDelta!=null?(rhrDelta<=0?'↓ '+rhrDelta+' bpm':'↑ +'+rhrDelta+' bpm'):null,
         rhrDelta!=null&&rhrDelta<=0?'good':'watch',rhrTone,rhrSpark)
     +'</div>';
+}
+
+/* ═══════════════════════════════════════════════════
+   TRENDS — day-by-day line charts built from HISTORY.
+   Breaks the line across gap days instead of interpolating,
+   so a missed sync never lies about that day's value.
+   ═══════════════════════════════════════════════════ */
+function trendLineSvg(points,colorVar){
+  const W=200,H=44,pad=3;
+  const idxs=[]; points.forEach((v,i)=>{ if(v!=null) idxs.push(i); });
+  if(idxs.length<2) return null;
+  const vals=idxs.map(i=>points[i]);
+  const mn=Math.min(...vals), mx=Math.max(...vals), rng=Math.max(.0001,mx-mn);
+  const stepX=(W-pad*2)/(points.length-1);
+  const xy=i=>[pad+i*stepX, H-pad-((points[i]-mn)/rng)*(H-pad*2)];
+  let d='';
+  idxs.forEach((i,n)=>{
+    const [x,y]=xy(i);
+    const connect=n>0&&idxs[n]-idxs[n-1]===1;
+    d+=(connect?'L':'M')+x.toFixed(1)+','+y.toFixed(1)+' ';
+  });
+  const [lx,ly]=xy(idxs[idxs.length-1]);
+  return '<svg viewBox="0 0 '+W+' '+H+'" class="trendCardSvg" preserveAspectRatio="none">'
+    +'<path d="'+d.trim()+'" fill="none" stroke="'+colorVar+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="2.6" fill="'+colorVar+'"/></svg>';
+}
+function trendCardHtml(label,unit,sub,points,colorVar,formatFn){
+  const vals=points.filter(v=>v!=null);
+  const latest=vals.length?vals[vals.length-1]:null;
+  const prev=vals.length>1?vals[vals.length-2]:null;
+  const delta=(latest!=null&&prev!=null)?Math.round((latest-prev)*10)/10:null;
+  const svg=trendLineSvg(points,colorVar);
+  return '<div class="card trendCard">'
+    +'<div class="trendCardHead"><span class="trendCardLabel">'+label+'</span>'
+    +(delta!=null?'<span class="trendCardDelta '+(delta>=0?'up':'down')+'">'+(delta>0?'+':'')+delta+unit+'</span>':'')+'</div>'
+    +(latest!=null?'<div><span class="trendCardValue">'+(formatFn?formatFn(latest):latest)+'</span>'+(unit?'<span class="trendCardUnit">'+unit+'</span>':'')+'</div>':'<div class="trendCardValue" style="color:var(--muted)">—</div>')
+    +(sub?'<div class="trendCardSub">'+sub+'</div>':'')
+    +(svg?svg:'<div class="trendCardEmpty">Builds day by day as you sync — check back tomorrow.</div>')
+    +'</div>';
+}
+function stepsTrendCardHtml(points){
+  const vals=points.filter(v=>v!=null);
+  const latest=vals.length?vals[vals.length-1]:null;
+  const svg=trendLineSvg(points,'var(--pos)');
+  const h=loadHistory(), todayVal=h[todayKey()]&&h[todayKey()].steps!=null?h[todayKey()].steps:'';
+  return '<div class="card trendCard">'
+    +'<div class="trendCardHead"><span class="trendCardLabel">Steps</span></div>'
+    +(latest!=null?'<div><span class="trendCardValue">'+latest.toLocaleString()+'</span></div>':'<div class="trendCardValue" style="color:var(--muted)">—</div>')
+    +'<div class="trendCardSub">logged manually · last 14 days</div>'
+    +(svg?svg:'<div class="trendCardEmpty">No API exposes steps yet — log today’s to start the trend.</div>')
+    +'<div class="stepsRow"><input class="fieldInput" id="stepsInput" type="number" min="0" step="100" placeholder="Today’s steps" value="'+esc(todayVal)+'"/>'
+    +'<button type="button" class="btn btn-ghost" data-action="logSteps" style="padding:7px 12px;font-size:12px">Log</button></div>'
+    +'</div>';
+}
+function trendSectionHtml(){
+  const days=historyRange(14);
+  const hrvPts=days.map(d=>d.hrv??null);
+  const rhrPts=days.map(d=>d.rhr??null);
+  const sleepPts=days.map(d=>d.sleepPerf??null);
+  const stepsPts=days.map(d=>d.steps??null);
+  return '<div class="trendGrid">'
+    +trendCardHtml('HRV','ms','rmssd · last 14 days',hrvPts,'var(--pos)')
+    +trendCardHtml('Heart Rate','bpm','resting · last 14 days',rhrPts,'var(--warn)')
+    +trendCardHtml('Sleep Score','%','efficiency · last 14 days',sleepPts,'var(--brand)')
+    +stepsTrendCardHtml(stepsPts)
+    +'</div>';
+}
+
+/* ═══════════════════════════════════════════════════
+   WEEK SUMMARY + BADGES
+   ═══════════════════════════════════════════════════ */
+function weekAndBadgesHtml(d){
+  const days=historyRange(7);
+  const withHrv=days.filter(x=>x.hrv!=null).map(x=>x.hrv);
+  const withRhr=days.filter(x=>x.rhr!=null).map(x=>x.rhr);
+  const withSleep=days.filter(x=>x.sleepHours!=null).map(x=>x.sleepHours);
+  const synced=days.filter(x=>x.hrv!=null||x.rhr!=null||x.sleepHours!=null).length;
+  const avg=arr=>arr.length?Math.round((arr.reduce((a,b)=>a+b,0)/arr.length)*10)/10:null;
+  const avgHrv=avg(withHrv), avgRhr=avg(withRhr), avgSleep=avg(withSleep);
+
+  const miniStats='<div class="miniStatRow">'
+    +'<div class="miniStat"><span class="miniStatVal">'+(avgHrv!=null?avgHrv+'ms':'—')+'</span><span class="miniStatLabel">avg hrv</span></div>'
+    +'<div class="miniStat"><span class="miniStatVal">'+(avgRhr!=null?avgRhr+'bpm':'—')+'</span><span class="miniStatLabel">avg rhr</span></div>'
+    +'<div class="miniStat"><span class="miniStatVal">'+(avgSleep!=null?formatHM(avgSleep):'—')+'</span><span class="miniStatLabel">avg sleep</span></div>'
+    +'<div class="miniStat"><span class="miniStatVal">'+synced+'/7</span><span class="miniStatLabel">days synced</span></div>'
+    +'</div>';
+
+  const badges=[];
+  let streak=0;
+  for(let i=days.length-1;i>=0;i--){ const x=days[i]; if(x.hrv!=null||x.rhr!=null||x.sleepHours!=null) streak++; else break; }
+  if(streak>=3) badges.push('\u{1F525} '+streak+'-day sync streak');
+  const target=(d&&d.sleepTargetHours)||8;
+  let sstreak=0;
+  for(let i=days.length-1;i>=0;i--){ const x=days[i]; if(x.sleepHours!=null&&x.sleepHours>=target-.5) sstreak++; else break; }
+  if(sstreak>=2) badges.push('\u{1F634} '+sstreak+'-night sleep streak');
+  if(withHrv.length>=4){
+    const recent=avg(withHrv.slice(-2)), earlier=avg(withHrv.slice(0,-2));
+    if(recent!=null&&earlier!=null&&recent>earlier+2) badges.push('\u{1F4C8} HRV trending up');
+  }
+  if(synced===7) badges.push('✅ Perfect week');
+
+  const badgeHtml=badges.length
+    ? '<div class="badgeRow">'+badges.map(b=>'<span class="badge">'+esc(b)+'</span>').join('')+'</div>'
+    : '<div class="badgeEmpty">Badges unlock as your sync streak builds.</div>';
+
+  return '<div class="card debtCard"><div class="cardHead"><span class="cardTitle">This Week</span></div>'
+    +miniStats+badgeHtml+'</div>';
+}
+function realSleepDebtHtml(d){
+  const nights=historyRange(7).filter(x=>x.sleepHours!=null).map(x=>({day:weekdayShort(x.date),hours:x.sleepHours}));
+  if(nights.length<2) return '';
+  return sleepDebtHtml({sleepDebt7d:nights,sleepTargetHours:(d&&d.sleepTargetHours)||8});
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1019,17 +1192,20 @@ function renderSideActions(d){
 function render(){
   const d=fitbitData||null;
   activeKind=d?'fitbit-live':null;
-  if(d) publishFitbit(d);
+  if(d){ publishFitbit(d); recordHistory(d); }
 
   renderSideActions(d);
 
   const main=document.getElementById('mainInner');
   if(d){
+    const debtHtml=realSleepDebtHtml(d);
     main.innerHTML=
       tickerHtml(d)
       +statGridHtml(d)
+      +trendSectionHtml()
+      +weekAndBadgesHtml(d)
       +'<div class="bottomRow">'
-      +(d.sleepDebt7d.length?sleepDebtHtml(d):'<div></div>')
+      +(debtHtml||'<div></div>')
       +coachHtml(d)
       +'</div>';
   } else {
@@ -1050,6 +1226,11 @@ document.addEventListener('click',e=>{
     return;
   }
   if(action==='sync'){syncFitbitLive();return;}
+  if(action==='logSteps'){
+    const el=document.getElementById('stepsInput');
+    logSteps(Number(el&&el.value));
+    return;
+  }
 });
 
 /* ═══════════════════════════════════════════════════

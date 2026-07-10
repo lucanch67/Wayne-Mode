@@ -53,6 +53,40 @@
 .xBtn:hover { color:var(--neg); border-color:var(--neg-line); }
 .secTitle { font-family:var(--font-display); font-weight:600; font-size:var(--text-lg); margin:var(--space-8) 0 0; }
 
+/* ── Meal tagging ── */
+.stack { display:flex; flex-direction:column; gap:var(--space-5); }
+.mealPills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:var(--space-3); }
+.mealPill { appearance:none; padding:7px 14px; border-radius:var(--radius-pill); border:1px solid var(--border); background:var(--surface); color:var(--muted-strong); font-family:var(--font-ui); font-size:12px; font-weight:600; cursor:pointer; transition:all var(--duration) var(--ease-premium); }
+.mealPill:hover { border-color:var(--border-strong); }
+.mealPillActive, .mealPillActive:hover { border-color:var(--brand-line); background:var(--brand-soft); color:var(--fg); }
+
+/* ── Trend chart ── */
+.trendHead { display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-3); flex-wrap:wrap; }
+.trendDelta { font-family:var(--font-mono); font-size:11px; font-weight:600; }
+.trendDelta.up { color:var(--pos); }
+.trendDelta.down { color:var(--neg); }
+.trendSvg { width:100%; overflow:visible; margin-top:var(--space-3); }
+.trendLine { fill:none; stroke:var(--brand); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+.trendGoalLine { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 4; }
+.trendDot { fill:var(--brand); }
+.macroTrendRow { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-4); margin-top:var(--space-4); }
+.macroTrendItem { display:flex; flex-direction:column; gap:4px; }
+.macroTrendLabel { font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:flex; justify-content:space-between; }
+.miniTrendSvg { width:100%; height:22px; overflow:visible; }
+
+/* ── Meal breakdown ── */
+.mealBar { display:flex; height:14px; border-radius:var(--radius-pill); overflow:hidden; background:var(--track); margin-top:var(--space-2); }
+.mealBarSeg { height:100%; }
+.mealLegend { display:flex; flex-wrap:wrap; gap:var(--space-4); margin-top:var(--space-3); font-family:var(--font-mono); font-size:11px; color:var(--muted-strong); }
+.mdot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+/* ── Weekly summary ── */
+.weekGrid { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-3); }
+@media (max-width:560px) { .weekGrid { grid-template-columns:repeat(2,1fr); } }
+.weekBox { display:flex; flex-direction:column; gap:4px; padding:var(--space-4); border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); }
+.weekVal { font-family:var(--font-display); font-weight:600; font-size:var(--text-xl); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+.weekLabel { font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+
 </style>
 </head>
 <body>
@@ -98,6 +132,8 @@
   ];
 
   function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function dateKeyOffset(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function lastNDates(n){ const a=[]; for(let i=n-1;i>=0;i--) a.push(dateKeyOffset(i)); return a; }
   function loadAll(){ try{ const r=localStorage.getItem(STORE_KEY); return r?JSON.parse(r):{}; }catch(e){ return {}; } }
   function saveAll(o){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(o)); }catch(e){} }
   let store=loadAll();
@@ -107,14 +143,19 @@
   function setGoalCal(n){ store.goalCal=n; saveAll(store); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function round(n){ return Math.round(n); }
+  function totalsFor(dateKey){ return (store[dateKey]||[]).reduce((t,e)=>{ t.cal+=e.cal; t.p+=e.p; t.c+=e.c; t.f+=e.f; return t; },{cal:0,p:0,c:0,f:0}); }
+
+  const MEALS=['breakfast','lunch','dinner','snack'];
+  const MEAL_LABEL={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Snack'};
+  const MEAL_COLOR={breakfast:'var(--brand)',lunch:'var(--pos)',dinner:'var(--warn)',snack:'var(--muted-strong)'};
+  function defaultMeal(){ const h=new Date().getHours(); if(h<11) return 'breakfast'; if(h<15) return 'lunch'; if(h<21) return 'dinner'; return 'snack'; }
 
   let query='';
   let matches=[];
   let currentTab='food';
+  let currentMeal=defaultMeal();
 
-  function totals(){
-    return todaysLog().reduce((t,e)=>{ t.cal+=e.cal; t.p+=e.p; t.c+=e.c; t.f+=e.f; return t; },{cal:0,p:0,c:0,f:0});
-  }
+  function totals(){ return totalsFor(todayKey()); }
 
   function summaryHtml(){
     const t=totals(), goal=goalCal(), remaining=goal-t.cal, over=remaining<0;
@@ -135,6 +176,80 @@
       +'</div></section>';
   }
 
+  function buildPath(values,maxVal,W,H,pad){
+    const mx=Math.max(1,maxVal);
+    const stepX=values.length>1?(W-pad*2)/(values.length-1):0;
+    return values.map((v,i)=>(pad+i*stepX).toFixed(1)+','+(H-pad-(v/mx)*(H-pad*2)).toFixed(1));
+  }
+
+  function trendCardHtml(){
+    const dates=lastNDates(14);
+    const dayTotals=dates.map(totalsFor);
+    const cals=dayTotals.map(t=>t.cal);
+    const hasData=cals.some(v=>v>0);
+    const today=cals[cals.length-1], yesterday=cals[cals.length-2];
+    const delta=(yesterday!=null)?Math.round(today-yesterday):null;
+    const goal=goalCal();
+    let svg='<p class="emptyNote">Log meals for a few days to see your trend.</p>';
+    if(hasData){
+      const W=560,H=110,pad=6;
+      const maxVal=Math.max(1,goal,...cals);
+      const pts=buildPath(cals,maxVal,W,H,pad);
+      const last=pts[pts.length-1].split(',');
+      const goalY=(H-pad-(goal/maxVal)*(H-pad*2)).toFixed(1);
+      svg='<svg viewBox="0 0 '+W+' '+H+'" class="trendSvg" preserveAspectRatio="none">'
+        +'<line x1="'+pad+'" y1="'+goalY+'" x2="'+(W-pad)+'" y2="'+goalY+'" class="trendGoalLine"/>'
+        +'<polyline points="'+pts.join(' ')+'" class="trendLine"/>'
+        +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3" class="trendDot"/>'
+        +'</svg>';
+    }
+    const macroRows=hasData?['p','c','f'].map(k=>{
+      const label=k==='p'?'Protein':k==='c'?'Carbs':'Fat';
+      const vals=dayTotals.map(t=>t[k]);
+      const mx=Math.max(1,...vals);
+      const W=160,H=22,pad=2;
+      const pts=buildPath(vals,mx,W,H,pad);
+      const last=pts[pts.length-1].split(',');
+      const spark='<svg viewBox="0 0 '+W+' '+H+'" class="miniTrendSvg" preserveAspectRatio="none">'
+        +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--muted-strong)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>'
+        +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="1.8" fill="var(--fg)"/></svg>';
+      return '<div class="macroTrendItem"><div class="macroTrendLabel"><span>'+label+'</span><span>'+round(vals[vals.length-1])+'g</span></div>'+spark+'</div>';
+    }).join(''):'';
+    return '<section class="card"><div class="trendHead"><span class="cardName">Last 14 Days</span>'
+      +(delta!=null?'<span class="trendDelta '+(delta<=0?'up':'down')+'">'+(delta>0?'+':'')+delta+' kcal vs yesterday</span>':'')
+      +'</div>'+svg
+      +(macroRows?'<div class="macroTrendRow">'+macroRows+'</div>':'')
+      +'</section>';
+  }
+
+  function weekSummaryHtml(){
+    const dayTotals=lastNDates(7).map(totalsFor);
+    const loggedDays=dayTotals.filter(t=>t.cal>0).length;
+    const avg=k=>loggedDays?Math.round(dayTotals.reduce((a,t)=>a+t[k],0)/loggedDays):0;
+    const goal=goalCal(), avgCal=avg('cal');
+    const goalPct=goal>0&&loggedDays?Math.round((avgCal/goal)*100):0;
+    const box=(val,label)=>'<div class="weekBox"><span class="weekVal">'+val+'</span><span class="weekLabel">'+label+'</span></div>';
+    return '<section class="card"><span class="cardName">This Week</span>'
+      +'<div class="weekGrid" style="margin-top:var(--space-3)">'
+      +box(avgCal,'avg kcal/day')+box(avg('p')+'g','avg protein')+box(loggedDays+'/7','days logged')+box(goalPct+'%','of goal')
+      +'</div></section>';
+  }
+
+  function mealBreakdownHtml(){
+    const log=todaysLog();
+    if(!log.length) return '';
+    const sums={}; MEALS.forEach(m=>sums[m]=0); let other=0;
+    log.forEach(e=>{ const m=e.meal&&sums.hasOwnProperty(e.meal)?e.meal:null; if(m) sums[m]+=e.cal; else other+=e.cal; });
+    const total=Object.values(sums).reduce((a,b)=>a+b,0)+other;
+    if(total<=0) return '';
+    const segs=MEALS.filter(m=>sums[m]>0).map(m=>'<span class="mealBarSeg" style="width:'+(sums[m]/total*100).toFixed(1)+'%;background:'+MEAL_COLOR[m]+'"></span>').join('')
+      +(other>0?'<span class="mealBarSeg" style="width:'+(other/total*100).toFixed(1)+'%;background:var(--border-strong)"></span>':'');
+    const legend=MEALS.filter(m=>sums[m]>0).map(m=>'<span><span class="mdot" style="background:'+MEAL_COLOR[m]+'"></span>'+MEAL_LABEL[m]+' · '+round(sums[m])+' kcal</span>').join('')
+      +(other>0?'<span><span class="mdot" style="background:var(--border-strong)"></span>Other · '+round(other)+' kcal</span>':'');
+    return '<section class="card"><span class="cardName">Today by Meal</span>'
+      +'<div class="mealBar">'+segs+'</div><div class="mealLegend">'+legend+'</div></section>';
+  }
+
   function resultsInner(){
     const q=query.trim().toLowerCase();
     matches=q?FOODS.filter(f=>f.name.toLowerCase().includes(q)).slice(0,8):[];
@@ -148,8 +263,15 @@
       +'<button class="btn btn-primary" data-add="'+i+'">Add</button></div></div>').join('');
   }
 
+  function mealPillsHtml(){
+    return '<div class="mealPills">'+MEALS.map(m=>
+      '<button type="button" class="mealPill'+(m===currentMeal?' mealPillActive':'')+'" data-meal="'+m+'">'+MEAL_LABEL[m]+'</button>'
+    ).join('')+'</div>';
+  }
+
   function searchHtml(){
     return '<h2 class="secTitle">Add food</h2>'
+      +mealPillsHtml()
       +'<div class="foodSearch"><input class="fieldInput" id="q" type="text" placeholder="Search foods (e.g. chicken, rice, banana)" value="'+esc(query)+'" autocomplete="off" /></div>'
       +'<div class="foodResults" id="results">'+resultsInner()+'</div>';
   }
@@ -158,7 +280,7 @@
     const log=todaysLog();
     if(!log.length) return '<h2 class="secTitle">Logged today</h2><p class="emptyNote">Nothing logged yet.</p>';
     const rows=log.map((e,i)=>
-      '<div class="logRow"><div><div class="foodName">'+esc(e.name)+' <span class="foodRowMeta">'+e.grams+'g</span></div>'
+      '<div class="logRow"><div><div class="foodName">'+esc(e.name)+' <span class="foodRowMeta">'+(e.meal&&MEAL_LABEL[e.meal]?MEAL_LABEL[e.meal]+' · ':'')+e.grams+'g</span></div>'
       +'<div class="logNums">'+round(e.cal)+' kcal · '+round(e.p)+'P / '+round(e.c)+'C / '+round(e.f)+'F</div></div>'
       +'<button class="xBtn" data-del="'+i+'" title="Remove">×</button></div>').join('');
     return '<h2 class="secTitle">Logged today</h2><div class="logList">'+rows+'</div>';
@@ -168,7 +290,7 @@
     if(currentTab==='food'){
       document.getElementById('tabFood').innerHTML=searchHtml()+logHtml();
     } else if(currentTab==='calories'){
-      document.getElementById('tabCalories').innerHTML=summaryHtml();
+      document.getElementById('tabCalories').innerHTML='<div class="stack">'+summaryHtml()+mealBreakdownHtml()+trendCardHtml()+weekSummaryHtml()+'</div>';
     }
   }
 
@@ -184,6 +306,12 @@
   });
 
   document.addEventListener('click',e=>{
+    const mealBtn=e.target.closest('[data-meal]');
+    if(mealBtn){
+      currentMeal=mealBtn.getAttribute('data-meal');
+      document.querySelectorAll('.mealPill').forEach(b=>b.classList.toggle('mealPillActive', b.getAttribute('data-meal')===currentMeal));
+      return;
+    }
     const add=e.target.closest('[data-add]');
     if(add){
       const f=matches[Number(add.getAttribute('data-add'))];
@@ -192,7 +320,7 @@
       if(!f||!isFinite(grams)||grams<=0){ alert('Enter how many grams.'); return; }
       const k=grams/100;
       const log=todaysLog();
-      log.push({name:f.name,grams,cal:f.cal*k,p:f.p*k,c:f.c*k,f:f.f*k});
+      log.push({name:f.name,grams,cal:f.cal*k,p:f.p*k,c:f.c*k,f:f.f*k,meal:currentMeal});
       setTodaysLog(log); query=''; render(); return;
     }
     const del=e.target.closest('[data-del]');
