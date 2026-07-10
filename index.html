@@ -1338,7 +1338,7 @@ async function syncFitbit(){
     const j = await r.json();
     fitbitStatus = { connected: !!j.connected, checked: true };
     if (j.connected) {
-      health = { source: 'fitbit', connected: true, ts: j.ts || Date.now(), recovery: j.recovery, sleepHours: j.sleepHours, sleepPerf: j.sleepPerf, sleepScoreEst: j.sleepScoreEst, sleepTargetHours: j.sleepTargetHours || 8, bedtime: j.bedtime, wakeTime: j.wakeTime, hrv: j.hrv, rhr: j.rhr, strain: j.strain };
+      health = { source: 'fitbit', connected: true, ts: j.ts || Date.now(), recovery: j.recovery, sleepHours: j.sleepHours, sleepPerf: j.sleepPerf, sleepTargetHours: j.sleepTargetHours || 8, bedtime: j.bedtime, wakeTime: j.wakeTime, hrv: j.hrv, rhr: j.rhr, strain: j.strain };
       saveHealth(health);
     } else if (health && health.source === 'fitbit') {
       clearHealth(); health = null;
@@ -1571,7 +1571,6 @@ function haulixtHtml(){
       + '<div class="hc-metric"><div class="hc-lbl">HRV</div><div class="hc-val">' + (health.hrv!=null ? Math.round(health.hrv)+'<em>ms</em>' : '—') + '</div></div>'
       + '<div class="hc-metric"><div class="hc-lbl">Resting HR</div><div class="hc-val">' + (health.rhr!=null ? Math.round(health.rhr)+'<em>bpm</em>' : '—') + '</div></div>'
       + '<div class="hc-metric"><div class="hc-lbl">Sleep Efficiency</div><div class="hc-val">' + (health.sleepPerf!=null ? Math.round(health.sleepPerf)+'<em>%</em>' : '—') + '</div></div>'
-      + '<div class="hc-metric"><div class="hc-lbl">Sleep Score (est.)</div><div class="hc-val">' + (health.sleepScoreEst!=null ? Math.round(health.sleepScoreEst) : '—') + '</div></div>'
       + '</div>';
   }
 
