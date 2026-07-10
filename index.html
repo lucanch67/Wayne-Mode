@@ -23,7 +23,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"vision");}catch(e){document.documentElement.setAttribute("data-theme","vision");}</script>
+<script>document.documentElement.setAttribute("data-theme","vision");try{localStorage.setItem("patron_theme","vision");}catch(e){}</script>
 <style>
 /* ================================================================
  * Luca — dashboard · black/dark CryptoVault style
@@ -194,9 +194,9 @@ body::before {
 /* hide overflow items on small screens */
 @media (max-width: 640px) { .topbarGreeting { display: none; } }
 @media (max-width: 520px) { .liveBadge { display: none; } }
-/* ── Theme switcher ── */
+/* ── Theme switcher (retired — Vision is the permanent, only theme) ── */
 .themeSeg {
-  display: inline-flex; align-items: center;
+  display: none !important; align-items: center;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill);
   padding: 3px; gap: 2px;
 }

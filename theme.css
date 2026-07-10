@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* ============================================================
  * theme.css — the shared Patron / Luca design system.
@@ -11,22 +11,22 @@
  * Change a colour/spacing/font here once → every page updates.
  * ============================================================ */
 
-/* ---- Design tokens: default theme (Nocturne — black / neon-green) ---- */
+/* ---- Design tokens: default theme (Vision — black / monochrome) ---- */
 :root {
   color-scheme: dark;
-  --bg: #080808; --bg-elevated: #111111;
-  --surface: rgba(255,255,255,0.035); --surface-2: rgba(255,255,255,0.065);
-  --fg: #F2F2F2; --muted: rgba(242,242,242,0.50); --muted-strong: rgba(242,242,242,0.74);
-  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.15);
-  --brand: #00FF88; --brand-2: #00CC6A; --brand-ink: #000000;
-  --brand-soft: rgba(0,255,136,0.09); --brand-line: rgba(0,255,136,0.22); --brand-glow: rgba(0,255,136,0.30);
-  --pos: #00FF88; --pos-soft: rgba(0,255,136,0.09); --pos-line: rgba(0,255,136,0.22);
-  --neg: #FF4060; --neg-soft: rgba(255,64,96,0.10); --neg-line: rgba(255,64,96,0.22);
-  --warn: #FFB930; --warn-soft: rgba(255,185,48,0.10); --warn-line: rgba(255,185,48,0.24);
-  --track: rgba(255,255,255,0.07);
-  --card-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 48px -28px rgba(0,0,0,0.95);
-  --glow-1: rgba(0,255,136,0.05); --glow-2: rgba(0,200,100,0.025);
-  --grain-opacity: 0.04; --overlay: rgba(0,0,0,0.80);
+  --bg: #050505; --bg-elevated: #0D0D0D;
+  --surface: rgba(255,255,255,0.03); --surface-2: rgba(255,255,255,0.055);
+  --fg: #F5F5F5; --muted: rgba(255,255,255,0.45); --muted-strong: rgba(255,255,255,0.72);
+  --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.14);
+  --brand: #FFFFFF; --brand-2: rgba(255,255,255,0.68); --brand-ink: #000000;
+  --brand-soft: rgba(255,255,255,0.06); --brand-line: rgba(255,255,255,0.14); --brand-glow: rgba(255,255,255,0.20);
+  --pos: #22C55E; --pos-soft: rgba(34,197,94,0.10); --pos-line: rgba(34,197,94,0.26);
+  --neg: #EF4444; --neg-soft: rgba(239,68,68,0.10); --neg-line: rgba(239,68,68,0.26);
+  --warn: #F59E0B; --warn-soft: rgba(245,158,11,0.10); --warn-line: rgba(245,158,11,0.26);
+  --track: rgba(255,255,255,0.06);
+  --card-shadow: 0 0 0 1px rgba(255,255,255,0.05) inset, 0 22px 56px -28px rgba(0,0,0,0.80);
+  --glow-1: rgba(255,255,255,0.04); --glow-2: rgba(255,255,255,0.02);
+  --grain-opacity: 0.038; --overlay: rgba(5,5,5,0.92);
   --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem;
   --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem;
   --radius-sm: 8px; --radius-md: 11px; --radius-lg: 18px; --radius-pill: 999px;
@@ -34,7 +34,7 @@
   --text-xl:1.375rem; --text-2xl:1.75rem; --text-3xl:2.5rem;
   --ease: cubic-bezier(0.2,0.8,0.2,1); --ease-premium: cubic-bezier(0.16,1,0.3,1);
   --duration-fast:120ms; --duration:200ms;
-  --font-display:'Cormorant Garamond'; --font-ui:'Cormorant Garamond'; --font-mono:'JetBrains Mono';
+  --font-display:'Instrument Serif',Georgia,serif; --font-ui:'Inter',-apple-system,sans-serif; --font-mono:'JetBrains Mono',monospace;
 }
 [data-theme="aurora"] {
   color-scheme: dark;
@@ -93,7 +93,7 @@ body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index
 [data-theme="daylight"] body::before { background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); }
 .grain-overlay { position: relative; }
 .grain-overlay::after { content:''; position: fixed; inset:0; pointer-events:none; z-index:1; opacity: var(--grain-opacity); mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); background-size: 200px 200px; }
-.page { position: relative; min-height: 100dvh; background: var(--bg); color: var(--fg); padding: var(--space-8) var(--space-5) var(--space-16); isolation: isolate; }
+.page { position: relative; min-height: 100dvh; background: transparent; color: var(--fg); padding: var(--space-8) var(--space-5) var(--space-16); isolation: isolate; }
 .page::before { content:''; position: absolute; inset:0; pointer-events:none; z-index:-1; background: radial-gradient(58% 42% at 82% 6%, var(--glow-1), transparent 70%), radial-gradient(48% 38% at 12% 92%, var(--glow-2), transparent 72%); }
 .shell { max-width: 1080px; margin: 0 auto; }
 

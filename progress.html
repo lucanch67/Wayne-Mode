@@ -23,7 +23,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="theme.css" />
 
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"vision");}catch(e){document.documentElement.setAttribute("data-theme","vision");}</script>
@@ -51,7 +51,7 @@ img{max-width:100%;height:auto}
   --text-xs:.75rem;--text-sm:.875rem;--text-base:1rem;--text-lg:1.125rem;--text-xl:1.375rem;--text-2xl:1.75rem;--text-3xl:2.5rem;
   --ease:cubic-bezier(.2,.8,.2,1);--ease-premium:cubic-bezier(.16,1,.3,1);
   --duration-fast:120ms;--duration:200ms;
-  --font-inter:'Hanken Grotesk';--font-serif:'Space Grotesk';--font-mono:'JetBrains Mono';
+  --font-inter:'Inter',-apple-system,sans-serif;--font-serif:'Instrument Serif',Georgia,serif;--font-mono:'JetBrains Mono',monospace;
 }
 [data-theme="aurora"]{color-scheme:dark;--bg:#080913;--bg-elevated:#12131F;--surface:rgba(150,160,255,.045);--surface-2:rgba(150,160,255,.08);--fg:#EEF0FF;--muted:rgba(220,225,255,.52);--muted-strong:rgba(220,225,255,.76);--border:rgba(150,160,255,.11);--border-strong:rgba(150,160,255,.22);--brand:#8B7BFF;--brand-2:#B9ABFF;--brand-ink:#0A0922;--brand-soft:rgba(139,123,255,.15);--brand-line:rgba(139,123,255,.32);--brand-glow:rgba(124,107,255,.6);--pos:#4FE3D0;--neg:#FF6FA5;--warn:#FFC65C;}
 [data-theme="daylight"]{color-scheme:light;--bg:#F3F2FA;--bg-elevated:#FFFFFF;--surface:#FFFFFF;--surface-2:#FAF9FF;--fg:#171622;--muted:rgba(23,22,34,.52);--muted-strong:rgba(23,22,34,.72);--border:rgba(23,22,60,.10);--border-strong:rgba(23,22,60,.18);--brand:#6A45FF;--brand-2:#8E6BFF;--brand-ink:#FFFFFF;--brand-soft:rgba(106,69,255,.08);--brand-line:rgba(106,69,255,.24);--brand-glow:rgba(106,69,255,.28);--pos:#0E9E64;--neg:#E11D63;--warn:#B4690E;}
@@ -62,7 +62,7 @@ img{max-width:100%;height:auto}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-inter),-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
 .grain-overlay{position:relative}
 .grain-overlay::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.035;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");background-size:200px 200px}
-.page{position:relative;min-height:100dvh;background:var(--bg);padding:var(--space-6) var(--space-5) var(--space-16);isolation:isolate}
+.page{position:relative;min-height:100dvh;background:transparent;padding:var(--space-6) var(--space-5) var(--space-16);isolation:isolate}
 .page::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(60% 40% at 80% 8%,color-mix(in srgb,var(--brand) 6%,transparent),transparent 70%),radial-gradient(50% 35% at 12% 92%,color-mix(in srgb,var(--brand) 4%,transparent),transparent 70%)}
 .shell{max-width:720px;margin:0 auto}
 
@@ -239,7 +239,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font-inter),-apple-s
 </style>
 </head>
 <body>
-<script src="theme-bg.js"></script>
+<script src="earth-bg.js"></script>
 <main class="page grain-overlay"><div class="shell" id="app"></div></main>
 <div id="modalRoot"></div>
 <input id="fileInput" type="file" accept="image/*" class="hiddenInput" />
@@ -637,11 +637,11 @@ applyTheme(currentTheme);
     'background:linear-gradient(135deg,var(--brand,#00FF88),var(--brand-2,#00CC6A));',
     'display:flex;align-items:center;justify-content:center;',
     'box-shadow:0 0 14px var(--brand-glow,rgba(0,255,136,0.30));}',
-    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;}',
+    '.stLogoName{font-family:"Instrument Serif",Georgia,serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;}',
     '.stSpacer{flex:1;}',
     '.stBack{display:inline-flex;align-items:center;gap:6px;padding:6px 14px 6px 10px;border-radius:999px;',
     'background:var(--brand-soft,rgba(0,255,136,0.09));border:1px solid var(--brand-line,rgba(0,255,136,0.22));',
-    'color:var(--brand,#00FF88);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;',
+    'color:var(--brand,#00FF88);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;',
     'text-decoration:none;transition:background 180ms ease;}',
     '.stBack:hover{background:rgba(0,255,136,0.16);}'
   ].join('');

@@ -22,7 +22,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="theme.css" />
 
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"vision");}catch(e){document.documentElement.setAttribute("data-theme","vision");}</script>
@@ -80,9 +80,9 @@ img{max-width:100%;height:auto}
   --ease-premium: cubic-bezier(0.16,1,0.3,1);
   --duration-fast:120ms; --duration:200ms;
 
-  --font-display:'Space Grotesk';
-  --font-ui:'Hanken Grotesk';
-  --font-mono:'JetBrains Mono';
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-ui:'Inter',-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
 }
 
 /* ---- Aurora (vibrant violet → teal) ---- */
@@ -194,7 +194,7 @@ body {
 }
 
 /* Page shell */
-.page { position: relative; min-height: 100dvh; background: var(--bg); color: var(--fg); padding: var(--space-8) var(--space-5) var(--space-16); isolation: isolate; }
+.page { position: relative; min-height: 100dvh; background: transparent; color: var(--fg); padding: var(--space-8) var(--space-5) var(--space-16); isolation: isolate; }
 .page::before {
   content:''; position: absolute; inset:0; pointer-events:none; z-index:-1;
   background:
@@ -531,7 +531,7 @@ body {
 </style>
 </head>
 <body>
-<script src="theme-bg.js"></script>
+<script src="earth-bg.js"></script>
 <main class="page grain-overlay">
   <div class="shell" id="app"></div>
 </main>
@@ -1759,11 +1759,11 @@ applyTheme(currentTheme);
     'background:linear-gradient(135deg,var(--brand,#00FF88),var(--brand-2,#00CC6A));',
     'display:flex;align-items:center;justify-content:center;',
     'box-shadow:0 0 14px var(--brand-glow,rgba(0,255,136,0.30));}',
-    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;}',
+    '.stLogoName{font-family:"Instrument Serif",Georgia,serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;}',
     '.stSpacer{flex:1;}',
     '.stBack{display:inline-flex;align-items:center;gap:6px;padding:6px 14px 6px 10px;border-radius:999px;',
     'background:var(--brand-soft,rgba(0,255,136,0.09));border:1px solid var(--brand-line,rgba(0,255,136,0.22));',
-    'color:var(--brand,#00FF88);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;',
+    'color:var(--brand,#00FF88);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;',
     'text-decoration:none;transition:background 180ms ease;}',
     '.stBack:hover{background:rgba(0,255,136,0.16);}'
   ].join('');

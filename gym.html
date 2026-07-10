@@ -21,7 +21,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css" />
 
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"vision");}catch(e){document.documentElement.setAttribute("data-theme","vision");}</script>
@@ -136,8 +136,8 @@ const CONFIG = {
   --body-glow: rgba(0,255,136,0.05);
   --tabbar-grad: linear-gradient(180deg, rgba(10,10,16,0) 0%, rgba(10,10,16,0.82) 40%, rgba(10,10,16,0.95) 100%);
   --tabbar-pill: rgba(26,26,36,0.82);
-  --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SF Mono, Menlo, Consolas, monospace;
 }
 [data-theme="aurora"] {
@@ -1016,7 +1016,7 @@ img, video, canvas, svg { max-width: 100%; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<script src="theme-bg.js"></script>
+<script src="earth-bg.js"></script>
 
 <div class="po-shell">
   <button class="po-day-pill" type="button" id="dayPill" title="Tap to switch the day filter to today's split">
@@ -2717,13 +2717,13 @@ img, video, canvas, svg { max-width: 100%; }
     'background:linear-gradient(135deg,var(--brand,#00FF88),var(--brand-2,#00CC6A));',
     'display:flex;align-items:center;justify-content:center;',
     'box-shadow:0 0 12px var(--brand-glow,rgba(0,255,136,0.30));}',
-    '.stLogoName{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.3px;}',
+    '.stLogoName{font-family:"Instrument Serif",Georgia,serif;font-weight:700;font-size:14px;letter-spacing:-0.3px;}',
     '.stTabBar{display:flex;align-items:center;gap:2px;flex:1;justify-content:center;}',
-    '.stTab{appearance:none;border:0;background:transparent;color:rgba(243,242,248,0.42);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;transition:background 180ms,color 180ms;white-space:nowrap;}',
+    '.stTab{appearance:none;border:0;background:transparent;color:rgba(243,242,248,0.42);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;transition:background 180ms,color 180ms;white-space:nowrap;}',
     '.stTab.stTabOn{background:var(--brand-soft,rgba(0,255,136,0.09));color:var(--brand,#00FF88);}',
     '.stBack{display:inline-flex;align-items:center;gap:5px;padding:6px 11px 6px 8px;border-radius:999px;flex-shrink:0;',
     'background:var(--brand-soft,rgba(0,255,136,0.09));border:1px solid var(--brand-line,rgba(0,255,136,0.22));',
-    'color:var(--brand,#00FF88);font-family:"Hanken Grotesk",sans-serif;font-size:12px;font-weight:600;',
+    'color:var(--brand,#00FF88);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;',
     'text-decoration:none;transition:background 180ms ease;white-space:nowrap;}',
     '.stBack:hover{background:rgba(0,255,136,0.16);}'
   ].join('');
