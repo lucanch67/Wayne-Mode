@@ -1,10 +1,21 @@
 // GET /api/fitbit/data — refresh token, fetch health data from Google Health API v4.
-// No filter params — the API returns most-recent-first by default.
 const L = require('./_lib');
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 // Parse "7200s" or "-3600s" UTC offset strings into milliseconds.
 function offsetMs(s) { const n = parseInt(s || '0', 10); return isNaN(n) ? 0 : n * 1000; }
+
+// Pick the data point with the largest timeFn(point) value — don't trust API response
+// order, since a differently-ordered page would otherwise make the shown value flip
+// between syncs even with no new data.
+function pickLatest(points, timeFn) {
+  let best = null, bestT = -Infinity;
+  for (const p of points) {
+    const t = timeFn(p);
+    if (t != null && t > bestT) { bestT = t; best = p; }
+  }
+  return best;
+}
 
 async function ghGet(path, token) {
   try {
@@ -41,7 +52,7 @@ module.exports = async (req, res) => {
 
   const at = tok.access_token;
 
-  // No filter — API returns most-recent entries first. pageSize=3 is enough to pick the latest.
+  // No filter — pageSize=3 gives enough recent entries to pick the actual latest from (see pickLatest).
   const [sleepRes, rhrRes, hrvRes] = await Promise.all([
     ghGet('/users/me/dataTypes/sleep/dataPoints?pageSize=3', at),
     ghGet('/users/me/dataTypes/daily-resting-heart-rate/dataPoints?pageSize=3', at),
@@ -60,8 +71,11 @@ module.exports = async (req, res) => {
   // startUtcOffset / endUtcOffset ("7200s") must be applied to get local clock time.
   let sleepHours = null, sleepPerf = null, bedtime = null, wakeTime = null;
   if (sleepRes && !sleepRes._err && Array.isArray(sleepRes.dataPoints) && sleepRes.dataPoints.length) {
-    const pts = sleepRes.dataPoints.filter(p => p.sleep?.interval?.startTime);
-    const s = pts[0]?.sleep;  // already sorted most-recent-first
+    const latest = pickLatest(sleepRes.dataPoints, p => {
+      const t = p.sleep?.interval?.startTime;
+      return t ? new Date(t).getTime() : null;
+    });
+    const s = latest?.sleep;
     if (s) {
       const startUtc = new Date(s.interval.startTime).getTime();
       const endUtc   = new Date(s.interval.endTime).getTime();
@@ -85,14 +99,22 @@ module.exports = async (req, res) => {
   // ── Parse resting HR (most recent daily value) ───────────────────────────
   let rhr = null;
   if (rhrRes && !rhrRes._err && Array.isArray(rhrRes.dataPoints) && rhrRes.dataPoints.length) {
-    const bpm = Number(rhrRes.dataPoints[0]?.dailyRestingHeartRate?.beatsPerMinute);
+    const latest = pickLatest(rhrRes.dataPoints, p => {
+      const d = p.dailyRestingHeartRate?.date;
+      return d ? d.year * 10000 + d.month * 100 + d.day : null;
+    });
+    const bpm = Number(latest?.dailyRestingHeartRate?.beatsPerMinute);
     if (bpm >= 30 && bpm <= 120) rhr = bpm;
   }
 
   // ── Parse HRV (most recent overnight reading) ────────────────────────────
   let hrv = null;
   if (hrvRes && !hrvRes._err && Array.isArray(hrvRes.dataPoints) && hrvRes.dataPoints.length) {
-    const ms = Number(hrvRes.dataPoints[0]?.heartRateVariability?.rootMeanSquareOfSuccessiveDifferencesMilliseconds);
+    const latest = pickLatest(hrvRes.dataPoints, p => {
+      const t = p.heartRateVariability?.sampleTime?.physicalTime;
+      return t ? new Date(t).getTime() : null;
+    });
+    const ms = Number(latest?.heartRateVariability?.rootMeanSquareOfSuccessiveDifferencesMilliseconds);
     if (ms > 0 && ms < 300) hrv = Math.round(ms);
   }
 
