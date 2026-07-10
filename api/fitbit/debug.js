@@ -30,14 +30,16 @@ module.exports = async (req, res) => {
   }
 
   const at = tok.access_token;
-  const [hrv, hrvDataSources] = await Promise.all([
+  const [hrv, hrvDataSources, sleep] = await Promise.all([
     ghGet('/users/me/dataTypes/heart-rate-variability/dataPoints?pageSize=3', at),
     ghGet('/users/me/dataTypes/heart-rate-variability', at),
+    ghGet('/users/me/dataTypes/sleep/dataPoints?pageSize=3', at),
   ]);
 
   res.end(JSON.stringify({
     scopes_in_token: tok.scope || '(not returned)',
     hrv_datapoints: hrv,
     hrv_datatype_meta: hrvDataSources,
+    sleep_datapoints: sleep,
   }, null, 2));
 };
